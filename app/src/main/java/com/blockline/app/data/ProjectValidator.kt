@@ -180,7 +180,8 @@ object ProjectValidator {
                 't' -> literal("true")
                 'f' -> literal("false")
                 'n' -> literal("null")
-                '-', in '0'..'9' -> numberValue()
+                '-' -> numberValue()
+                in '0'..'9' -> numberValue()
                 else -> fail("Expected a JSON value.")
             }
         }
@@ -253,7 +254,7 @@ object ProjectValidator {
                 if (index >= source.length || source[index] !in '0'..'9') fail("Expected digits after decimal point.")
                 while (index < source.length && source[index] in '0'..'9') index++
             }
-            if (index < source.length && source[index] in 'e'..'e' || index < source.length && source[index] in 'E'..'E') {
+            if (index < source.length && (source[index] == 'e' || source[index] == 'E')) {
                 index++
                 if (index < source.length && source[index] in "+-") index++
                 if (index >= source.length || source[index] !in '0'..'9') fail("Expected exponent digits.")
