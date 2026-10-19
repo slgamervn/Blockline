@@ -158,6 +158,27 @@ class ProjectRepository(private val ctx: Context) {
     fun isFavorite(id: String, path: String) = prefs.getBoolean("filefav:$id:$path", false)
     fun toggleFavorite(id: String, path: String) { prefs.edit().putBoolean("filefav:$id:$path", !isFavorite(id, path)).apply() }
     fun addRecentFile(id: String, path: String) { prefs.edit().putString("recentFile:$id", path).apply() }
+
+    fun remapPathMetadata(id: String, oldPath: String, newPath: String) {
+        val prefix = "filefav:$id:"
+        val editor = prefs.edit()
+        prefs.all.forEach { (key, value) ->
+            if (key.startsWith(prefix)) {
+                val savedPath = key.removePrefix(prefix)
+                if (savedPath == oldPath || savedPath.startsWith("$oldPath/")) {
+                    editor.remove(key)
+                    val replacement = newPath + savedPath.removePrefix(oldPath)
+                    if (value == true) editor.putBoolean("$prefix$replacement", true)
+                }
+            }
+        }
+        val recentKey = "recentFile:$id"
+        val recent = prefs.getString(recentKey, null)
+        if (recent == oldPath || recent?.startsWith("$oldPath/") == true) {
+            editor.putString(recentKey, newPath + recent!!.removePrefix(oldPath))
+        }
+        editor.apply()
+    }
     fun recentFile(id: String): String? = prefs.getString("recentFile:$id", null)
 
     fun backup(id: String): File {
@@ -169,12 +190,29 @@ class ProjectRepository(private val ctx: Context) {
     }
 
     fun restoreLatest(id: String): Boolean {
-        val latest = backupDir(id).listFiles()?.filter { it.isDirectory }?.maxByOrNull { it.name.toLongOrNull() ?: 0L } ?: return false
+        val latest = backupDir(id).listFiles()?.filter { it.isDirectory }
+            ?.maxByOrNull { it.name.toLongOrNull() ?: 0L } ?: return false
         val live = projectDir(id)
-        val rollback = File(backupRoot, "rollback_${System.currentTimeMillis()}")
-        live.copyRecursively(rollback, overwrite = true)
-        live.deleteRecursively()
-        return latest.copyRecursively(live, overwrite = true)
+        val staging = File(root, ".restore_${id}_${System.currentTimeMillis()}")
+        val rollback = File(root, ".rollback_${id}_${System.currentTimeMillis()}")
+        return try {
+            check(latest.copyRecursively(staging, overwrite = false)) { "Could not prepare backup restore" }
+            val hadLive = live.exists()
+            if (hadLive) check(live.renameTo(rollback)) { "Could not preserve current project before restore" }
+            if (!staging.renameTo(live)) {
+                if (hadLive) rollback.renameTo(live)
+                false
+            } else {
+                rollback.deleteRecursively()
+                true
+            }
+        } catch (_: Exception) {
+            if (!live.exists() && rollback.exists()) rollback.renameTo(live)
+            false
+        } finally {
+            staging.deleteRecursively()
+            if (live.exists()) rollback.deleteRecursively()
+        }
     }
 
     fun export(id: String, mode: ExportMode, output: OutputStream) {
