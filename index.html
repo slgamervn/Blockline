@@ -1,1443 +1,235 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#080b0a">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<meta name="description" content="Blockline is a mobile-first Android studio for Minecraft Bedrock add-on creators. Import, explore, edit and export packs locally.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Blockline — Bedrock Add-on Studio for Android">
-<meta property="og:description" content="Your Bedrock workflow, built for mobile. Local-first pack editing tools for Android.">
-<meta property="og:url" content="https://slgamervn.github.io/Blockline/">
-<meta property="og:site_name" content="Blockline">
-<meta name="twitter:card" content="summary">
-<link rel="canonical" href="https://slgamervn.github.io/Blockline/">
-<title>Blockline — Bedrock Add-on Studio for Android</title>
-<style>
-:root{color-scheme:dark;--bg:#101612;--panel:#151d18;--panel2:#1b261f;--line:#2a3930;--text:#edf5ef;--muted:#a8b8ad;--green:#3dba7a;--green2:#8ce0b2;--amber:#e6b35a;--max:1120px}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#234b35 0,transparent 42%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}a{color:inherit;text-decoration:none}button,a{ -webkit-tap-highlight-color:transparent}.wrap{width:min(var(--max),calc(100% - 40px));margin:auto}.nav{position:sticky;top:0;z-index:10;border-bottom:1px solid #26342b;background:#101612dc;backdrop-filter:blur(16px)}.navinner{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.03em;font-size:1.15rem}.mark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,var(--green2),var(--green));color:#082013;font-weight:950;box-shadow:0 7px 24px #3dba7a33}.links{display:flex;align-items:center;gap:25px;color:var(--muted);font-size:.92rem}.links a:hover{color:var(--text)}.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 20px;border-radius:13px;border:1px solid transparent;font-weight:750;transition:transform .18s,background .18s,border-color .18s}.button:hover{transform:translateY(-2px)}.primary{background:var(--green);color:#082013;box-shadow:0 8px 28px #3dba7a26}.secondary{border-color:#526459;background:#17211b;color:var(--text)}.tiny{font-size:.85rem;color:var(--muted)}.hero{padding:84px 0 76px;overflow:hidden}.heroGrid{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:7px 12px;border:1px solid #3dba7a55;border-radius:999px;color:var(--green2);font-size:.83rem;font-weight:750;background:#3dba7a0d}.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}h1{font-size:clamp(2.8rem,6vw,5rem);line-height:1.02;letter-spacing:-.065em;margin:24px 0 20px;max-width:650px}h1 em{font-style:normal;color:var(--green2)}.lead{font-size:1.12rem;color:var(--muted);max-width:560px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 22px}.trust{display:flex;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:.87rem}.trust span{display:flex;align-items:center;gap:7px}.check{color:var(--green2);font-weight:900}.mockWrap{position:relative}.glow{position:absolute;inset:12% 5%;background:#3dba7a20;filter:blur(70px);border-radius:50%}.device{position:relative;margin:auto;max-width:370px;border:1px solid #526459;border-radius:34px;padding:10px;background:#090d0a;box-shadow:0 28px 90px #0008;transform:rotate(1deg)}.screen{border-radius:25px;overflow:hidden;background:var(--bg);border:1px solid #24342a;min-height:480px}.status{display:flex;justify-content:space-between;padding:14px 18px 8px;font-size:.7rem;color:#c6d3ca}.apphead{display:flex;align-items:center;justify-content:space-between;padding:13px 17px;border-bottom:1px solid #26342b}.appname{font-weight:850;font-size:1.05rem}.pill{font-size:.67rem;border:1px solid #38664b;border-radius:999px;padding:4px 8px;color:var(--green2)}.screenbody{padding:17px}.screenlabel{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.13em;font-weight:800}.screenTitle{font-size:1.55rem;letter-spacing:-.04em;font-weight:800;margin:4px 0 14px}.miniCard{padding:13px;border:1px solid #2b3c31;background:#17221b;border-radius:15px;margin:10px 0}.miniTop{display:flex;align-items:center;gap:10px}.fileIcon{display:grid;place-items:center;width:37px;height:37px;border-radius:11px;background:#244b34;color:var(--green2);font-size:1.1rem}.mininame{font-size:.88rem;font-weight:750}.minisub{font-size:.72rem;color:var(--muted)}.tag{font-size:.65rem;padding:3px 7px;border-radius:7px;background:#234b35;color:var(--green2);margin-left:auto}.code{font: .74rem/1.75 ui-monospace,SFMono-Regular,monospace;background:#0c110e;border:1px solid #25362b;border-radius:12px;padding:12px;margin-top:14px;color:#c8d7cd}.code .k{color:#8ddcae}.code .s{color:#e6b35a}.tabbar{display:flex;justify-content:space-around;padding:13px 5px 15px;border-top:1px solid #26342b;color:#93a69a;font-size:.64rem}.tabbar b{color:var(--green2)}section{padding:76px 0}.sectionhead{max-width:650px;margin-bottom:32px}.kicker{color:var(--green2);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:850}.sectionhead h2{font-size:clamp(2rem,4vw,3.1rem);line-height:1.1;letter-spacing:-.05em;margin:12px 0}.sectionhead p{color:var(--muted);font-size:1.05rem}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.feature{padding:24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,#18231c,#131a15);min-height:200px}.featureIcon{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#234b35;color:var(--green2);font-size:1.3rem}.feature h3{margin:18px 0 7px;font-size:1.08rem}.feature p{margin:0;color:var(--muted);font-size:.94rem}.band{background:linear-gradient(110deg,#17271d,#111813);border-block:1px solid #2a3b30}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;counter-reset:steps}.step{border-top:1px solid #3a4a3f;padding-top:19px}.stepnum{color:var(--amber);font:800 1.9rem ui-monospace,monospace}.step h3{margin:8px 0}.step p{color:var(--muted);margin:0}.downloadCard{display:flex;align-items:center;justify-content:space-between;gap:30px;padding:34px;border:1px solid #3b5a44;border-radius:24px;background:radial-gradient(ellipse at 0 0,#214b33 0,transparent 55%),#151e18}.downloadCard h2{font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.05em;margin:0 0 8px}.downloadCard p{color:var(--muted);margin:0}.downloadActions{display:flex;flex-wrap:wrap;gap:10px}.fineprint{margin-top:15px;font-size:.82rem;color:var(--muted)}footer{border-top:1px solid #26342b;padding:28px 0 36px;color:var(--muted);font-size:.88rem}.footinner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}.footlinks{display:flex;gap:18px}.footlinks a:hover{color:var(--text)}@media(max-width:820px){.hero{padding:60px 0}.heroGrid{grid-template-columns:1fr;gap:40px}.mockWrap{max-width:440px;width:100%;margin:auto}.grid3{grid-template-columns:repeat(2,1fr)}.links a:not(.button){display:none}.downloadCard{align-items:flex-start;flex-direction:column}}@media(max-width:560px){.wrap{width:min(100% - 28px,var(--max))}.navinner{min-height:64px}.links{gap:0}.links .button{min-height:42px;padding:0 13px;font-size:.85rem}.hero{padding:48px 0 54px}h1{font-size:clamp(2.7rem,14vw,4rem)}.lead{font-size:1rem}.actions .button{width:100%}.grid3,.steps{grid-template-columns:1fr}section{padding:58px 0}.feature{min-height:unset}.screen{min-height:440px}.downloadCard{padding:24px}.downloadActions{width:100%}.downloadActions .button{width:100%}.footinner{align-items:flex-start;flex-direction:column}}
-
-/* Motion system: lightweight, responsive, and accessible */
-:root{--ease-out:cubic-bezier(.22,1,.36,1)}
-html{scroll-behavior:smooth}
-body{overflow-x:hidden}
-.nav{transition:background .25s ease,border-color .25s ease,box-shadow .25s ease}
-.nav.is-scrolled{background:#0d120fee;border-color:#3a4b3f;box-shadow:0 8px 30px #0002}
-.nav::after{content:"";position:absolute;left:0;bottom:-1px;height:2px;width:var(--scroll-progress,0%);background:linear-gradient(90deg,var(--green),var(--green2));pointer-events:none}
-.button{position:relative;overflow:hidden;isolation:isolate}
-.button::after{content:"";position:absolute;inset:-80% auto -80% -45%;width:30%;transform:rotate(22deg) translateX(-240%);background:linear-gradient(90deg,transparent,#ffffff40,transparent);transition:transform .7s var(--ease-out);pointer-events:none;z-index:-1}
-.button:hover::after{transform:rotate(22deg) translateX(600%)}
-.hero .eyebrow{animation:fade-up .7s var(--ease-out) both}
-.hero h1{animation:fade-up .85s .08s var(--ease-out) both}
-.hero .lead{animation:fade-up .85s .16s var(--ease-out) both}
-.hero .actions{animation:fade-up .85s .23s var(--ease-out) both}
-.hero .trust{animation:fade-up .85s .3s var(--ease-out) both}
-.device{animation:device-enter 1s .12s var(--ease-out) both;transform-origin:center}
-.glow{animation:glow-pulse 7s ease-in-out infinite alternate}
-.reveal{opacity:0;transform:translate3d(0,26px,0);transition:opacity .72s var(--ease-out),transform .82s var(--ease-out);transition-delay:var(--reveal-delay,0ms);will-change:opacity,transform}
-.reveal.is-visible{opacity:1;transform:translate3d(0,0,0);will-change:auto}
-.feature:hover{transform:translateY(-5px);border-color:#45634e;box-shadow:0 18px 40px #0002}
-.feature{transition:transform .28s var(--ease-out),border-color .28s ease,box-shadow .28s ease}
-.featureIcon{transition:transform .3s var(--ease-out),background .3s ease}
-.feature:hover .featureIcon{transform:translateY(-2px) rotate(-5deg);background:#2a5a3c}
-.step{transition:transform .3s var(--ease-out)}
-.step:hover{transform:translateY(-3px)}
-.downloadCard{transition:border-color .3s ease,box-shadow .3s ease}
-.downloadCard:hover{border-color:#54815f;box-shadow:0 20px 60px #0002}
-@keyframes fade-up{from{opacity:0;transform:translate3d(0,18px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
-@keyframes device-enter{from{opacity:0;transform:translate3d(0,26px,0) rotate(3deg) scale(.97)}to{opacity:1;transform:translate3d(0,0,0) rotate(1deg) scale(1)}}
-@keyframes glow-pulse{from{opacity:.55;transform:scale(.94)}to{opacity:1;transform:scale(1.06)}}
-@media(max-width:820px){.feature:hover{transform:none;box-shadow:none}.device{animation:device-enter .8s .1s var(--ease-out) both}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none;will-change:auto}.device,.glow{animation:none}}
-
-
-
-/* Refined visual direction: editorial, spacious, and intentionally restrained */
-:root{--bg:#080b0a;--panel:#101512;--panel2:#151d18;--line:#28332c;--text:#f3f6f2;--muted:#a1ada4;--green:#9be7b5;--green2:#b8f3cb;--max:1180px}
-body{background:#080b0a;background-image:radial-gradient(ellipse at 74% 10%,#1b3928 0,transparent 33%),radial-gradient(ellipse at 0 45%,#122219 0,transparent 28%);background-attachment:fixed}
-.nav{background:#080b0ad9;border-bottom-color:#ffffff12}
-.navinner{min-height:78px}
-.mark{border-radius:11px;background:var(--green);box-shadow:none}
-.links{gap:30px}
-.links a:not(.button){transition:color .2s ease}
-.primary{background:var(--green);color:#07130b;box-shadow:none}
-.primary:hover{background:#b8f3cb;box-shadow:0 8px 28px #9be7b51c}
-.secondary{border-color:#ffffff27;background:#ffffff05}
-.hero{padding:112px 0 100px;position:relative}
-.hero::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(#ffffff09 1px,transparent 1px),linear-gradient(90deg,#ffffff09 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(to bottom,black,transparent 78%)}
-.heroGrid{position:relative;grid-template-columns:1.1fr .9fr;gap:64px}
-.eyebrow{background:#9be7b50c;border-color:#9be7b52a;color:var(--green2);letter-spacing:.035em}
-h1{font-size:clamp(3.4rem,7vw,6.2rem);letter-spacing:-.078em;line-height:.98;margin:28px 0 24px}
-h1 em{color:var(--green);background:linear-gradient(100deg,#9be7b5 5%,#d7ffe3 48%,#72c994 90%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.lead{font-size:1.13rem;line-height:1.8;max-width:520px}
-.actions{margin-top:32px}
-.button{border-radius:999px;padding-inline:23px}
-.trust{gap:18px 22px}
-.mockWrap{perspective:1200px}
-.glow{inset:10% 0;background:#58c98217;filter:blur(95px)}
-.device{max-width:355px;border-color:#ffffff28;border-radius:30px;padding:8px;box-shadow:0 45px 120px #000b,0 0 0 1px #ffffff08;transform:rotateY(-7deg) rotateX(2deg)}
-.screen{border-radius:23px;background:#0b100d;border-color:#ffffff0e}
-.apphead{border-bottom-color:#ffffff10}
-.miniCard{background:linear-gradient(120deg,#151e18,#0e1410);border-color:#ffffff13}
-.code{border-color:#ffffff12;background:#070a08}
-.tabbar{border-top-color:#ffffff10}
-section{padding:100px 0}
-.sectionhead{max-width:720px;margin-bottom:42px}
-.kicker{color:var(--green);letter-spacing:.17em;font-size:.73rem}
-.sectionhead h2{font-size:clamp(2.3rem,4.8vw,3.7rem);letter-spacing:-.065em;line-height:1.04;margin:16px 0}
-.sectionhead p{line-height:1.8;max-width:620px}
-.grid3{gap:14px}
-.feature{min-height:220px;border-radius:17px;background:linear-gradient(145deg,#121915,#0d120f);border-color:#ffffff12;padding:27px}
-.featureIcon{border-radius:12px;background:#9be7b511;color:var(--green);border:1px solid #9be7b51a}
-.feature h3{font-size:1.08rem;letter-spacing:-.025em}
-.feature p,.step p{line-height:1.8}
-.band{background:linear-gradient(110deg,#101812,#0a0e0b);border-block-color:#ffffff10}
-.steps{gap:28px}
-.step{border-top-color:#ffffff24;padding-top:20px}
-.stepnum{color:var(--green);font-size:1.6rem}
-.downloadCard{border-color:#ffffff1b;border-radius:22px;background:radial-gradient(ellipse at 0 0,#1b3c27 0,transparent 58%),linear-gradient(120deg,#111914,#0b100d);padding:clamp(26px,5vw,48px)}
-.downloadCard h2{letter-spacing:-.065em;line-height:1.05}
-footer{border-top-color:#ffffff12}
-@media(max-width:820px){.hero{padding:78px 0 65px}.heroGrid{grid-template-columns:1fr;gap:48px}.device{transform:none}.grid3{grid-template-columns:repeat(2,1fr)}section{padding:78px 0}}
-@media(max-width:560px){.navinner{min-height:66px}.hero{padding:60px 0 54px}h1{font-size:clamp(3.1rem,15vw,4.3rem)}.lead{font-size:1rem;line-height:1.75}.actions{gap:10px}.actions .button{width:100%}.grid3,.steps{grid-template-columns:1fr}.feature{min-height:unset;padding:23px}section{padding:66px 0}.downloadCard{padding:25px}.footinner{gap:16px}}
-@media(prefers-reduced-motion:reduce){.device{transform:none!important}}
-
-
-/* Viewport-only motion: crisp reveals replay in both scroll directions */
-.reveal{opacity:0;transform:translate3d(0,22px,0);transition:opacity .45s var(--ease-out),transform .6s var(--ease-out);transition-delay:var(--reveal-delay,0ms)}
-.reveal[data-reveal="left"]{transform:translate3d(-22px,0,0)}
-.reveal[data-reveal="right"]{transform:translate3d(22px,0,0)}
-.reveal[data-reveal="scale"]{transform:translate3d(0,10px,0)}
-.reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
-.hero .eyebrow,.hero h1,.hero .lead,.hero .actions,.hero .trust{will-change:auto}
-@media(max-width:820px){.reveal[data-reveal="left"],.reveal[data-reveal="right"]{transform:translate3d(0,18px,0)}}
-@media(prefers-reduced-motion:reduce){.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{opacity:1;transform:none;transition:none}}
-
-
-/* Cinematic scroll direction: depth and motion tied to actual viewport progress */
-.hero{min-height:min(900px,calc(100svh - 70px));display:flex;align-items:center}
-.heroGrid{width:100%}
-.hero .eyebrow,.hero h1,.hero .lead,.hero .actions,.hero .trust{transition:opacity .12s linear,transform .12s linear}
-.mockWrap{transform-style:preserve-3d}
-.device{backface-visibility:hidden;will-change:transform}
-.feature{position:relative;overflow:hidden}
-.feature::before{content:"";position:absolute;inset:0;background:linear-gradient(130deg,#b8f3cb0c,transparent 48%);opacity:0;transition:opacity .35s ease;pointer-events:none}
-.feature:hover::before{opacity:1}
-.feature::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#9be7b580,transparent);transform:scaleX(0);transform-origin:center;transition:transform .45s var(--ease-out)}
-.feature:hover::after{transform:scaleX(1)}
-.sectionhead h2{max-width:820px}
-#features .feature:nth-child(3n + 2){background:linear-gradient(145deg,#141d17,#0b100d)}
-#features .feature:nth-child(3n){background:linear-gradient(145deg,#101a14,#0b100d)}
-@media(min-width:821px){
-  #features .grid3{gap:18px}
-  #features .feature:nth-child(3n + 2){transform:translateY(18px)}
-  #features .feature:nth-child(3n + 2).is-visible{transform:translateY(18px)}
-  #features .feature:nth-child(3n + 2):hover{transform:translateY(12px)}
-}
-@media(max-width:820px){.hero{min-height:0;display:block}.heroGrid{width:auto}#features .feature:nth-child(3n + 2),#features .feature:nth-child(3n + 2).is-visible{transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.device{will-change:auto}.feature::before,.feature::after{transition:none}}
-
-
-/* Pinned product story: one persistent stage, three meaningful states */
-.product-story{padding:90px 0 110px;background:linear-gradient(180deg,#080b0a,#0d1510 48%,#080b0a);border-block:1px solid #ffffff10}
-.story-head{max-width:760px;margin-bottom:46px}
-.story-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.75fr);gap:clamp(36px,7vw,100px);align-items:start}
-.story-stage-wrap{position:sticky;top:104px;align-self:start}
-.story-stage{position:relative;min-height:510px;overflow:hidden;border:1px solid #ffffff1a;border-radius:26px;background:radial-gradient(ellipse at 50% 0%,#24463180,transparent 58%),linear-gradient(145deg,#121a15,#080b09);box-shadow:0 30px 90px #0007}
-.story-stage:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,black,transparent 90%);pointer-events:none}
-.stage-top{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid #ffffff12;color:#a1ada4;font-size:.78rem}
-.stage-brand{display:flex;align-items:center;gap:9px;color:#f3f6f2;font-weight:800}
-.stage-brand-mark{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#9be7b5;color:#07130b;font-weight:950}
-.stage-live{display:flex;align-items:center;gap:7px;color:#b8f3cb;font-size:.7rem;letter-spacing:.1em}
-.stage-live:before{content:"";width:6px;height:6px;background:#9be7b5;border-radius:50%}
-.stage-content{position:relative;padding:clamp(18px,3vw,32px)}
-.stage-caption{color:#9be7b5;font-size:.7rem;letter-spacing:.16em;font-weight:800;text-transform:uppercase}
-.stage-title{font-size:clamp(1.65rem,3vw,2.5rem);line-height:1.08;letter-spacing:-.06em;margin:10px 0 8px}
-.stage-description{color:#a1ada4;font-size:.9rem;max-width:460px}
-.stage-window{margin-top:24px;border:1px solid #ffffff17;border-radius:16px;overflow:hidden;background:#080d0a;box-shadow:0 20px 45px #0005}
-.stage-windowbar{height:37px;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid #ffffff10;color:#87968b;font-size:.68rem}
-.stage-windowbar i{width:6px;height:6px;background:#415348;border-radius:50%}
-.stage-path{margin-left:7px}
-.stage-files{display:grid;grid-template-columns: minmax(105px,.65fr) minmax(0,1.35fr);min-height:210px}
-.stage-tree{padding:14px 10px;border-right:1px solid #ffffff10;color:#9aa89e;font: .69rem/2 ui-monospace,monospace}
-.stage-tree span{display:block;padding-left:9px;white-space:nowrap}
-.stage-tree .selected{color:#b8f3cb;background:#9be7b510;border-radius:5px}
-.stage-editor{padding:16px 12px;color:#bfcac2;font: .69rem/1.95 ui-monospace,monospace;overflow:hidden}
-.stage-editor .line-no{display:inline-block;width:19px;color:#59695e;user-select:none}
-.stage-editor .syntax{color:#9be7b5}
-.stage-editor .string{color:#e7c58a}
-.stage-editor .comment{color:#728579}
-.stage-footer{display:flex;justify-content:space-between;gap:12px;padding:10px 13px;border-top:1px solid #ffffff10;color:#7f9185;font-size:.65rem}
-.stage-footer b{color:#9be7b5;font-weight:600}
-.story-steps{display:flex;flex-direction:column}
-.story-step{min-height:390px;display:flex;flex-direction:column;justify-content:center;padding:35px 0;border-top:1px solid #ffffff20;opacity:.46;transition:opacity .35s ease}
-.story-step:last-child{border-bottom:1px solid #ffffff20}
-.story-step.is-active{opacity:1}
-.story-step-number{font:800 1rem ui-monospace,monospace;color:#9be7b5;letter-spacing:.08em}
-.story-step h3{font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.08;letter-spacing:-.055em;margin:17px 0 12px}
-.story-step p{color:#a1ada4;line-height:1.85;margin:0;max-width:380px}
-.story-step .step-note{display:flex;align-items:center;gap:9px;margin-top:22px;color:#b8f3cb;font-size:.8rem;font-weight:700}
-.story-step .step-note:before{content:"";width:22px;height:1px;background:#9be7b5}
-.story-progress{display:flex;gap:6px;margin-top:22px}
-.story-progress span{height:3px;flex:1;background:#ffffff18;border-radius:4px;transition:background .25s ease}
-.story-progress span.is-active{background:#9be7b5}
-.stage-window [data-scene-content]{display:none}
-.story-stage[data-scene="0"] [data-scene-content="0"],.story-stage[data-scene="1"] [data-scene-content="1"],.story-stage[data-scene="2"] [data-scene-content="2"]{display:block;animation:scene-enter .35s var(--ease-out) both}
-@keyframes scene-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-/* Tablet and phone: switch to a compact, non-sticky product preview */
-@media(max-width:820px){
- .product-story{padding:58px 0 64px}
- .story-layout{grid-template-columns:1fr;gap:22px}
- .story-stage-wrap{position:relative;top:auto}
- .story-stage{min-height:0;border-radius:18px;box-shadow:0 14px 38px #0004}
- .stage-content{padding:18px}
- .stage-title{font-size:clamp(1.45rem,5vw,2rem)}
- .stage-description{font-size:.84rem;line-height:1.6}
- .stage-window{margin-top:16px}
- .stage-files{min-height:150px}
- .story-steps{gap:0}
- .story-step{min-height:0;padding:24px 0 26px;opacity:.72}
- .story-step.is-active{opacity:1}
- .story-step h3{font-size:1.65rem}
- .story-step p{font-size:.92rem}
- .story-stage{position:relative}
-}
-@media(max-width:480px){
- .product-story{padding:48px 0 52px}
- .story-head{margin-bottom:24px}
- .story-head h2{font-size:2.15rem}
- .story-head p{font-size:.94rem}
- .stage-content{padding:14px}
- .stage-top{padding:12px}
- .stage-live{font-size:.58rem;letter-spacing:.06em}
- .stage-files{grid-template-columns:84px minmax(0,1fr);min-height:136px}
- .stage-tree,.stage-editor{font-size:.56rem;line-height:1.85}
- .stage-tree{padding:10px 5px}
- .stage-editor{padding:10px 6px;overflow-wrap:anywhere}
- .stage-editor .line-no{width:15px}
- .stage-windowbar{padding:0 8px;font-size:.61rem}
- .stage-footer{padding:8px 10px;font-size:.59rem}
- .story-stage-wrap{margin:0}
- .story-step{padding:22px 0 24px}
- .story-step h3{font-size:1.55rem}
-}
-@media(prefers-reduced-motion:reduce){.story-step,.story-progress span{transition:none}.story-stage [data-scene-content]{animation:none}}
-/* Desktop keeps the pinned cinematic layout; mobile gets its own compact flow */
-@media(min-width:821px){
- .product-story .story-stage-wrap{position:sticky;top:calc(50vh - 255px)}
- .product-story .story-stage{min-height:500px}
-}
-@media(max-width:820px){
- .nav{backdrop-filter:none}
- .product-story .story-stage-wrap{position:static!important}
- .product-story .story-stage{min-height:0}
- .product-story .story-steps{margin-top:2px}
-}
-
-
-
-/* Responsive layout, accessible controls, and stable workflow presentation */
-:focus-visible{outline:2px solid var(--green2);outline-offset:4px}
-.nav-toggle{display:none;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid #ffffff25;border-radius:999px;background:#ffffff08;color:var(--text);font:inherit;font-size:.9rem;font-weight:700;cursor:pointer}
-.nav-toggle .menu-icon{font-size:1.1rem;line-height:1}
-.story-head h2,.story-head p,.story-step h3,.story-step p,.stage-title,.stage-description{min-width:0;max-width:100%;overflow-wrap:break-word;word-break:normal}
-.story-head h2{line-height:1.08;text-wrap:balance}
-.story-controls{display:none}
-.story-help{display:none}
-.product-story .story-layout{align-items:stretch}
-.product-story .story-stage-wrap{position:sticky;top:max(76px,calc((100vh - 600px)/2));top:max(76px,calc((100svh - 600px)/2));align-self:start;transform:none;z-index:1}
-.product-story .story-stage{min-height:0}
-.stage-top{min-width:0;flex-wrap:wrap}
-.stage-brand{min-width:0;flex-wrap:wrap}
-.stage-live{white-space:nowrap}
-.stage-window{width:100%;max-width:100%;min-width:0;overflow:hidden;overscroll-behavior-x:contain}
-.stage-files{width:100%;min-width:0;grid-template-columns:minmax(86px,.72fr) minmax(0,1.28fr)}
-.stage-windowbar,.stage-footer{width:100%;min-width:0}
-.stage-tree,.stage-editor{min-width:0;overflow-wrap:anywhere;word-break:break-word}
-.stage-tree span{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
-.stage-editor{white-space:normal;overflow:hidden}
-.stage-editor .line-no{width:16px}
-.story-step{scroll-margin-top:100px}
-.story-controls button{
- display:inline-flex;align-items:center;justify-content:center;gap:7px;
- min-height:44px;padding:0 14px;border:1px solid #ffffff1b;border-radius:999px;
- background:#ffffff05;color:var(--muted);font:inherit;font-size:.82rem;font-weight:700;
- cursor:pointer;transition:background .2s ease,border-color .2s ease,color .2s ease
-}
-.story-controls button span{color:var(--green2);font-family:ui-monospace,monospace}
-.story-controls button[aria-pressed="true"]{border-color:#9be7b566;background:#9be7b512;color:var(--text)}
-.story-controls button:hover{border-color:#9be7b566;color:var(--text)}
-.story-controls button:focus-visible,.nav-toggle:focus-visible{outline:2px solid var(--green2);outline-offset:3px}
-@media(min-width:821px) and (pointer:fine), (min-width:1101px){
- .product-story .story-layout{grid-template-columns:minmax(0,1.08fr) minmax(320px,.82fr);gap:clamp(34px,5vw,76px)}
- .product-story .story-stage-wrap{width:100%}
-}
-@media(max-width:820px), (max-width:1100px) and (pointer:coarse){
- .nav{backdrop-filter:none}
- .navinner{position:relative;min-height:66px;gap:12px}
- .nav-toggle{display:inline-flex;flex:0 0 auto}
- .nav-toggle .menu-label{display:inline}
- .links{display:flex;flex:0 0 auto;gap:0}
- .links a:not(.button){display:none}
- .links .button{min-height:42px;padding:0 12px;font-size:.8rem;white-space:nowrap}
- .nav.is-menu-open .links{
-   display:flex;position:absolute;top:calc(100% + 8px);left:0;right:0;
-   flex-direction:column;align-items:stretch;gap:4px;padding:12px;
-   border:1px solid #ffffff20;border-radius:18px;background:#0b100d;
-   box-shadow:0 20px 50px #0008;z-index:20
- }
- .nav.is-menu-open .links a:not(.button){display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:10px}
- .nav.is-menu-open .links a:not(.button):hover{background:#ffffff0a}
- .nav.is-menu-open .links .button{width:100%;min-height:46px;margin-top:4px}
- .hero{min-height:0;display:block;padding:62px 0 56px}
- .heroGrid{width:auto;grid-template-columns:1fr;gap:38px}
- .hero h1{font-size:clamp(2.5rem,8vw,4.3rem);line-height:1.02}
- .hero .lead{font-size:1rem;line-height:1.75}
- .mockWrap{max-width:440px;width:100%;margin:auto}
- .device{max-width:355px;transform:none!important}
- .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
- .downloadCard{align-items:flex-start;flex-direction:column}
- .product-story{padding:58px 0 64px}
- .story-head{margin-bottom:24px}
- .story-head h2{font-size:clamp(1.85rem,5.8vw,2.55rem);letter-spacing:-.055em}
- .story-head p{font-size:clamp(.9rem,2.5vw,1rem);line-height:1.7}
- .story-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
- .story-help{display:block;margin:9px 0 0;color:var(--muted);font-size:.8rem;line-height:1.55}
- .product-story .story-layout{display:flex;flex-direction:column;gap:20px}
- .product-story .story-stage-wrap{position:relative!important;top:auto!important;transform:none!important;width:100%}
- .product-story .story-stage{width:100%;max-width:100%;border-radius:18px;box-shadow:0 14px 38px #0004}
- .stage-content{min-width:0;padding:clamp(14px,3vw,20px)}
- .stage-top{gap:8px;padding:12px}
- .stage-brand{font-size:.78rem;gap:7px}
- .stage-live{font-size:.58rem;letter-spacing:.04em}
- .stage-title{font-size:clamp(1.4rem,4.8vw,1.9rem);letter-spacing:-.045em;line-height:1.12}
- .stage-description{font-size:.86rem;line-height:1.6}
- .stage-window{margin-top:16px;border-radius:13px}
- .stage-windowbar{height:auto;min-height:37px;flex-wrap:wrap;padding:9px 10px;font-size:.64rem;overflow-wrap:anywhere}
- .stage-files{min-height:150px;grid-template-columns:minmax(78px,.72fr) minmax(0,1.28fr)}
- .stage-tree{padding:11px 7px;font-size:.63rem;line-height:1.9}
- .stage-tree span{padding-left:4px}
- .stage-editor{padding:11px 8px;font-size:.63rem;line-height:1.9}
- .stage-editor .line-no{width:14px}
- .stage-footer{gap:8px;flex-wrap:wrap;padding:9px 10px;font-size:.62rem}
- .story-steps{
-   display:flex;flex-direction:row;gap:12px;
-   width:calc(100% + 28px);margin-left:-14px;padding:0 14px 14px;
-   overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
-   scroll-snap-type:x mandatory;scroll-padding-inline:14px;
-   -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#9be7b566 #ffffff10
- }
- .story-step{
-   flex:0 0 min(86%,440px);min-width:0;min-height:0;
-   padding:20px 18px 22px;border:1px solid #ffffff18;border-radius:16px;
-   background:linear-gradient(145deg,#111a14,#090d0b);
-   scroll-snap-align:start;opacity:.68;
-   transition:opacity .25s ease,border-color .25s ease
- }
- .story-step:last-child{border-bottom:1px solid #ffffff18}
- .story-step.is-active{opacity:1;border-color:#9be7b566}
- .story-step-number{font-size:.9rem}
- .story-step h3{font-size:clamp(1.45rem,4.8vw,1.8rem);margin:12px 0 10px;overflow-wrap:break-word}
- .story-step p{max-width:none;font-size:.92rem;line-height:1.75;overflow-wrap:break-word}
- .story-step .step-note{margin-top:16px}
-}
-@media(max-width:560px){
- .wrap{width:min(100% - 28px,var(--max))}
- .navinner{min-height:64px}
- .nav-toggle{width:44px;padding:0}
- .nav-toggle .menu-label{display:none}
- .links .button{min-height:42px;padding:0 10px;font-size:.75rem}
- .brand{gap:9px;font-size:1.05rem}
- .mark{width:36px;height:36px}
- .hero{padding:48px 0 48px}
- .hero h1{font-size:clamp(2.45rem,11.8vw,3.35rem);letter-spacing:-.065em}
- .hero .actions .button{width:100%;min-height:46px}
- .grid3,.steps{grid-template-columns:1fr}
- .feature{min-height:unset;padding:23px}
- section{padding:62px 0}
- .product-story{padding:48px 0 52px}
- .story-head h2{font-size:clamp(1.75rem,7.5vw,2.15rem);line-height:1.12}
- .story-head p{font-size:.94rem}
- .story-controls{gap:7px}
- .story-controls button{flex:1 1 auto;min-width:0;padding:0 10px;font-size:.78rem}
- .story-help{font-size:.78rem}
- .stage-content{padding:12px}
- .stage-top{padding:10px}
- .stage-brand{font-size:.7rem;gap:6px}
- .stage-brand-mark{flex:0 0 27px}
- .stage-live{font-size:.53rem;letter-spacing:.025em}
- .stage-caption{font-size:.61rem}
- .stage-title{font-size:1.35rem;line-height:1.12}
- .stage-description{font-size:.79rem;line-height:1.55}
- .stage-files{min-height:136px;grid-template-columns:minmax(70px,.7fr) minmax(0,1.3fr)}
- .stage-tree,.stage-editor{font-size:.58rem;line-height:1.85}
- .stage-tree{padding:9px 5px}
- .stage-editor{padding:9px 5px}
- .stage-editor .line-no{width:12px}
- .stage-windowbar{padding:8px;font-size:.59rem}
- .stage-footer{padding:8px;font-size:.58rem}
- .story-step{flex-basis:88%;padding:18px 16px 20px}
- .story-step-number{font-size:.8rem}
- .story-step h3{font-size:1.42rem}
- .story-step p{font-size:.88rem;line-height:1.7}
- .downloadCard{padding:24px}
- .downloadActions{width:100%}
- .downloadActions .button{width:100%}
- .footinner{align-items:flex-start;flex-direction:column}
-}
-@media(prefers-reduced-motion:reduce){
- html{scroll-behavior:auto!important}
- .product-story .story-stage-wrap{transform:none}
- .story-step,.story-controls button{transition:none!important}
- .story-stage [data-scene-content]{animation:none!important}
-}
-
-/* Mobile polish: keep all hero copy inside the viewport and make steps feel deliberate */
-@media(max-width:820px){
- .wrap.heroGrid{width:min(100% - 32px,var(--max));margin-inline:auto}
- .hero{padding:clamp(42px,7vw,58px) 0 48px}
- .heroGrid{gap:30px;min-width:0}
- .heroGrid>div:first-child{min-width:0;width:100%}
- .hero h1{max-width:100%;font-size:clamp(2.55rem,8.5vw,3.7rem);line-height:1.03;letter-spacing:-.06em;overflow-wrap:normal}
- .hero .eyebrow{max-width:100%;font-size:.76rem}
- .hero .lead{max-width:36rem;font-size:.98rem;line-height:1.75}
- .hero .actions{gap:10px;margin:22px 0 18px}
- .hero .trust{gap:10px 14px;font-size:.81rem}
- .story-head.sectionhead{margin-bottom:22px}
- .story-head .kicker{font-size:.75rem}
- .story-head h2{max-width:19ch;font-size:clamp(1.8rem,6.4vw,2.35rem);line-height:1.12;letter-spacing:-.05em;text-wrap:balance}
- .story-head>p:not(.story-help){font-size:.96rem;line-height:1.72}
- .story-controls{gap:8px;margin-top:18px}
- .story-controls button{min-height:46px;padding:0 15px;border-radius:999px;font-size:.85rem;white-space:nowrap}
- .story-controls button[aria-pressed="true"]{box-shadow:inset 0 0 0 1px #9be7b51c,0 6px 18px #3dba7a12}
- .story-help{margin-top:10px;font-size:.82rem;line-height:1.6}
- .product-story .story-layout{gap:18px}
- .product-story .story-stage{overflow:hidden}
- .stage-content{padding:clamp(14px,3.6vw,20px)}
- .stage-title{font-size:clamp(1.45rem,4.7vw,1.8rem);line-height:1.16}
- .stage-description{font-size:.89rem;line-height:1.7}
- .story-step{flex-basis:min(88%,460px);padding:22px 20px 24px}
-}
-@media(max-width:560px){
- .wrap.heroGrid{width:calc(100% - 32px)}
- .hero{padding-top:40px;padding-bottom:42px}
- .hero h1{font-size:clamp(2.55rem,10.5vw,3.35rem);letter-spacing:-.065em}
- .hero .eyebrow{padding:6px 10px;font-size:.72rem}
- .hero .lead{font-size:.94rem}
- .hero .actions .button{min-height:48px}
- .hero .trust{font-size:.78rem}
- .story-head h2{font-size:clamp(1.75rem,7vw,2.15rem)}
- .story-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
- .story-controls button{justify-content:center;gap:6px;min-width:0;padding:0 8px;font-size:.78rem}
- .stage-top{gap:7px}
- .stage-live{white-space:normal;text-align:right}
- .stage-files{grid-template-columns:minmax(66px,.7fr) minmax(0,1.3fr)}
- .story-step{flex-basis:88%;padding:20px 17px 22px}
-}
-
-/* Desktop composition: balanced columns and a preview that follows the selected step */
-@media(min-width:821px) and (pointer:fine){
- .product-story .story-layout{
-   display:grid;
-   grid-template-columns:minmax(0,1fr) minmax(340px,.94fr);
-   align-items:start;
-   gap:clamp(36px,5.2vw,84px);
- }
- .product-story .story-stage-wrap{
-   position:sticky;
-   top:clamp(88px,12vh,136px);
-   width:100%;
-   max-width:620px;
-   margin-inline:auto;
-   align-self:start;
- }
- .product-story .story-stage{
-   width:100%;
-   max-width:100%;
- }
- .product-story .story-steps{
-   min-width:0;
-   display:flex;
-   flex-direction:column;
-   gap:clamp(26px,4vh,44px);
- }
- .product-story .story-step{
-   min-width:0;
-   padding:clamp(24px,3vw,38px);
- }
- .product-story .story-step h3{font-size:clamp(1.55rem,2.2vw,2.25rem);line-height:1.12}
- .product-story .story-step p{max-width:44ch;line-height:1.8}
- .story-controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
- .story-controls button{min-height:46px;padding-inline:16px}
- .story-help{display:none}
-}
-@media(min-width:821px) and (max-width:1100px){
- .product-story .story-layout{grid-template-columns:minmax(0,.95fr) minmax(0,1fr);gap:28px}
- .product-story .story-stage-wrap{top:100px}
- .product-story .story-step{padding:22px}
-}
-
-/* Final desktop layout pass: keep the hero artwork beside the headline. */
-@media (min-width: 821px) {
-  .hero .heroGrid {
-    grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
-    align-items: center;
-    gap: clamp(36px, 5vw, 72px);
-  }
-  .hero .heroGrid > :first-child { min-width: 0; }
-  .hero .mockWrap {
-    width: 100%;
-    max-width: 520px;
-    justify-self: end;
-    margin: 0;
-  }
-}
-@media (min-width: 821px) and (max-width: 1050px) {
-  .hero .heroGrid { grid-template-columns: minmax(0, 1fr) minmax(300px, .88fr); gap: 30px; }
-  .hero .device { transform: scale(.92); transform-origin: center right; }
-}
-
-
-/* Blockline identity: a stepped path mark, not a letter badge */
-.mark{background:var(--green);color:#07130b;display:grid;place-items:center}
-.mark svg,.stage-brand-mark svg{width:72%;height:72%;display:block;fill:#07130b}
-.mark svg .mark-accent,.stage-brand-mark svg .mark-accent{fill:#e6b35a}
-.stage-brand-mark{display:grid;place-items:center}
-.featureIcon svg{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-
-/* Viewport-aware rendering and motion: keep off-screen sections cheap. */
-@supports (content-visibility: auto) {
-  main > section:not(.hero):not(.product-story) {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 720px;
-  }
-  footer {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 120px;
-  }
-}
-.hero .eyebrow,
-.hero h1,
-.hero .lead,
-.hero .actions,
-.hero .trust,
-.device,
-.glow {
-  animation-play-state: paused !important;
-}
-.hero .eyebrow.in-viewport,
-.hero h1.in-viewport,
-.hero .lead.in-viewport,
-.hero .actions.in-viewport,
-.hero .trust.in-viewport,
-.device.in-viewport,
-.glow.in-viewport {
-  animation-play-state: running !important;
-}
-.glow { will-change: auto; }
-.glow.in-viewport { will-change: opacity, transform; }
-.story-stage:not(.in-viewport) [data-scene-content] {
-  animation-play-state: paused !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  main > section:not(.hero):not(.product-story),
-  footer {
-    content-visibility: visible;
-  }
-  .hero .eyebrow,
-  .hero h1,
-  .hero .lead,
-  .hero .actions,
-  .hero .trust,
-  .device,
-  .glow {
-    animation: none !important;
-    will-change: auto !important;
-  }
-}
-
-</style>
-<style>
-/* Keep interaction calm and predictable; content should lead the page. */
-.language-toggle{flex:0 0 auto;min-height:40px;padding:0 13px;border:1px solid #ffffff22;border-radius:999px;background:transparent;color:var(--text);font:inherit;font-size:.84rem;font-weight:650;cursor:pointer}
-.language-toggle:hover{border-color:#9be7b580;background:#9be7b50c}
-@media(max-width:820px){.language-toggle{margin-left:auto;min-height:38px;padding:0 11px;font-size:.8rem}.navinner{gap:10px}}
-@media(max-width:560px){.navinner{gap:8px}.language-toggle{padding:0 9px}.nav-toggle{padding-inline:11px}}
-/* Remove scroll-linked parallax and oversized reveal movements. */
-.nav::after{display:none}
-.hero{min-height:0;display:block}
-.hero .eyebrow,.hero h1,.hero .lead,.hero .actions,.hero .trust{animation:none!important;transition:none!important;will-change:auto}
-.device{animation:none!important;will-change:auto}
-.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{transform:translate3d(0,8px,0);transition:opacity .28s ease,transform .28s ease;transition-delay:var(--reveal-delay,0ms);will-change:auto}
-.reveal.is-visible{transform:translate3d(0,0,0)}
-.feature,.feature:hover,.step,.step:hover{transform:none;box-shadow:none}
-.feature::before,.feature::after{display:none}
-.story-step{transition:opacity .2s ease}
-@media(prefers-reduced-motion:reduce){.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{opacity:1;transform:none;transition:none}}
-
-/* Keep the signature visible, with motion and decoration in the background. */
-:root{--bg:#080b0a;--panel:#101512;--panel2:#151d18;--line:#2c3930;--text:#f3f6f2;--muted:#a1ada4;--green:#9be7b5;--green2:#b8f3cb;--amber:#e6b35a}
-body{background:#080b0a;background-image:none;background-attachment:scroll}
-.hero::before{display:none}
-.glow{background:#9be7b509;filter:blur(54px);animation:none}
-.button::after{display:none}
-.device{transform:none;animation:none;box-shadow:0 24px 60px #0007;border-color:#ffffff20}
-.feature{background:#101512;border-color:#ffffff14;border-radius:14px;min-height:205px}
-.feature:hover,.step:hover{transform:none;box-shadow:none}
-.featureIcon{background:#9be7b509;border:1px solid #9be7b51a;color:var(--green)}
-.featureIcon svg{width:22px;height:22px}
-.feature::before,.feature::after{display:none}
-.band{background:#0c110d;border-block-color:#ffffff10}
-.downloadCard{background:#101512;border-color:#34473a;box-shadow:none}
-.downloadCard:hover{box-shadow:none}
-.product-story{background:#0b100d;border-block-color:#ffffff10}
-.story-stage{background:#0d130f;box-shadow:0 20px 55px #0005}
-@media(min-width:821px){#features .feature:nth-child(3n + 2),#features .feature:nth-child(3n + 2).is-visible{transform:none}}
-@media(prefers-reduced-motion:reduce){.feature,.story-step,.downloadCard{transition:none}}
-
-</style>
-<style id="stability-polish">
-/* Fail-open progressive enhancement: page content is visible without working JS. */
-.reveal,
-.reveal[data-reveal="left"],
-.reveal[data-reveal="right"],
-.reveal[data-reveal="scale"] {
-  opacity: 1;
-  transform: none;
-  transition: none;
-  will-change: auto;
-}
-html.reveal-motion-ready .reveal:not(.is-visible),
-html.reveal-motion-ready .reveal[data-reveal="left"]:not(.is-visible),
-html.reveal-motion-ready .reveal[data-reveal="right"]:not(.is-visible),
-html.reveal-motion-ready .reveal[data-reveal="scale"]:not(.is-visible) {
-  opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition: opacity .32s ease, transform .38s ease;
-  transition-delay: var(--reveal-delay, 0ms);
-}
-html.reveal-motion-ready .reveal.is-visible,
-html.reveal-motion-ready .reveal[data-reveal="left"].is-visible,
-html.reveal-motion-ready .reveal[data-reveal="right"].is-visible,
-html.reveal-motion-ready .reveal[data-reveal="scale"].is-visible {
-  opacity: 1;
-  transform: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  html.reveal-motion-ready .reveal,
-  html.reveal-motion-ready .reveal:not(.is-visible),
-  html.reveal-motion-ready .reveal.is-visible {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
-/* Blockline's signature: restrained editor-grid details and clear emerald accents. */
-.story-stage {
-  background-image:
-    linear-gradient(#9be7b50a 1px, transparent 1px),
-    linear-gradient(90deg, #9be7b50a 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-.story-stage .stage-content {
-  background: linear-gradient(145deg, #0d130fef, #0d130fe0);
-  border: 1px solid #9be7b51c;
-  border-radius: 14px;
-}
-.sectionhead .kicker,
-.story-head .kicker,
-.downloadCard .kicker {
-  color: var(--amber);
-}
-.feature,
-.step {
-  border-color: #9be7b51b;
-}
-@media (hover: hover) and (pointer: fine) {
-  .feature:hover,
-  .step:hover {
-    border-color: #9be7b56b;
-    background-color: #101712;
-  }
-}
-
-/* Restore Blockline's signature ambient glow and subtle motion. */
-body {
-  background-color: #080b0a;
-  background-image:
-    radial-gradient(ellipse at 76% 12%, rgba(35, 82, 51, .52) 0, transparent 36%),
-    radial-gradient(ellipse at 0% 46%, rgba(18, 44, 29, .34) 0, transparent 30%);
-  background-attachment: fixed;
-}
-.glow {
-  background: #58c98217;
-  filter: blur(88px);
-}
-.nav::after { display: block; }
-.button::after { display: block; }
-.story-stage {
-  background:
-    radial-gradient(ellipse at 50% 0%, #24463166, transparent 60%),
-    linear-gradient(145deg, #111a14, #080b09);
-  border-color: #ffffff20;
-  box-shadow: 0 22px 58px #0006;
-}
-.story-stage[data-scene="0"] [data-scene-content="0"],
-.story-stage[data-scene="1"] [data-scene-content="1"],
-.story-stage[data-scene="2"] [data-scene-content="2"] {
-  animation: scene-enter .35s var(--ease-out) both !important;
-}
-.feature::before {
-  display: block;
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(130deg, #b8f3cb0c, transparent 48%);
-  opacity: 0;
-  transition: opacity .35s ease;
-  pointer-events: none;
-}
-.feature:hover::before { opacity: 1; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .hero .eyebrow { animation: fade-up .7s var(--ease-out) both !important; }
-  .hero h1 { animation: fade-up .85s .08s var(--ease-out) both !important; }
-  .hero .lead { animation: fade-up .85s .16s var(--ease-out) both !important; }
-  .hero .actions { animation: fade-up .85s .23s var(--ease-out) both !important; }
-  .hero .trust { animation: fade-up .85s .3s var(--ease-out) both !important; }
-  .device {
-    animation: device-enter .9s .1s var(--ease-out) both !important;
-    transform-origin: center;
-  }
-  .glow { animation: glow-pulse 7s ease-in-out infinite alternate; }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .feature, .step {
-    transition: transform .28s var(--ease-out), border-color .28s ease, box-shadow .28s ease;
-  }
-  .feature:hover {
-    transform: translateY(-4px);
-    border-color: #45634e;
-    box-shadow: 0 18px 40px #0003;
-  }
-  .feature:hover .featureIcon { transform: translateY(-2px) rotate(-4deg); }
-  .step:hover { transform: translateY(-3px); border-color: #45634e; }
-  .downloadCard { transition: border-color .3s ease, box-shadow .3s ease; }
-  .downloadCard:hover { border-color: #54815f; box-shadow: 0 20px 60px #0003; }
-}
-@media (max-width: 820px) {
-  body { background-attachment: scroll; }
-  .glow { filter: blur(62px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  body { background-attachment: scroll; }
-  .hero .eyebrow, .hero h1, .hero .lead, .hero .actions, .hero .trust, .device, .glow {
-    animation: none !important;
-    transition: none !important;
-  }
-  .feature:hover, .step:hover { transform: none !important; }
-}
-
-</style>
-<style id="viewport-motion-guard">
-/* Pause decorative motion outside the viewport without changing document flow. */
-@media (prefers-reduced-motion: no-preference) {
-  .hero .eyebrow:not(.in-viewport),
-  .hero h1:not(.in-viewport),
-  .hero .lead:not(.in-viewport),
-  .hero .actions:not(.in-viewport),
-  .hero .trust:not(.in-viewport),
-  .device:not(.in-viewport),
-  .glow:not(.in-viewport) {
-    animation-play-state: paused !important;
-  }
-  .hero .eyebrow.in-viewport,
-  .hero h1.in-viewport,
-  .hero .lead.in-viewport,
-  .hero .actions.in-viewport,
-  .hero .trust.in-viewport,
-  .device.in-viewport,
-  .glow.in-viewport {
-    animation-play-state: running !important;
-  }
-  .story-stage:not(.in-viewport)[data-scene] [data-scene-content] {
-    animation-play-state: paused !important;
-  }
-  .story-stage.in-viewport[data-scene] [data-scene-content] {
-    animation-play-state: running !important;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero .eyebrow,
-  .hero h1,
-  .hero .lead,
-  .hero .actions,
-  .hero .trust,
-  .device,
-  .glow,
-  .story-stage [data-scene-content] {
-    animation: none !important;
-    transition: none !important;
-    will-change: auto !important;
-  }
-}
-</style>
-
-<style id="premium-motion-refresh">
-/* Premium motion pass: layered light, restrained depth, and clear interaction feedback. */
-:root{
-  --motion-spring:cubic-bezier(.16,1,.3,1);
-  --motion-smooth:cubic-bezier(.2,.75,.25,1);
-}
-::selection{background:#9be7b54a;color:#f7fff9}
-:focus-visible{outline:2px solid var(--green2);outline-offset:4px}
-.nav{isolation:isolate}
-.nav::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,#9be7b508,transparent 38%,#9be7b505)}
-.brand{transition:opacity .25s ease,transform .35s var(--motion-spring)}
-.brand:hover{opacity:.92;transform:translateY(-1px)}
-.mark{position:relative;isolation:isolate;overflow:hidden}
-.mark::after{content:"";position:absolute;inset:-70% -35%;background:linear-gradient(110deg,transparent 38%,#ffffff7a 50%,transparent 62%);transform:translateX(-100%) rotate(14deg);transition:transform .8s var(--motion-spring);pointer-events:none}
-.brand:hover .mark::after{transform:translateX(100%) rotate(14deg)}
-.hero{isolation:isolate}
-.hero::after{content:"";position:absolute;z-index:-1;pointer-events:none;width:min(58vw,760px);aspect-ratio:1;right:-15%;top:3%;border-radius:50%;background:radial-gradient(circle,#6de49a12 0%,#4cae7910 30%,transparent 68%);filter:blur(14px);animation:hero-aurora 13s ease-in-out infinite alternate}
-.hero::before{opacity:.28;background-size:64px 64px;mask-image:radial-gradient(ellipse at 55% 28%,#000 0%,transparent 72%)}
-.hero .eyebrow{backdrop-filter:blur(10px);box-shadow:inset 0 1px #ffffff0c,0 8px 35px #0002}
-.hero .dot{box-shadow:0 0 0 4px #9be7b514,0 0 18px #9be7b56b;animation:status-pulse 3s ease-in-out infinite}
-h1{text-wrap:balance}
-.lead{ text-wrap:pretty}
-.actions .button{transition:transform .35s var(--motion-spring),background .25s ease,border-color .25s ease,box-shadow .35s ease}
-.actions .primary:hover{transform:translateY(-3px);box-shadow:0 12px 36px #9be7b526}
-.actions .secondary:hover{transform:translateY(-3px);border-color:#9be7b55e;background:#9be7b50a}
-.trust span{transition:color .25s ease}
-.trust span:hover{color:var(--text)}
-.mockWrap::before,.mockWrap::after{content:"";position:absolute;pointer-events:none;border:1px solid #9be7b512;border-radius:50%;aspect-ratio:1;z-index:0}
-.mockWrap::before{width:112%;left:-6%;top:7%;transform:rotate(-22deg) scaleY(.34);animation:orbit-breathe 9s ease-in-out infinite}
-.mockWrap::after{width:100%;left:0;top:14%;transform:rotate(32deg) scaleY(.28);border-color:#9be7b50b;animation:orbit-breathe 11s 1s ease-in-out infinite reverse}
-.device{z-index:1;transition:transform .65s var(--motion-spring),box-shadow .5s ease}
-.mockWrap:hover .device{transform:rotateY(-2deg) rotateX(1deg) translateY(-5px);box-shadow:0 52px 130px #000c,0 0 50px #9be7b50b}
-.glow{pointer-events:none}
-.sectionhead h2{ text-wrap:balance}
-.sectionhead p{ text-wrap:pretty}
-.feature{transform:translateZ(0);isolation:isolate}
-.feature::before{background:radial-gradient(ellipse at 0 0,#9be7b512,transparent 66%),linear-gradient(135deg,#ffffff06,transparent 55%)}
-.feature:hover{border-color:#9be7b548;box-shadow:0 24px 60px #0005,0 0 0 1px #9be7b508;transform:translateY(-6px)}
-.featureIcon{transition:transform .45s var(--motion-spring),background .3s ease,border-color .3s ease}
-.feature:hover .featureIcon{transform:translateY(-3px) scale(1.04);border-color:#9be7b536}
-.step{position:relative}
-.step::after{content:"";display:block;height:1px;width:0;margin-top:18px;background:linear-gradient(90deg,var(--green),transparent);transition:width .55s var(--motion-spring)}
-.step:hover::after{width:100%}
-.downloadCard{position:relative;isolation:isolate;overflow:hidden}
-.downloadCard::after{content:"";position:absolute;z-index:-1;right:-12%;top:-80%;width:52%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#9be7b512,transparent 68%);transition:transform .8s var(--motion-spring)}
-.downloadCard:hover::after{transform:translate(-10%,18%) scale(1.18)}
-.story-stage{transition:border-color .4s ease,box-shadow .4s ease}
-.story-stage:hover{border-color:#9be7b532;box-shadow:0 35px 100px #0008,0 0 55px #9be7b507}
-.story-controls button{transition:transform .35s var(--motion-spring),border-color .25s ease,background .25s ease,color .25s ease}
-.story-controls button:hover{transform:translateX(4px)}
-a,button{-webkit-tap-highlight-color:transparent}
-@keyframes hero-aurora{0%{transform:translate3d(0,0,0) scale(.94);opacity:.65}100%{transform:translate3d(-5%,5%,0) scale(1.08);opacity:1}}
-@keyframes status-pulse{0%,100%{box-shadow:0 0 0 4px #9be7b514,0 0 12px #9be7b52b}50%{box-shadow:0 0 0 6px #9be7b508,0 0 22px #9be7b56b}}
-@keyframes orbit-breathe{0%,100%{opacity:.42}50%{opacity:.9}}
-@media(max-width:820px){
- .hero::after{width:100vw;right:-35%;top:0;opacity:.65}
- .mockWrap::before{width:112%;left:-6%;top:10%}
- .mockWrap::after{width:100%;left:0;top:16%}
- .mockWrap:hover .device{transform:none}
- .feature:hover{transform:none;box-shadow:none}
- .story-controls button:hover{transform:none}
-}
-@media(prefers-reduced-motion:reduce){
- .hero::after,.hero .dot,.mockWrap::before,.mockWrap::after{animation:none!important}
- .brand,.mark::after,.actions .button,.device,.feature,.featureIcon,.step::after,.downloadCard::after,.story-stage,.story-controls button{transition:none!important}
- .mockWrap:hover .device,.brand:hover,.feature:hover,.story-controls button:hover{transform:none!important}
-}
-</style>
-
-
-<style id="blockline-experience-polish">
-:root{--bl-ease:cubic-bezier(.2,.8,.2,1);--bl-reveal-distance:18px}
-html{scrollbar-gutter:stable}
-body{overflow-x:clip}
-::selection{background:#8ce0b244;color:#f7fff9}
-#blockline-scroll-progress{position:fixed;inset:0 auto auto 0;width:100%;height:2px;z-index:9999;pointer-events:none;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,#3dba7a,#8ce0b2 65%,#d4f7df);box-shadow:0 0 12px #8ce0b244;opacity:0;transition:opacity .25s ease}
-#blockline-scroll-progress.is-active{opacity:1}
-a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--green2);outline-offset:4px}
-@media(prefers-reduced-motion:no-preference){
- [data-bl-reveal]{opacity:0;transform:translate3d(0,var(--bl-reveal-distance),0);transition:opacity .65s var(--bl-ease),transform .65s var(--bl-ease);transition-delay:var(--bl-reveal-delay,0ms)}
- [data-bl-reveal].is-revealed{opacity:1;transform:translate3d(0,0,0)}
- .sectionhead[data-bl-reveal]{--bl-reveal-distance:12px}
- .feature[data-bl-reveal],.step[data-bl-reveal]{--bl-reveal-distance:14px}
-}
-@media(prefers-reduced-motion:reduce){
- #blockline-scroll-progress{transition:none}
- [data-bl-reveal]{opacity:1!important;transform:none!important;transition:none!important}
-}
-@media(max-width:600px){
- #blockline-scroll-progress{height:2px}
- .wrap{width:min(var(--max),calc(100% - 32px))}
-}
-/* Responsive composition: desktop, compact laptop/tablet, and phone are tuned separately. */
-@media (min-width: 1101px) {
-  .wrap { width: min(var(--max), calc(100% - 64px)); }
-  .heroGrid { grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr); gap: clamp(52px, 6vw, 88px); }
-  .product-story .story-layout { grid-template-columns: minmax(0, 1.08fr) minmax(360px, .82fr); }
-}
-@media (min-width: 821px) and (max-width: 1100px) {
-  .wrap { width: min(var(--max), calc(100% - 48px)); }
-  .hero { padding-block: 76px 68px; }
-  .heroGrid { grid-template-columns: minmax(0, 1fr) minmax(300px, .82fr); gap: 34px; }
-  h1 { font-size: clamp(3rem, 5.3vw, 4.4rem); }
-  .links { gap: 18px; }
-  .product-story .story-layout { grid-template-columns: minmax(0, 1fr) minmax(290px, .86fr); gap: 34px; }
-}
-/* Phone header prioritizes the brand and controls; the download action lives in the opened menu. */
-@media (max-width: 820px) {
-  .navinner { display: flex; flex-wrap: nowrap; }
-  .brand { flex: 0 1 auto; min-width: 0; }
-  .language-toggle { flex: 0 0 auto; }
-  .nav-toggle { flex: 0 0 44px; }
-  .links .button { display: none; }
-  .nav.is-menu-open .links .button {
-    display: inline-flex;
-    width: 100%;
-    min-height: 46px;
-    margin-top: 4px;
-    white-space: normal;
-  }
-  .nav.is-menu-open .links { max-height: min(75vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
-  .heroGrid, .story-layout, .grid3, .steps { min-width: 0; }
-  .mockWrap, .device, .screen { max-width: 100%; min-width: 0; }
-}
-@media (max-width: 380px) {
-  .wrap, .wrap.heroGrid { width: calc(100% - 24px); }
-  .navinner { gap: 7px; }
-  .brand { gap: 7px; font-size: .98rem; }
-  .mark { width: 32px; height: 32px; }
-  .language-toggle { min-height: 36px; padding-inline: 7px; font-size: .72rem; }
-  .nav-toggle { width: 40px; flex-basis: 40px; min-height: 40px; }
-  .hero h1 { font-size: clamp(2.25rem, 10.8vw, 2.7rem); }
-  .trust { gap: 8px 12px; }
-  .stage-files { grid-template-columns: minmax(64px, .7fr) minmax(0, 1.3fr); }
-}
-@media (prefers-reduced-motion: reduce) {
-  #blockline-scroll-progress { display: none; }
-}
-
-</style>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101612">
+  <meta name="description" content="Blockline là ứng dụng Android giúp mở, chỉnh sửa, kiểm tra và xuất add-on/resource pack Minecraft Bedrock ngay trên điện thoại.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Blockline — Làm chủ pack. Ngay trên điện thoại.">
+  <meta property="og:description" content="Mở, chỉnh sửa, kiểm tra và xuất pack Minecraft Bedrock ngay trên Android.">
+  <meta property="og:site_name" content="Blockline">
+  <meta property="og:url" content="https://slgamervn.github.io/Blockline/">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://slgamervn.github.io/Blockline/">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <title>Blockline — Làm chủ pack. Ngay trên điện thoại.</title>
+  <script src="assets/js/main.js" defer></script>
 </head>
 <body>
-<header class="nav"><div class="wrap navinner">
-<a class="brand" href="#" aria-label="Blockline home"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span><span>Blockline</span></a>
-<button class="nav-toggle" type="button" aria-controls="site-links" aria-expanded="false"><span class="menu-icon" aria-hidden="true">☰</span><span class="menu-label">Menu</span></button>
-<button class="language-toggle" type="button" data-language-toggle aria-label="Switch language">Tiếng Việt</button>
-<nav class="links" id="site-links" aria-label="Main navigation"><a href="#features">Features</a><a href="#workflow">How it works</a><a href="https://github.com/slgamervn/Blockline">Source</a><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a></nav>
-</div></header>
-<main>
-<section class="hero"><div class="wrap heroGrid">
-<div>
-<div class="eyebrow"><span class="dot"></span> ANDROID STUDIO · EARLY ACCESS</div>
-<h1>Your Bedrock workflow.<br><em>Built for mobile.</em></h1>
-<p class="lead">A focused workspace for Minecraft Bedrock add-on creators. Bring your packs in, navigate their files, edit code, and export — right from your Android device.</p>
-<div class="actions"><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Get Blockline for Android</a><a class="button secondary" href="https://github.com/slgamervn/Blockline">⌘ Explore source code</a></div>
-<div class="trust"><span><b class="check">✓</b> Local-first projects</span><span><b class="check">✓</b> No account required</span><span><b class="check">✓</b> Core tools work offline</span></div>
-</div>
-<div class="mockWrap" aria-label="Illustration of the Blockline mobile interface"><div class="glow"></div><div class="device"><div class="screen">
-<div class="status"><span>9:41</span><span>● ● ▰</span></div>
-<div class="apphead"><span class="appname">Blockline <span style="color:var(--green)">.</span></span><span class="pill">APP PREVIEW</span></div>
-<div class="screenbody"><div class="screenlabel">Your workspace</div><div class="screenTitle">Projects</div>
-<div class="miniCard"><div class="miniTop"><div class="fileIcon">▧</div><div><div class="mininame">Survival Pack</div><div class="minisub">Behavior Pack · example</div></div><span class="tag">EXAMPLE</span></div></div>
-<div class="miniCard"><div class="miniTop"><div class="fileIcon">◇</div><div><div class="mininame">Custom Textures</div><div class="minisub">Resource Pack · example</div></div></div></div>
-<div class="screenlabel" style="margin-top:22px">Quick edit</div><div class="code"><span class="k">import</span> { world } <span class="k">from</span> <span class="s">"@minecraft/server"</span>;<br><br>world.afterEvents.worldLoad<br>&nbsp; .subscribe(() =&gt; {<br>&nbsp;&nbsp; world.sendMessage(<span class="s">"Ready!"</span>);<br>});</div>
-</div><div class="tabbar"><span>▦ Projects</span><b>▤ Explorer</b><span>⌕ Search</span><span>⚒ Tools</span><span>⋯ More</span></div>
-</div></div></div>
-</div></section>
-<section class="product-story" id="product-story" aria-labelledby="story-title">
-  <div class="wrap">
-    <div class="story-head sectionhead">
-      <div class="kicker">One workspace. Every step.</div>
-      <h2 id="story-title">Your pack, from archive to finished build.</h2>
-      <p>Explore the three stages of a local pack workflow. On desktop, scroll alongside the preview; on mobile, swipe between steps.</p>
-      <div class="story-controls" role="group" aria-label="Choose a workflow stage">
-        <button type="button" data-story-go="0" aria-label="Show step 1: Import" aria-pressed="true"><span>01</span> Import</button>
-        <button type="button" data-story-go="1" aria-label="Show step 2: Edit" aria-pressed="false"><span>02</span> Edit</button>
-        <button type="button" data-story-go="2" aria-label="Show step 3: Export" aria-pressed="false"><span>03</span> Export</button>
+  <a class="skip-link" href="#main">Bỏ qua đến nội dung</a>
+  <header class="site-header" id="top">
+    <div class="header-inner wrap">
+      <a class="brand" href="#top" aria-label="Blockline — về đầu trang">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 5h22v5H10v17H5z"/><path d="M14 14h13v5h-8v8h-5z"/></svg></span>
+        <span>blockline<span class="brand-period">.</span></span>
+      </a>
+      <nav class="desktop-nav" aria-label="Điều hướng chính">
+        <a href="#features">Tính năng</a><a href="#demo">Trải nghiệm</a><a href="#roadmap">Lộ trình</a><a href="#faq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <button class="theme-toggle icon-button" type="button" aria-label="Chuyển giao diện sáng hoặc tối" title="Chuyển giao diện"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></button>
+        <a class="button button-small button-primary header-download" href="Blockline.apk" download>Tải APK <span aria-hidden="true">↗</span></a>
+        <button class="menu-toggle icon-button" type="button" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
       </div>
-      <p class="story-help">Swipe the cards below, or tap a step to jump directly.</p>
     </div>
-    <div class="story-layout">
-      <div class="story-stage-wrap">
-        <div class="story-stage" id="story-stage" data-scene="0" aria-live="polite">
-          <div class="stage-top"><div class="stage-brand"><span class="stage-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span> Blockline <span style="color:#6f8274;font-weight:500">/ Studio</span></div><span class="stage-live">APP PREVIEW</span></div>
-          <div class="stage-content">
-            <div class="stage-caption" id="stage-caption">01 / Import</div>
-            <div class="stage-title" id="stage-title">Start with your pack.</div>
-            <p class="stage-description" id="stage-description">Bring an existing Bedrock archive into a workspace on your device.</p>
-            <div class="stage-window">
-              <div class="stage-windowbar"><i></i><i></i><i></i><span class="stage-path" id="stage-path">workspace / projects</span></div>
-              <div class="stage-files">
-                <div class="stage-tree" data-scene-content="0"><span>▾ projects</span><span class="selected">↳ survival.mcaddon</span><span>↳ textures.mcpack</span><span>↳ backups</span></div>
-                <div class="stage-editor" data-scene-content="0"><span class="line-no">✓</span><span class="syntax">Archive selected</span><br><span class="line-no">✓</span>Files extracted<br><span class="line-no">✓</span>Pack manifest<br><span class="line-no">✓</span><span class="string">Ready to inspect</span><br><br><span class="comment">Open the files →</span></div>
-                <div class="stage-tree" data-scene-content="1"><span>▾ behavior_pack</span><span>▾ scripts</span><span class="selected">↳ main.js</span><span>↳ manifest.json</span><span>▸ entities</span></div>
-                <div class="stage-editor" data-scene-content="1"><span class="line-no">1</span><span class="syntax">import</span> { world }<br><span class="line-no">2</span><span class="syntax">from</span> <span class="string">"@minecraft/server"</span>;<br><span class="line-no">3</span><br><span class="line-no">4</span><span class="syntax">world</span>.afterEvents<br><span class="line-no">5</span> .worldLoad.subscribe(() =&gt; {<br><span class="line-no">6</span> &nbsp;<span class="comment">// your logic</span><br><span class="line-no">7</span>});</div>
-                <div class="stage-tree" data-scene-content="2"><span>▾ export</span><span class="selected">✓ manifest.json</span><span>✓ scripts/</span><span>✓ textures/</span><span>✓ pack_icon.png</span></div>
-                <div class="stage-editor" data-scene-content="2"><span class="line-no">✓</span><span class="syntax">Pack validation</span><br><span class="line-no">✓</span>Files collected<br><span class="line-no">✓</span>Structure preserved<br><span class="line-no">✓</span><span class="string">Ready to export</span><br><br><span class="comment">Output / MyAddon.mcaddon</span></div>
-              </div>
-              <div class="stage-footer"><span id="stage-footer-left">3 files detected</span><b id="stage-footer-right">IMPORT READY</b></div>
+  </header>
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Menu điều hướng điện thoại" aria-hidden="true" inert>
+    <div class="mobile-menu-top"><span class="menu-caption">BLOCKLINE / ĐIỀU HƯỚNG</span><button class="menu-close icon-button" type="button" aria-label="Đóng menu"><span></span><span></span></button></div>
+    <div class="mobile-menu-links"><a href="#features"><span>01</span>Tính năng</a><a href="#demo"><span>02</span>Trải nghiệm</a><a href="#roadmap"><span>03</span>Lộ trình</a><a href="#faq"><span>04</span>Câu hỏi thường gặp</a></div>
+    <a class="button button-primary mobile-menu-download" href="Blockline.apk" download>Tải Blockline APK <span aria-hidden="true">↗</span></a>
+    <p class="mobile-menu-note">Dành cho Android 8.0 trở lên · Phiên bản 0.1.0</p>
+  </nav>
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <a class="release-note" href="#download"><span class="release-dot"></span> Phiên bản 0.1.0 đã ra mắt <span aria-hidden="true">↗</span></a>
+        <p class="eyebrow">CÔNG CỤ LÀM PACK TRÊN ANDROID</p>
+        <h1 id="hero-title">Làm chủ pack.<br><span>Ngay trên điện thoại.</span></h1>
+        <p class="hero-lead">Mở, chỉnh sửa và chuẩn bị add-on Minecraft Bedrock ngay trên thiết bị Android. Từ cấu trúc thư mục đến những dòng JSON — tất cả trong một không gian làm việc gọn gàng.</p>
+        <div class="hero-actions"><a class="button button-primary" href="Blockline.apk" download>Tải APK <span aria-hidden="true">↗</span></a><a class="text-link" href="#demo">Khám phá cách hoạt động <span aria-hidden="true">↓</span></a></div>
+        <div class="hero-facts" aria-label="Thông tin sản phẩm"><span><b>0.1.0</b> Phiên bản</span><i></i><span><b>Android 8.0+</b> Yêu cầu</span><i></i><span><b>Offline</b> Dùng ngoại tuyến</span></div>
+      </div>
+      <div class="hero-visual" aria-label="Mô phỏng giao diện Blockline, không phải ảnh chụp ứng dụng thật">
+        <div class="visual-label"><span class="live-mark"></span> GIAO DIỆN MINH HỌA <span>01 / EDITOR</span></div>
+        <div class="phone">
+          <div class="phone-hardware"><span></span></div>
+          <div class="phone-screen">
+            <div class="phone-status"><span>9:41</span><span>●●● ▰</span></div>
+            <div class="app-toolbar"><span class="app-symbol">B</span><span class="app-toolbar-title">Blockline <small>WORKSPACE</small></span><span class="app-status">LOCAL</span></div>
+            <div class="project-heading"><span class="micro-label">ĐANG CHỈNH SỬA</span><h2>My Add-on</h2><p>behavior_pack / manifest.json</p></div>
+            <div class="editor-tabs"><span class="active-tab">manifest.json <b>×</b></span><span>main.js</span><span>+</span></div>
+            <div class="code-editor" aria-label="Ví dụ mã manifest JSON">
+              <div><span class="ln">1</span><span class="punct">{</span></div>
+              <div><span class="ln">2</span><span class="key">"format_version"</span><span class="punct">: </span><span class="num">2</span><span class="punct">,</span></div>
+              <div><span class="ln">3</span><span class="key">"header"</span><span class="punct">: {</span></div>
+              <div><span class="ln">4</span><span class="key indent">"name"</span><span class="punct">: </span><span class="str">"My Add-on"</span><span class="punct">,</span></div>
+              <div><span class="ln">5</span><span class="key indent">"uuid"</span><span class="punct">: </span><span class="str">"xxxxxxxx-…"</span></div>
+              <div><span class="ln">6</span><span class="punct">},</span></div>
+              <div><span class="ln">7</span><span class="key">"modules"</span><span class="punct">: [{</span></div>
+              <div><span class="ln">8</span><span class="key indent">"type"</span><span class="punct">: </span><span class="str">"data"</span></div>
+              <div><span class="ln">9</span><span class="punct">}]</span></div>
+              <div><span class="ln">10</span><span class="punct">}</span><span class="cursor"></span></div>
             </div>
-            <div class="story-progress" aria-hidden="true"><span class="is-active"></span><span></span><span></span></div>
+            <div class="editor-bottom"><span><span class="status-dot"></span> Đã lưu cục bộ</span><span>JSON · UTF-8</span></div>
+            <div class="phone-nav"><span class="nav-active"><b>⌘</b>Dự án</span><span><b>▤</b>Tệp</span><span><b>⌕</b>Tìm</span><span><b>⋯</b>Thêm</span></div>
+          </div>
+        </div>
+        <div class="visual-footnote"><span>HTML / CSS CONCEPT</span><span>Thay bằng ảnh thật khi có</span></div>
+      </div>
+    </section>
+
+    <section class="manifesto section-pad" aria-labelledby="manifesto-title">
+      <div class="wrap manifesto-inner">
+        <p class="eyebrow" id="manifesto-title">MỘT KHÔNG GIAN LÀM VIỆC KHÁC</p>
+        <p class="manifesto-copy" data-reading-copy>Pack không chỉ là một tệp để nhập vào game. Đó là cấu trúc, dữ liệu và những chi tiết bạn muốn tự tay hoàn thiện. <span>Blockline đưa công việc ấy lên điện thoại — để bạn có thể duyệt, chỉnh sửa, sao lưu và xuất pack ngay tại nơi mình đang làm việc.</span></p>
+        <div class="manifesto-foot"><span>01 — TỪ CẤU TRÚC ĐẾN BẢN XUẤT</span><span>Thiết kế cho quy trình làm pack trên Android</span></div>
+      </div>
+    </section>
+
+    <section class="features-section section-pad wrap" id="features" aria-labelledby="features-title">
+      <div class="section-intro reveal">
+        <p class="eyebrow">CÔNG CỤ THỰC DỤNG</p><h2 id="features-title">Tập trung vào phần việc<br>quan trọng nhất.</h2>
+        <p>Không cần biến điện thoại thành máy tính. Blockline tập trung vào những thao tác thường gặp khi làm việc với pack.</p>
+      </div>
+      <article class="feature-row feature-row-files reveal">
+        <div class="feature-copy"><p class="feature-index">01 / CẤU TRÚC</p><h3>Một pack. Rõ từng tệp.</h3><p>Nhập .mcpack hoặc .mcaddon, tự tách Behavior Pack và Resource Pack, rồi duyệt cây thư mục có thể thu gọn. Tạo, đổi tên, di chuyển, xóa và đánh dấu tệp yêu thích ngay trong dự án.</p><ul class="plain-list"><li>Nhập pack có bảo vệ zip-slip</li><li>Cây tệp thu gọn và yêu thích</li><li>Tạo, đổi tên, di chuyển và xóa tệp</li></ul></div>
+        <div class="feature-visual file-explorer" aria-label="Minh họa cây thư mục tương tác">
+          <div class="mini-window-head"><span>PROJECT EXPLORER</span><span>LOCAL FILES</span></div>
+          <div class="tree-project"><span class="tree-caret">⌄</span><span class="tree-folder">▰</span><b>My Add-on</b><span class="tree-badge">2 PACKS</span></div>
+          <button class="tree-item tree-toggle" type="button" aria-expanded="true" aria-controls="bp-files"><span class="tree-caret">⌄</span><span class="tree-folder">▰</span> behavior_pack <span class="tree-count">3</span></button>
+          <div class="tree-children" id="bp-files"><button class="tree-file is-selected" type="button" data-file-name="manifest.json"><span class="file-type json">J</span> manifest.json <span class="tree-star">★</span></button><button class="tree-file" type="button" data-file-name="main.js"><span class="file-type js">JS</span> scripts/main.js</button><button class="tree-file" type="button" data-file-name="functions/tick.mcfunction"><span class="file-type mc">ƒ</span> functions/tick.mcfunction</button></div>
+          <button class="tree-item tree-toggle" type="button" aria-expanded="true" aria-controls="rp-files"><span class="tree-caret">⌄</span><span class="tree-folder">▰</span> resource_pack <span class="tree-count">2</span></button>
+          <div class="tree-children" id="rp-files"><button class="tree-file" type="button" data-file-name="manifest.json"><span class="file-type json">J</span> manifest.json</button><button class="tree-file" type="button" data-file-name="textures/terrain_texture.json"><span class="file-type json">J</span> textures/terrain_texture.json</button></div>
+          <div class="tree-selection"><span>Đang chọn</span><b id="selected-file-name">manifest.json</b><span class="selection-note">Nhấn vào tệp để đổi lựa chọn minh họa.</span></div>
+        </div>
+      </article>
+      <article class="feature-row feature-row-editor reveal">
+        <div class="feature-copy"><p class="feature-index">02 / CHỈNH SỬA</p><h3>Mã nguồn dễ đọc hơn.</h3><p>Editor hỗ trợ tô màu cú pháp cho JSON, JavaScript và .mcfunction, nhiều tab, hoàn tác/làm lại, tìm trong tệp, tự lưu và định dạng JSON có giữ comment.</p><ul class="plain-list"><li>Chuyển tab không mất mạch làm việc</li><li>Undo / redo và tìm nội dung</li><li>Định dạng JSON giữ comment</li></ul></div>
+        <div class="feature-visual editor-preview" aria-label="Minh họa editor với các tab có thể chọn">
+          <div class="editor-window-head"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-title">EDITOR / MY ADD-ON</span></div>
+          <div class="editor-tab-buttons" role="tablist" aria-label="Chọn tệp xem trước"><button type="button" role="tab" id="tab-manifest" aria-selected="true" aria-controls="editor-tab-panel" data-editor-tab="manifest">manifest.json</button><button type="button" role="tab" id="tab-script" aria-selected="false" aria-controls="editor-tab-panel" data-editor-tab="script">main.js</button><button type="button" role="tab" id="tab-function" aria-selected="false" aria-controls="editor-tab-panel" data-editor-tab="function">tick.mcfunction</button></div>
+          <div class="editor-preview-content" id="editor-tab-panel" role="tabpanel" aria-labelledby="tab-manifest" tabindex="0"><pre class="sample-code" data-code-sample="manifest"><span class="code-muted">1</span> <span class="code-punct">{</span>
+<span class="code-muted">2</span>   <span class="code-key">"format_version"</span><span class="code-punct">:</span> <span class="code-number">2</span><span class="code-punct">,</span>
+<span class="code-muted">3</span>   <span class="code-key">"header"</span><span class="code-punct">:</span> <span class="code-punct">{</span>
+<span class="code-muted">4</span>     <span class="code-key">"name"</span><span class="code-punct">:</span> <span class="code-string">"My Add-on"</span>
+<span class="code-muted">5</span>   <span class="code-punct">}</span>
+<span class="code-muted">6</span> <span class="code-punct">}</span></pre><pre class="sample-code" data-code-sample="script" hidden><span class="code-muted">1</span> <span class="code-keyword">import</span> <span class="code-punct">{ world }</span> <span class="code-keyword">from</span> <span class="code-string">"@minecraft/server"</span><span class="code-punct">;</span>
+<span class="code-muted">2</span>
+<span class="code-muted">3</span> world<span class="code-punct">.</span>afterEvents
+<span class="code-muted">4</span>   <span class="code-punct">.</span>worldLoad<span class="code-punct">.</span>subscribe<span class="code-punct">(() =&gt; {</span>
+<span class="code-muted">5</span>     <span class="code-comment">// Logic goes here</span>
+<span class="code-muted">6</span>   <span class="code-punct">});</span></pre><pre class="sample-code" data-code-sample="function" hidden><span class="code-muted">1</span> <span class="code-comment"># Example function file</span>
+<span class="code-muted">2</span> <span class="code-command">say</span> Hello from Blockline
+<span class="code-muted">3</span> <span class="code-command">time</span> query daytime</pre></div>
+          <div class="editor-status"><span><i></i> Mô phỏng editor</span><span id="editor-language">JSON</span></div>
+        </div>
+      </article>
+      <article class="feature-row feature-row-manifest reveal">
+        <div class="feature-copy"><p class="feature-index">03 / CẤU HÌNH PACK</p><h3>Đọc manifest có ngữ cảnh.</h3><p>Xem UUID, module và dependency trong manifest để hiểu pack đang khai báo những gì. Sao lưu và khôi phục dự án khi cần, trước khi xuất bản thử nghiệm.</p><ul class="plain-list"><li>Thông tin header và module</li><li>UUID và dependency</li><li>Sao lưu / khôi phục cục bộ</li></ul></div>
+        <div class="feature-visual manifest-card">
+          <div class="mini-window-head"><span>MANIFEST INSPECTOR</span><span class="inspector-state">ĐỌC TỪ TỆP</span></div>
+          <div class="manifest-line"><span>HEADER UUID</span><code>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code><b>UUID</b></div>
+          <div class="manifest-line"><span>MODULE TYPE</span><code>data</code><b>MODULE</b></div>
+          <div class="manifest-line"><span>DEPENDENCIES</span><code>UUID / version</code><b>DEPENDENCY</b></div>
+          <p class="manifest-note">Giá trị trên là dữ liệu minh họa, không phải manifest của pack thật.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="demo-section section-pad" id="demo" aria-labelledby="demo-title">
+      <div class="wrap">
+        <div class="section-intro reveal"><p class="eyebrow">XEM QUY TRÌNH</p><h2 id="demo-title">Từ gói nén đến bản xuất.</h2><p>Chọn từng bước để xem minh họa cách Blockline hỗ trợ một quy trình làm pack thường gặp.</p></div>
+        <div class="demo-layout reveal">
+          <div class="demo-tabs" role="tablist" aria-label="Các bước trong quy trình Blockline">
+            <button type="button" role="tab" id="demo-tab-import" aria-selected="true" aria-controls="demo-panel" data-demo-tab="import"><span>01</span><span><b>Mở pack</b><small>Nhập .mcpack / .mcaddon</small></span><span class="tab-arrow">↗</span></button>
+            <button type="button" role="tab" id="demo-tab-edit" aria-selected="false" aria-controls="demo-panel" data-demo-tab="edit" tabindex="-1"><span>02</span><span><b>Sửa tệp</b><small>Duyệt và chỉnh sửa nội dung</small></span><span class="tab-arrow">↗</span></button>
+            <button type="button" role="tab" id="demo-tab-manifest" aria-selected="false" aria-controls="demo-panel" data-demo-tab="manifest" tabindex="-1"><span>03</span><span><b>Đọc manifest</b><small>Xem UUID và dependency</small></span><span class="tab-arrow">↗</span></button>
+            <button type="button" role="tab" id="demo-tab-export" aria-selected="false" aria-controls="demo-panel" data-demo-tab="export" tabindex="-1"><span>04</span><span><b>Xuất pack</b><small>BP, RP hoặc cả hai</small></span><span class="tab-arrow">↗</span></button>
+          </div>
+          <div class="demo-screen" id="demo-panel" role="tabpanel" aria-labelledby="demo-tab-import" tabindex="0" data-demo-panel>
+            <div class="demo-screen-top"><span><i></i><i></i><i></i></span><span id="demo-screen-label">IMPORT / PACK FILE</span><span>BLOCKLINE</span></div>
+            <div class="demo-screen-content" data-demo-content="import"><div class="demo-graphic import-graphic"><div class="archive-icon"><span>ZIP</span><b>↗</b></div><div class="transfer-line"><span></span><span></span><span></span></div><div class="folder-pair"><div><b>BP</b><span>Behavior Pack</span></div><div><b>RP</b><span>Resource Pack</span></div></div></div><p class="demo-caption">Nhập gói từ thiết bị. Blockline nhận diện cấu trúc và tách BP/RP khi có trong gói.</p></div>
+            <div class="demo-screen-content" data-demo-content="edit" hidden><div class="demo-graphic edit-graphic"><div class="mini-code-row"><span>01</span><b class="code-key">"name"</b><span>:</span><em>"My Add-on"</em></div><div class="mini-code-row"><span>02</span><b class="code-key">"description"</b><span>:</span><em>"Pack description"</em></div><div class="mini-code-row"><span>03</span><b class="code-key">"modules"</b><span>:</span><strong>[ … ]</strong></div><div class="edit-tools"><span>↶ Undo</span><span>↷ Redo</span><span>≡ Format JSON</span></div></div><p class="demo-caption">Sửa tệp văn bản trong editor, chuyển giữa nhiều tab và định dạng JSON có giữ comment.</p></div>
+            <div class="demo-screen-content" data-demo-content="manifest" hidden><div class="demo-graphic check-graphic"><div class="check-row"><span>HEADER</span><b>UUID</b><i>Đã đọc</i></div><div class="check-row"><span>MODULES</span><b>Type / UUID</b><i>Đã đọc</i></div><div class="check-row"><span>DEPENDENCIES</span><b>UUID / version</b><i>Đã đọc</i></div><div class="check-disclaimer">Mô phỏng phần thông tin đọc được, không phải công cụ xác thực toàn bộ pack.</div></div><p class="demo-caption">Đọc thông tin manifest để xem định danh và các dependency được khai báo.</p></div>
+            <div class="demo-screen-content" data-demo-content="export" hidden><div class="demo-graphic export-graphic"><div class="export-option"><span>BP</span><b>Behavior Pack</b><i>↗</i></div><div class="export-option"><span>RP</span><b>Resource Pack</b><i>↗</i></div><div class="export-option export-combined"><span>BP + RP</span><b>Gói .mcaddon</b><i>↗</i></div></div><p class="demo-caption">Chọn xuất Behavior Pack, Resource Pack hoặc gói kết hợp để kiểm tra trong Minecraft.</p></div>
           </div>
         </div>
       </div>
-      <div class="story-steps" aria-label="Blockline workflow stages">
-        <article class="story-step is-active" data-story-step="0">
-          <div class="story-step-number">01 — BRING IT IN</div>
-          <h3>One place for your packs.</h3>
-          <p>Choose a .mcpack or .mcaddon and bring its files into a local project. Keep your work organized without switching devices.</p>
-          <div class="step-note">Import to a local workspace</div>
-        </article>
-        <article class="story-step" data-story-step="1">
-          <div class="story-step-number">02 — GET INTO THE DETAILS</div>
-          <h3>Find the file. Make the change.</h3>
-          <p>Move through the pack structure and work directly with supported text files, including JSON and JavaScript.</p>
-          <div class="step-note">Explore and edit your project</div>
-        </article>
-        <article class="story-step" data-story-step="2">
-          <div class="story-step-number">03 — TAKE IT FURTHER</div>
-          <h3>Package it for the next test.</h3>
-          <p>Keep the folder structure intact, create a backup when needed, and export the pack to continue your Bedrock workflow.</p>
-          <div class="step-note">Back up and export</div>
-        </article>
+    </section>
+
+    <section class="fit-section section-pad wrap" aria-labelledby="fit-title">
+      <div class="section-intro reveal"><p class="eyebrow">NÓI RÕ GIỚI HẠN</p><h2 id="fit-title">Đúng việc. Đúng kỳ vọng.</h2><p>Blockline là công cụ làm việc với tệp pack trên Android — không phải trình thay thế toàn bộ bộ công cụ phát triển Minecraft.</p></div>
+      <div class="comparison-wrap reveal" role="region" aria-label="Bảng so sánh phạm vi sử dụng Blockline" tabindex="0">
+        <table class="comparison-table"><thead><tr><th scope="col">Nhu cầu</th><th scope="col">Blockline hiện hỗ trợ</th><th scope="col">Giới hạn cần biết</th></tr></thead><tbody>
+          <tr><th scope="row">Mở và quản lý pack</th><td><span class="table-mark yes">✓</span> Nhập .mcpack / .mcaddon, duyệt BP/RP và quản lý tệp.</td><td>Chỉ dùng trên Android 8.0 trở lên.</td></tr>
+          <tr><th scope="row">Sửa nội dung</th><td><span class="table-mark yes">✓</span> Editor JSON, JavaScript, .mcfunction; tab, undo/redo và tự lưu.</td><td>Tệp trên 1 MB chỉ mở đọc; tệp trên 5 MB không mở được.</td></tr>
+          <tr><th scope="row">Đọc manifest</th><td><span class="table-mark yes">✓</span> Đọc UUID, module và dependency.</td><td>Đọc manifest không đồng nghĩa kiểm tra toàn bộ tính đúng đắn của pack.</td></tr>
+          <tr><th scope="row">Kiểm tra pack tự động</th><td><span class="table-mark progress-mark">↗</span> Đang phát triển.</td><td>Chưa giới thiệu như tính năng đã phát hành.</td></tr>
+          <tr><th scope="row">Tạo entity/item/block</th><td><span class="table-mark progress-mark">↗</span> Đang phát triển.</td><td>Chưa phải trình tạo tài nguyên hoàn chỉnh.</td></tr>
+          <tr><th scope="row">Chỉnh sửa nâng cao hàng loạt</th><td><span class="table-mark progress-mark">↗</span> Diff và đổi tên hàng loạt đang phát triển.</td><td>Chưa có trong phạm vi tính năng hiện tại.</td></tr>
+        </tbody></table>
       </div>
+      <p class="table-note">Bảng mô tả phạm vi tính năng được cung cấp cho phiên bản 0.1.0.</p>
+    </section>
+
+    <section class="roadmap-section section-pad" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="wrap roadmap-layout">
+        <div class="section-intro reveal"><p class="eyebrow">TIẾP THEO LÀ GÌ?</p><h2 id="roadmap-title">Đang phát triển.</h2><p>Những hạng mục dưới đây chưa được giới thiệu là tính năng đã phát hành.</p></div>
+        <ol class="roadmap-list">
+          <li class="roadmap-item reveal"><span class="roadmap-number">01</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Tìm kiếm và kiểm tra</h3><p>Tìm kiếm trên toàn dự án và kiểm tra pack.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">02</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Tạo tài nguyên nhanh hơn</h3><p>Trình tạo entity, item và block.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">03</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Kiểm soát thay đổi</h3><p>So sánh nội dung bằng diff và đổi tên hàng loạt.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">04</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Tra cứu Script API</h3><p>Tra cứu Script API ngay trong quy trình làm việc.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="setup-section section-pad wrap" aria-labelledby="setup-title">
+      <div class="section-intro reveal"><p class="eyebrow">BẮT ĐẦU</p><h2 id="setup-title">Ba bước để bắt đầu.</h2><p>Không cần bước build cho website này. Với ứng dụng, hãy tải APK và cài trên thiết bị Android tương thích.</p></div>
+      <ol class="setup-steps">
+        <li class="setup-step reveal"><span class="setup-num">01</span><div class="setup-line"></div><h3>Tải APK</h3><p>Nhấn nút tải để lấy tệp cài đặt Blockline phiên bản 0.1.0.</p></li>
+        <li class="setup-step reveal"><span class="setup-num">02</span><div class="setup-line"></div><h3>Cài trên Android</h3><p>Thiết bị cần chạy Android 8.0 trở lên. Chỉ cài APK từ nguồn bạn tin cậy.</p></li>
+        <li class="setup-step reveal"><span class="setup-num">03</span><div class="setup-line"></div><h3>Mở pack của bạn</h3><p>Chọn tệp .mcpack hoặc .mcaddon từ thiết bị để bắt đầu làm việc.</p></li>
+      </ol>
+    </section>
+
+    <section class="faq-section section-pad" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-layout"><div class="section-intro reveal"><p class="eyebrow">CÂU HỎI THƯỜNG GẶP</p><h2 id="faq-title">Trước khi tải.</h2><p>Thông tin rõ ràng về nền tảng, tệp hỗ trợ và giới hạn hiện tại.</p></div>
+        <div class="faq-list reveal">
+          <details><summary>Blockline hỗ trợ thiết bị nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Blockline là ứng dụng Android, yêu cầu Android 8.0 trở lên. Phiên bản được giới thiệu trên trang này là 0.1.0.</p></div></details>
+          <details><summary>Có cần kết nối mạng để chỉnh sửa pack không?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Các công cụ chính được mô tả có thể dùng ngoại tuyến. Trang web chỉ là trang giới thiệu và cung cấp liên kết tải APK.</p></div></details>
+          <details><summary>Blockline có thể mở những loại tệp nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Ứng dụng nhận .mcpack và .mcaddon; editor hỗ trợ tệp văn bản JSON, JavaScript và .mcfunction. Tệp trên 1 MB chỉ mở đọc, còn tệp trên 5 MB không mở được.</p></div></details>
+          <details><summary>Blockline đã kiểm tra pack tự động chưa?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Kiểm tra pack đang phát triển. Phiên bản hiện tại có thể đọc thông tin manifest như UUID, module và dependency, nhưng việc đọc đó không đồng nghĩa xác thực toàn bộ pack.</p></div></details>
+          <details><summary>APK có sẵn trong kho mã nguồn không?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Nút tải trỏ đến tệp <code>Blockline.apk</code>. Nếu liên kết chưa có tệp tương ứng trên máy chủ, bạn sẽ cần cung cấp APK hoặc cập nhật đường dẫn tải trước khi phát hành trang.</p></div></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section section-pad wrap" id="download" aria-labelledby="download-title">
+      <div class="download-panel reveal"><div class="download-panel-top"><span class="eyebrow">BLOCKLINE / ANDROID</span><span class="download-version">VERSION 0.1.0</span></div><h2 id="download-title">Pack của bạn.<br><span>Quy trình của bạn.</span></h2><p>Mở, chỉnh sửa, sao lưu và xuất pack Minecraft Bedrock ngay trên điện thoại Android.</p><div class="download-panel-actions"><a class="button button-primary button-large" href="Blockline.apk" download data-apk-link>Tải Blockline APK <span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/slgamervn/Blockline" target="_blank" rel="noopener noreferrer">Xem mã nguồn <span aria-hidden="true">↗</span></a></div><div class="download-meta"><span>Android 8.0 trở lên</span><span>Phiên bản 0.1.0</span><span>Công cụ chính dùng ngoại tuyến</span></div></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-main">
+      <div class="footer-brand-column"><a class="brand" href="#top" aria-label="Blockline — về đầu trang"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 5h22v5H10v17H5z"/><path d="M14 14h13v5h-8v8h-5z"/></svg></span><span>blockline<span class="brand-period">.</span></span></a><p>Công cụ làm việc với add-on Minecraft Bedrock trên Android.</p></div>
+      <div class="footer-column"><h2>SẢN PHẨM</h2><a href="#features">Tính năng</a><a href="#demo">Trải nghiệm</a><a href="#roadmap">Lộ trình</a><a href="#download">Tải APK</a></div>
+      <div class="footer-column"><h2>HỖ TRỢ</h2><a href="#faq">Câu hỏi thường gặp</a><a href="https://github.com/slgamervn/Blockline" target="_blank" rel="noopener noreferrer">Mã nguồn trên GitHub ↗</a><a href="https://github.com/slgamervn/Blockline/issues" target="_blank" rel="noopener noreferrer">Báo lỗi ↗</a></div>
+      <div class="footer-column footer-note"><h2>GHI CHÚ</h2><p>Blockline là dự án độc lập, không liên kết với Mojang hay Microsoft.</p><button class="theme-toggle footer-theme" type="button">Chuyển giao diện sáng / tối</button></div>
     </div>
-  </div>
-</section>
-<section id="features"><div class="wrap"><div class="sectionhead"><div class="kicker">Made for the way you build</div><h2>Useful tools. No desktop-sized clutter.</h2><p>Blockline is designed around small screens and real pack files — with a simple workflow that keeps the project in your hands.</p></div>
-<div class="grid3">
-<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m-4-4 4 4 4-4"/><path d="M5 16v4h14v-4"/></svg></div><h3>Bring your packs</h3><p>Import .mcpack and .mcaddon files through Android’s system picker. Work on a private local copy.</p></article>
-<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h7l2 2h9v10H3z"/><path d="M8 13h8"/></svg></div><h3>Explore every file</h3><p>Browse folders, create and move files, rename items, and keep important files in favorites.</p></article>
-<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5"/><path d="m16 7 5 5-5 5"/><path d="m14 5-4 14"/></svg></div><h3>Edit on the go</h3><p>Work with JSON, JavaScript, and .mcfunction files using tabs, undo/redo, find, and JSON formatting.</p></article>
-<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m-4-4 4 4 4-4"/><path d="M4 16v4h16v-4"/></svg></div><h3>Export your work</h3><p>Package a behavior pack, resource pack, or combined add-on for the next step in your workflow.</p></article>
-<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg></div><h3>Backups when needed</h3><p>Create a local backup and restore the latest saved copy if you need to roll back.</p></article>
-<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg></div><h3>Made for mobile</h3><p>Material 3, dark and light themes, adjustable editor text, and touch-friendly navigation.</p></article>
-</div></div></section>
-<section class="band" id="workflow"><div class="wrap"><div class="sectionhead"><div class="kicker">A simple workflow</div><h2>From archive to add-on, in a few steps.</h2><p>Keep your files organized without moving your whole workflow to a desktop.</p></div>
-<div class="steps"><article class="step"><div class="stepnum">01</div><h3>Import a pack</h3><p>Select an existing .mcpack or .mcaddon from your device. Blockline copies its contents into app storage.</p></article><article class="step"><div class="stepnum">02</div><h3>Inspect and edit</h3><p>Open the project, explore its structure, inspect manifests, and edit supported text files.</p></article><article class="step"><div class="stepnum">03</div><h3>Back up and export</h3><p>Make a local backup, then export the pack you want to test in Minecraft Bedrock.</p></article></div>
-</div></section>
-<section><div class="wrap"><div class="downloadCard"><div><div class="kicker">Start building</div><h2>Take your workspace with you.</h2><p>Download the latest Android build or explore the source and current roadmap.</p><div class="fineprint">Early access · Android 8.0+ (API 26) · Debug APK</div></div><div class="downloadActions"><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a><a class="button secondary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">Open release page ↗</a></div><p class="fineprint">If the APK reaches 100% but does not appear in Downloads, open the release page and tap <strong>Blockline.apk</strong> there. Some in-app browsers do not save APK downloads correctly.</p></div></div></section>
-</main>
-<footer><div class="wrap footinner"><a class="brand" href="#"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span><span>Blockline</span></a><span>Built for Minecraft Bedrock creators. Early access; features are still evolving.</span><div class="footlinks"><a href="https://github.com/slgamervn/Blockline">GitHub</a><a href="https://github.com/slgamervn/Blockline/issues">Issues</a><a href="https://github.com/slgamervn/Blockline/releases">Releases</a></div></div></footer>
+    <div class="wrap footer-bottom"><span>© <span data-current-year>2026</span> Blockline.</span><span>Được thiết kế cho người làm pack trên Android.</span><a href="#top">Về đầu trang ↑</a></div>
+    <div class="wrap footnotes"><p><sup>1</sup> Giới hạn trình soạn thảo: tệp lớn hơn 1 MB chỉ mở ở chế độ đọc; tệp lớn hơn 5 MB không mở được.</p><p><sup>2</sup> Các khung giao diện trên trang là mô phỏng HTML/CSS, không phải ảnh chụp hoặc bản ghi màn hình ứng dụng thật.</p></div>
+  </footer>
 
-<script>
-(() => {
-  const root = document.documentElement;
-  const nav = document.querySelector('.nav');
-  const navToggle = document.querySelector('.nav-toggle');
-  const navLinks = document.querySelector('.links');
-  const closeNav = () => {
-    nav?.classList.remove('is-menu-open');
-    navToggle?.setAttribute('aria-expanded', 'false');
-  };
-  navToggle?.addEventListener('click', () => {
-    const open = !nav?.classList.contains('is-menu-open');
-    nav?.classList.toggle('is-menu-open', open);
-    navToggle.setAttribute('aria-expanded', String(open));
-  });
-  navLinks?.querySelectorAll('a').forEach(link => link.addEventListener('click', closeNav));
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && nav?.classList.contains('is-menu-open')) {
-      closeNav();
-      navToggle?.focus();
-    }
-  });
-  document.addEventListener('click', event => {
-    if (nav && !nav.contains(event.target)) closeNav();
-  });
-  let scrollTicking = false;
-  const updateScroll = () => {
-    if (scrollTicking) return;
-    scrollTicking = true;
-    window.requestAnimationFrame(() => {
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollable > 0 ? Math.min(100, Math.max(0, window.scrollY / scrollable * 100)) : 0;
-      root.style.setProperty('--scroll-progress', progress.toFixed(2) + '%');
-      nav?.classList.toggle('is-scrolled', window.scrollY > 12);
-      scrollTicking = false;
-    });
-  };
-  window.addEventListener('scroll', updateScroll, { passive: true });
-  window.addEventListener('resize', updateScroll, { passive: true });
-  updateScroll();
-
-  const storySection = document.querySelector('#product-story');
-  const storyStage = document.querySelector('#story-stage');
-  const storyTrack = document.querySelector('.story-steps');
-  const storySteps = [...document.querySelectorAll('[data-story-step]')];
-  const storyControls = [...document.querySelectorAll('[data-story-go]')];
-  const isCompactStory = () => window.matchMedia('(max-width: 820px), (max-width: 1100px) and (pointer: coarse)').matches;
-  const storyCopy = {
-    en: [
-      {caption:'01 / Import', title:'Start with your pack.', description:'Open a .mcpack or .mcaddon from your device and keep a working copy in Blockline.', path:'workspace / projects', left:'Pack files found', right:'READY TO OPEN'},
-      {caption:'02 / Edit', title:'Work on the files that matter.', description:'Browse the pack and edit supported text files, including JSON and JavaScript.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 lines', right:'FILE OPEN'},
-      {caption:'03 / Export', title:'Make a copy for testing.', description:'Keep the pack structure, create a backup, and export the files you want to test in Minecraft.', path:'workspace / export', left:'Pack structure kept', right:'READY TO EXPORT'}
-    ],
-    vi: [
-      {caption:'01 / Nhập pack', title:'Bắt đầu từ pack của bạn.', description:'Mở tệp .mcpack hoặc .mcaddon trên điện thoại và tạo bản làm việc trong Blockline.', path:'workspace / projects', left:'Đã nhận diện tệp', right:'SẴN SÀNG MỞ'},
-      {caption:'02 / Chỉnh sửa', title:'Sửa đúng tệp cần dùng.', description:'Duyệt cấu trúc pack và chỉnh sửa các tệp văn bản được hỗ trợ, như JSON và JavaScript.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 dòng', right:'ĐANG MỞ TỆP'},
-      {caption:'03 / Xuất pack', title:'Tạo bản để kiểm tra.', description:'Giữ nguyên cấu trúc thư mục, sao lưu khi cần và xuất các tệp để thử trong Minecraft.', path:'workspace / export', left:'Đã giữ cấu trúc pack', right:'SẴN SÀNG XUẤT'}
-    ]
-  };
-  let activeScene = -1;
-  let currentLanguage = root.lang === 'vi' ? 'vi' : 'en';
-  const setStoryScene = index => {
-    if (!Number.isInteger(index) || index < 0 || index >= storyCopy[currentLanguage].length) return;
-    activeScene = index;
-    if (storyStage) storyStage.dataset.scene = String(index);
-    storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
-    storyControls.forEach((control, i) => control.setAttribute('aria-pressed', String(i === index)));
-    const data = storyCopy[currentLanguage][index];
-    const caption = document.querySelector('#stage-caption');
-    const title = document.querySelector('#stage-title');
-    const description = document.querySelector('#stage-description');
-    const path = document.querySelector('#stage-path');
-    const footerLeft = document.querySelector('#stage-footer-left');
-    const footerRight = document.querySelector('#stage-footer-right');
-    if (caption) caption.textContent = data.caption;
-    if (title) title.textContent = data.title;
-    if (description) description.textContent = data.description;
-    if (path) path.textContent = data.path;
-    if (footerLeft) footerLeft.textContent = data.left;
-    if (footerRight) footerRight.textContent = data.right;
-    storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
-  };
-  let storyScrollFrame = 0;
-  let storyProgrammaticScroll = false;
-  let storyScrollReleaseTimer = 0;
-  const scrollStoryStepIntoView = index => {
-    if (!storyTrack || !isCompactStory() || !storySteps[index]) return;
-    const step = storySteps[index];
-    const trackRect = storyTrack.getBoundingClientRect();
-    const stepRect = step.getBoundingClientRect();
-    const targetLeft = storyTrack.scrollLeft + stepRect.left - trackRect.left
-      - (storyTrack.clientWidth - stepRect.width) / 2;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    storyProgrammaticScroll = true;
-    window.clearTimeout(storyScrollReleaseTimer);
-    storyTrack.scrollTo({
-      left: Math.max(0, targetLeft),
-      behavior: reduced ? 'auto' : 'smooth'
-    });
-    if (reduced) {
-      storyProgrammaticScroll = false;
-      return;
-    }
-    storyScrollReleaseTimer = window.setTimeout(() => {
-      storyProgrammaticScroll = false;
-      syncStorySceneFromScroll();
-    }, 700);
-  };
-
-  const syncStorySceneFromScroll = () => {
-    if (!storyTrack || !isCompactStory() || storyProgrammaticScroll || storyScrollFrame) return;
-    storyScrollFrame = window.requestAnimationFrame(() => {
-      storyScrollFrame = 0;
-      if (!isCompactStory()) return;
-      const trackRect = storyTrack.getBoundingClientRect();
-      const trackCenter = trackRect.left + trackRect.width / 2;
-      let nearestIndex = -1;
-      let nearestDistance = Infinity;
-      storySteps.forEach((step, index) => {
-        const rect = step.getBoundingClientRect();
-        if (rect.right <= trackRect.left || rect.left >= trackRect.right) return;
-        const distance = Math.abs(rect.left + rect.width / 2 - trackCenter);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestIndex = index;
-        }
-      });
-      if (nearestIndex >= 0 && nearestIndex !== activeScene) setStoryScene(nearestIndex);
-    });
-  };
-
-  storyTrack?.addEventListener('scroll', syncStorySceneFromScroll, { passive: true });
-  window.addEventListener('resize', syncStorySceneFromScroll, { passive: true });
-
-  storySteps.forEach((step, index) => {
-    step.addEventListener('click', () => {
-      if (!isCompactStory()) return;
-      setStoryScene(index);
-      scrollStoryStepIntoView(index);
-    });
-  });
-
-  storyControls.forEach(control => {
-    control.addEventListener('click', () => {
-      const index = Number(control.dataset.storyGo);
-      if (!Number.isInteger(index) || index < 0 || index >= storyCopy[currentLanguage].length) return;
-      setStoryScene(index);
-      scrollStoryStepIntoView(index);
-    });
-  });
-  window.addEventListener('blockline:languagechange', event => {
-    currentLanguage = event.detail?.language === 'vi' ? 'vi' : 'en';
-    setStoryScene(activeScene < 0 ? 0 : activeScene);
-  });
-  // Keep the preview under the reader's control; programmatic smooth scrolling must not undo a button selection.
-  setStoryScene(0);
-
-  const motionTargets = [...document.querySelectorAll(
-    '.hero .eyebrow, .hero h1, .hero .lead, .hero .actions, .hero .trust, .mockWrap, .device, .glow, #product-story .story-stage, #features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
-  )];
-  const revealTargets = [...document.querySelectorAll(
-    '#features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
-  )];
-
-  revealTargets.forEach((el, i) => {
-    el.classList.add('reveal');
-    if (el.matches('.feature, .step')) {
-      el.dataset.reveal = i % 5 === 0 ? 'scale' : (i % 2 ? 'right' : 'left');
-      el.style.setProperty('--reveal-delay', (i % 3) * 65 + 'ms');
-    } else el.dataset.reveal = 'up';
-  });
-
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reducedMotion || !('IntersectionObserver' in window)) {
-    motionTargets.forEach(el => el.classList.add('in-viewport'));
-    revealTargets.forEach(el => el.classList.add('is-visible'));
-  } else {
-    try {
-      root.classList.add('reveal-motion-ready');
-      const viewportObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          const el = entry.target;
-          const visible = entry.isIntersecting && entry.intersectionRatio > 0;
-          el.classList.toggle('in-viewport', visible);
-          if (el.matches('.reveal')) el.classList.toggle('is-visible', visible);
-        });
-      }, { threshold: 0.01, rootMargin: '0px 0px 8% 0px' });
-
-      motionTargets.forEach(el => viewportObserver.observe(el));
-    } catch (_) {
-      root.classList.remove('reveal-motion-ready');
-      motionTargets.forEach(el => el.classList.add('in-viewport'));
-      revealTargets.forEach(el => el.classList.add('is-visible'));
-    }
-  }
-})();
-</script>
-
-
-<script>
-(() => {
-  const messages = {
-    en: {
-      menu: 'Menu', featuresNav: 'Features', workflowNav: 'How it works', sourceNav: 'Source', download: '↓ Download APK',
-      heroKicker: '<span class="dot"></span> ANDROID APP · EARLY ACCESS',
-      heroTitle: 'Edit Bedrock packs.<br><em>Right on your phone.</em>',
-      heroLead: 'Blockline helps you open, organize, edit and export Minecraft Bedrock add-on files on Android. Your working files stay on your device.',
-      getApp: '↓ Get Blockline for Android', sourceAction: '⌘ View source code',
-      trustLocal: '<b class="check">✓</b> Files stay on your device', trustNoAccount: '<b class="check">✓</b> No account needed', trustOffline: '<b class="check">✓</b> Core tools work offline',
-      localBadge: 'APP PREVIEW', workspace: 'Your workspace', projects: 'Projects', sampleOne: 'Survival Pack', sampleTwo: 'Custom Textures',
-      behaviorPack: 'Behavior Pack · example', resourcePack: 'Resource Pack · example', openTag: 'EXAMPLE', quickEdit: 'Quick edit',
-      tabProjects: '▦ Projects', tabExplorer: '▤ Explorer', tabSearch: '⌕ Search', tabTools: '⚒ Tools', tabMore: '⋯ More',
-      storyKicker: 'A straightforward workflow', storyTitle: 'From pack archive to your next test.', storyLead: 'Open a pack, work on its files, then export a copy when you are ready. Choose a step to preview it.',
-      controlImport: '<span>01</span> Import', controlEdit: '<span>02</span> Edit', controlExport: '<span>03</span> Export',
-      help: 'Choose a step above to change the preview.', stageLocal: 'APP PREVIEW',
-      stageContent0: "<span class=\"line-no\">✓</span><span class=\"syntax\">Archive selected</span><br><span class=\"line-no\">✓</span>Files extracted<br><span class=\"line-no\">✓</span>Pack manifest<br><span class=\"line-no\">✓</span><span class=\"string\">Ready to inspect</span><br><br><span class=\"comment\">Open the files →</span>",
-      stageContent1: "<span class=\"line-no\">1</span><span class=\"syntax\">import</span> { world }<br><span class=\"line-no\">2</span><span class=\"syntax\">from</span> <span class=\"string\">\"@minecraft/server\"</span>;<br><span class=\"line-no\">3</span><br><span class=\"line-no\">4</span><span class=\"syntax\">world</span>.afterEvents<br><span class=\"line-no\">5</span> .worldLoad.subscribe(() =&gt; {<br><span class=\"line-no\">6</span> &nbsp;<span class=\"comment\">// your logic</span><br><span class=\"line-no\">7</span>});",
-      stageContent2: "<span class=\"line-no\">✓</span><span class=\"syntax\">Pack contents checked</span><br><span class=\"line-no\">✓</span>Files collected<br><span class=\"line-no\">✓</span>Structure preserved<br><span class=\"line-no\">✓</span><span class=\"string\">Ready to export</span><br><br><span class=\"comment\">Output / MyAddon.mcaddon</span>",
-      stepOneNum: '01 — IMPORT', stepOneTitle: 'Keep your packs in one place.', stepOneBody: 'Open a .mcpack or .mcaddon and work on a local copy. Your files stay in the app’s private storage.', stepOneNote: 'Import a pack from your device',
-      stepTwoNum: '02 — EDIT', stepTwoTitle: 'Find the file you need.', stepTwoBody: 'Browse folders and edit supported text files, including JSON, JavaScript and .mcfunction.', stepTwoNote: 'Browse and edit project files',
-      stepThreeNum: '03 — EXPORT', stepThreeTitle: 'Prepare a copy for Minecraft.', stepThreeBody: 'Back up the project when needed, then export a behavior pack, resource pack or combined add-on.', stepThreeNote: 'Back up or export your pack',
-      featuresKicker: 'What you can do today', featuresTitle: 'The tools you need for pack work.', featuresLead: 'Blockline is still in early access. The current build focuses on importing, browsing, editing and exporting files locally.',
-      featureImportTitle: 'Import packs', featureImportBody: 'Open .mcpack and .mcaddon files with Android’s file picker. Blockline works with a local copy.',
-      featureBrowseTitle: 'Browse files', featureBrowseBody: 'Open folders, create or move files, rename items, and mark frequently used files as favorites.',
-      featureEditTitle: 'Edit text files', featureEditBody: 'Use tabs, undo and redo, search, and JSON formatting in the built-in editor.',
-      featureExportTitle: 'Export a pack', featureExportBody: 'Export a behavior pack, resource pack, or combined .mcaddon for testing.',
-      featureBackupTitle: 'Back up your work', featureBackupBody: 'Create a local backup and restore the latest saved copy when you need it.',
-      featureMobileTitle: 'Made for Android', featureMobileBody: 'Material 3 interface, dark and light themes, adjustable editor text, and touch-friendly controls.',
-      workflowKicker: 'How it works', workflowTitle: 'Three steps, without the desktop detour.', workflowLead: 'Keep the project on your phone from import through export.',
-      workOneTitle: 'Import a pack', workOneBody: 'Choose an existing .mcpack or .mcaddon. Blockline copies its contents into app storage.',
-      workTwoTitle: 'Review and edit', workTwoBody: 'Open the project, inspect its folders and manifests, then edit a supported text file.',
-      workThreeTitle: 'Back up and export', workThreeBody: 'Save a backup if needed and export the pack you want to try in Minecraft Bedrock.',
-      downloadKicker: 'Try the current build', downloadTitle: 'A small studio for your phone.', downloadBody: 'Get the latest Android build or review the source code and project roadmap.',
-      fineprint: 'Early access · Android 8.0+ (API 26) · Debug APK', downloadAgain: '↓ Download APK', releasePage: 'View release page ↗',
-      downloadHelp: 'If the APK download does not appear in Downloads, open the release page and tap <strong>Blockline.apk</strong>. Some in-app browsers do not save APK files correctly.',
-      footerCopy: 'Made for Minecraft Bedrock creators. Blockline is in early access, and features may change as development continues.',
-      github: 'GitHub', issues: 'Report an issue', releases: 'Releases'
-    },
-    vi: {
-      menu: 'Menu', featuresNav: 'Tính năng', workflowNav: 'Cách dùng', sourceNav: 'Mã nguồn', download: '↓ Tải APK',
-      heroKicker: '<span class="dot"></span> ỨNG DỤNG ANDROID · TRUY CẬP SỚM',
-      heroTitle: 'Chỉnh sửa pack Bedrock.<br><em>Ngay trên điện thoại.</em>',
-      heroLead: 'Blockline giúp bạn mở, sắp xếp, chỉnh sửa và xuất tệp add-on Minecraft Bedrock trên Android. Các tệp làm việc được giữ trên thiết bị của bạn.',
-      getApp: '↓ Tải Blockline cho Android', sourceAction: '⌘ Xem mã nguồn',
-      trustLocal: '<b class="check">✓</b> Tệp được giữ trên máy', trustNoAccount: '<b class="check">✓</b> Không cần tài khoản', trustOffline: '<b class="check">✓</b> Công cụ chính dùng được ngoại tuyến',
-      localBadge: 'BẢN XEM TRƯỚC', workspace: 'Không gian làm việc', projects: 'Dự án', sampleOne: 'Pack Sinh tồn (mẫu)', sampleTwo: 'Texture tùy chỉnh (mẫu)',
-      behaviorPack: 'Behavior Pack · mẫu', resourcePack: 'Resource Pack · mẫu', openTag: 'MẪU', quickEdit: 'Chỉnh sửa nhanh',
-      tabProjects: '▦ Dự án', tabExplorer: '▤ Tệp', tabSearch: '⌕ Tìm kiếm', tabTools: '⚒ Công cụ', tabMore: '⋯ Thêm',
-      storyKicker: 'Quy trình làm việc rõ ràng', storyTitle: 'Từ tệp pack đến lần thử tiếp theo.', storyLead: 'Mở pack, chỉnh sửa các tệp cần thiết rồi xuất bản sao khi sẵn sàng. Chọn từng bước để xem trước.',
-      controlImport: '<span>01</span> Nhập pack', controlEdit: '<span>02</span> Chỉnh sửa', controlExport: '<span>03</span> Xuất pack',
-      help: 'Chọn một bước phía trên để đổi phần xem trước.', stageLocal: 'BẢN XEM TRƯỚC',
-      stageContent0: "<span class=\"line-no\">✓</span><span class=\"syntax\">Đã chọn tệp pack</span><br><span class=\"line-no\">✓</span>Đã giải nén tệp<br><span class=\"line-no\">✓</span>Manifest của pack<br><span class=\"line-no\">✓</span><span class=\"string\">Sẵn sàng kiểm tra</span><br><br><span class=\"comment\">Mở các tệp →</span>",
-      stageContent1: "<span class=\"line-no\">1</span><span class=\"syntax\">import</span> { world }<br><span class=\"line-no\">2</span><span class=\"syntax\">from</span> <span class=\"string\">\"@minecraft/server\"</span>;<br><span class=\"line-no\">3</span><br><span class=\"line-no\">4</span><span class=\"syntax\">world</span>.afterEvents<br><span class=\"line-no\">5</span> .worldLoad.subscribe(() =&gt; {<br><span class=\"line-no\">6</span> &nbsp;<span class=\"comment\">// logic của bạn</span><br><span class=\"line-no\">7</span>});",
-      stageContent2: "<span class=\"line-no\">✓</span><span class=\"syntax\">Đã kiểm tra nội dung pack</span><br><span class=\"line-no\">✓</span>Đã tập hợp tệp<br><span class=\"line-no\">✓</span>Đã giữ cấu trúc<br><span class=\"line-no\">✓</span><span class=\"string\">Sẵn sàng xuất</span><br><br><span class=\"comment\">Tệp xuất / MyAddon.mcaddon</span>",
-      stepOneNum: '01 — NHẬP PACK', stepOneTitle: 'Quản lý pack tại một nơi.', stepOneBody: 'Mở tệp .mcpack hoặc .mcaddon và làm việc trên bản sao cục bộ. Tệp được lưu trong vùng dữ liệu riêng của ứng dụng.', stepOneNote: 'Nhập pack từ thiết bị',
-      stepTwoNum: '02 — CHỈNH SỬA', stepTwoTitle: 'Tìm đúng tệp cần sửa.', stepTwoBody: 'Duyệt thư mục và chỉnh sửa các tệp văn bản được hỗ trợ, gồm JSON, JavaScript và .mcfunction.', stepTwoNote: 'Duyệt và sửa tệp dự án',
-      stepThreeNum: '03 — XUẤT PACK', stepThreeTitle: 'Chuẩn bị bản để thử trong game.', stepThreeBody: 'Sao lưu khi cần, sau đó xuất Behavior Pack, Resource Pack hoặc gói .mcaddon kết hợp.', stepThreeNote: 'Sao lưu hoặc xuất pack',
-      featuresKicker: 'Những gì bản hiện tại hỗ trợ', featuresTitle: 'Công cụ thiết yếu để làm việc với pack.', featuresLead: 'Blockline vẫn đang ở giai đoạn truy cập sớm. Bản hiện tại tập trung vào nhập, duyệt, chỉnh sửa và xuất tệp ngay trên thiết bị.',
-      featureImportTitle: 'Nhập pack', featureImportBody: 'Mở tệp .mcpack và .mcaddon bằng trình chọn tệp của Android. Ứng dụng thao tác trên bản sao cục bộ.',
-      featureBrowseTitle: 'Duyệt tệp', featureBrowseBody: 'Mở thư mục, tạo hoặc di chuyển tệp, đổi tên và đánh dấu các tệp thường dùng.',
-      featureEditTitle: 'Sửa tệp văn bản', featureEditBody: 'Trình chỉnh sửa hỗ trợ nhiều tab, hoàn tác, làm lại, tìm kiếm và định dạng JSON.',
-      featureExportTitle: 'Xuất pack', featureExportBody: 'Xuất Behavior Pack, Resource Pack hoặc gói .mcaddon kết hợp để kiểm tra.',
-      featureBackupTitle: 'Sao lưu dự án', featureBackupBody: 'Tạo bản sao lưu cục bộ và khôi phục bản gần nhất khi cần.',
-      featureMobileTitle: 'Thiết kế cho Android', featureMobileBody: 'Giao diện Material 3, giao diện sáng/tối, tùy chỉnh cỡ chữ trình sửa và nút bấm phù hợp màn hình cảm ứng.',
-      workflowKicker: 'Cách hoạt động', workflowTitle: 'Ba bước, không cần chuyển sang máy tính.', workflowLead: 'Từ lúc nhập đến khi xuất, dự án vẫn nằm trên điện thoại.',
-      workOneTitle: 'Nhập pack', workOneBody: 'Chọn tệp .mcpack hoặc .mcaddon có sẵn. Blockline sao chép nội dung vào vùng lưu trữ của ứng dụng.',
-      workTwoTitle: 'Kiểm tra và chỉnh sửa', workTwoBody: 'Mở dự án, xem cấu trúc thư mục và manifest, rồi sửa các tệp văn bản được hỗ trợ.',
-      workThreeTitle: 'Sao lưu và xuất', workThreeBody: 'Tạo bản sao lưu nếu cần, sau đó xuất pack để thử trong Minecraft Bedrock.',
-      downloadKicker: 'Dùng thử bản hiện tại', downloadTitle: 'Bộ công cụ nhỏ gọn trên điện thoại.', downloadBody: 'Tải bản Android mới nhất hoặc xem mã nguồn và kế hoạch phát triển.',
-      fineprint: 'Truy cập sớm · Android 8.0+ (API 26) · APK debug', downloadAgain: '↓ Tải APK', releasePage: 'Xem trang phát hành ↗',
-      downloadHelp: 'Nếu tải xong nhưng không thấy APK trong thư mục Tải xuống, hãy mở trang phát hành và nhấn vào <strong>Blockline.apk</strong>. Một số trình duyệt bên trong ứng dụng không lưu APK đúng cách.',
-      footerCopy: 'Dành cho người làm add-on Minecraft Bedrock. Blockline đang trong giai đoạn truy cập sớm, nên tính năng có thể thay đổi trong quá trình phát triển.',
-      github: 'GitHub', issues: 'Báo lỗi', releases: 'Bản phát hành'
-    }
-  };
-  const bindings = [
-    ['.nav-toggle .menu-label','menu'],['.links a[href="#features"]','featuresNav'],['.links a[href="#workflow"]','workflowNav'],
-    ['.links a[href="https://github.com/slgamervn/Blockline"]','sourceNav'],['.links a.button','download'],
-    ['.hero .eyebrow','heroKicker',true],['.hero h1','heroTitle',true],['.hero .lead','heroLead'],
-    ['.actions a.primary','getApp'],['.actions a.secondary','sourceAction'],
-    ['.trust span','trustLocal',true,0],['.trust span','trustNoAccount',true,1],['.trust span','trustOffline',true,2],
-    ['.stage-editor[data-scene-content="0"]','stageContent0',true],
-    ['.stage-editor[data-scene-content="1"]','stageContent1',true],
-    ['.stage-editor[data-scene-content="2"]','stageContent2',true],
-    ['.apphead .pill','localBadge'],['.screenbody .screenlabel','workspace',false,0],['.screenTitle','projects'],
-    ['.miniCard:nth-of-type(3) .mininame','sampleOne'],['.miniCard:nth-of-type(4) .mininame','sampleTwo'],
-    ['.miniCard:nth-of-type(3) .minisub','behaviorPack'],['.miniCard:nth-of-type(4) .minisub','resourcePack'],['.miniCard .tag','openTag'],
-    ['.screenbody .screenlabel','quickEdit',false,1],
-    ['.tabbar span','tabProjects',false,0],['.tabbar b','tabExplorer'],['.tabbar span','tabSearch',false,1],['.tabbar span','tabTools',false,2],['.tabbar span','tabMore',false,3],
-    ['.story-head .kicker','storyKicker'],['#story-title','storyTitle'],['.story-head > p','storyLead',false,0],
-    ['.story-controls button[data-story-go="0"]','controlImport',true],['.story-controls button[data-story-go="1"]','controlEdit',true],['.story-controls button[data-story-go="2"]','controlExport',true],
-    ['.story-help','help'],['.stage-live','stageLocal'],
-    ['.story-step-number','stepOneNum',false,0],['.story-step h3','stepOneTitle',false,0],['.story-step p','stepOneBody',false,0],['.story-step .step-note','stepOneNote',false,0],
-    ['.story-step-number','stepTwoNum',false,1],['.story-step h3','stepTwoTitle',false,1],['.story-step p','stepTwoBody',false,1],['.story-step .step-note','stepTwoNote',false,1],
-    ['.story-step-number','stepThreeNum',false,2],['.story-step h3','stepThreeTitle',false,2],['.story-step p','stepThreeBody',false,2],['.story-step .step-note','stepThreeNote',false,2],
-    ['#features .sectionhead .kicker','featuresKicker'],['#features .sectionhead h2','featuresTitle'],['#features .sectionhead p','featuresLead'],
-    ['#features .feature h3','featureImportTitle',false,0],['#features .feature p','featureImportBody',false,0],
-    ['#features .feature h3','featureBrowseTitle',false,1],['#features .feature p','featureBrowseBody',false,1],
-    ['#features .feature h3','featureEditTitle',false,2],['#features .feature p','featureEditBody',false,2],
-    ['#features .feature h3','featureExportTitle',false,3],['#features .feature p','featureExportBody',false,3],
-    ['#features .feature h3','featureBackupTitle',false,4],['#features .feature p','featureBackupBody',false,4],
-    ['#features .feature h3','featureMobileTitle',false,5],['#features .feature p','featureMobileBody',false,5],
-    ['#workflow .sectionhead .kicker','workflowKicker'],['#workflow .sectionhead h2','workflowTitle'],['#workflow .sectionhead p','workflowLead'],
-    ['#workflow .step h3','workOneTitle',false,0],['#workflow .step p','workOneBody',false,0],
-    ['#workflow .step h3','workTwoTitle',false,1],['#workflow .step p','workTwoBody',false,1],
-    ['#workflow .step h3','workThreeTitle',false,2],['#workflow .step p','workThreeBody',false,2],
-    ['.downloadCard .kicker','downloadKicker'],['.downloadCard h2','downloadTitle'],['.downloadCard > div > p','downloadBody'],
-    ['.downloadCard .fineprint','fineprint',false,0],['.downloadActions a','downloadAgain',false,0],['.downloadActions a','releasePage',false,1],
-    ['.downloadCard .fineprint','downloadHelp',true,1],['.footinner > span','footerCopy'],
-    ['.footlinks a','github',false,0],['.footlinks a','issues',false,1],['.footlinks a','releases',false,2]
-  ];
-  const attrBindings = [
-    ['.nav-toggle','aria-label',{en:'Open navigation menu',vi:'Mở menu điều hướng'}],
-    ['nav.links','aria-label',{en:'Main navigation',vi:'Điều hướng chính'}],
-    ['.mockWrap','aria-label',{en:'Illustration of the Blockline app interface',vi:'Hình minh họa giao diện ứng dụng Blockline'}],
-    ['.story-controls','aria-label',{en:'Choose a workflow stage',vi:'Chọn một bước trong quy trình'}],
-    ['.story-controls button[data-story-go="0"]','aria-label',{en:'Show step 1: Import',vi:'Xem bước 1: Nhập pack'}],
-    ['.story-controls button[data-story-go="1"]','aria-label',{en:'Show step 2: Edit',vi:'Xem bước 2: Chỉnh sửa'}],
-    ['.story-controls button[data-story-go="2"]','aria-label',{en:'Show step 3: Export',vi:'Xem bước 3: Xuất pack'}]
-  ];
-  function applyLanguage(language) {
-    const lang = language === 'vi' ? 'vi' : 'en';
-    const dict = messages[lang];
-    document.documentElement.lang = lang;
-    bindings.forEach(([selector,key,html=false,index=0]) => {
-      const element = document.querySelectorAll(selector)[index];
-      if (!element || dict[key] == null) return;
-      if (html) element.innerHTML = dict[key];
-      else element.textContent = dict[key];
-    });
-    attrBindings.forEach(([selector,attribute,values]) => {
-      const element = document.querySelector(selector);
-      if (element) element.setAttribute(attribute, values[lang]);
-    });
-    const toggle = document.querySelector('[data-language-toggle]');
-    if (toggle) {
-      toggle.textContent = lang === 'en' ? 'Tiếng Việt' : 'English';
-      toggle.setAttribute('aria-label', lang === 'en' ? 'Switch website language to Vietnamese' : 'Chuyển ngôn ngữ trang web sang tiếng Anh');
-      toggle.setAttribute('aria-pressed', String(lang === 'vi'));
-    }
-    document.title = lang === 'vi' ? 'Blockline — Công cụ chỉnh sửa add-on Bedrock trên Android' : 'Blockline — Bedrock Add-on Studio for Android';
-    const description = lang === 'vi'
-      ? 'Blockline là ứng dụng Android giúp mở, duyệt, chỉnh sửa và xuất tệp add-on Minecraft Bedrock ngay trên thiết bị.'
-      : 'Blockline is an Android app for opening, browsing, editing and exporting Minecraft Bedrock add-on files on your device.';
-    document.querySelector('meta[name="description"]')?.setAttribute('content',description);
-    document.querySelector('meta[property="og:title"]')?.setAttribute('content',document.title);
-    document.querySelector('meta[property="og:description"]')?.setAttribute('content',description);
-    try { localStorage.setItem('blockline-language', lang); } catch (_) {}
-    window.dispatchEvent(new CustomEvent('blockline:languagechange',{detail:{language:lang}}));
-  }
-  document.querySelector('[data-language-toggle]')?.addEventListener('click', () => {
-    applyLanguage(document.documentElement.lang === 'en' ? 'vi' : 'en');
-  });
-  let savedLanguage = (navigator.language || 'en').toLowerCase().startsWith('vi') ? 'vi' : 'en';
-  try { savedLanguage = localStorage.getItem('blockline-language') || savedLanguage; } catch (_) {}
-  if (savedLanguage !== 'en' && savedLanguage !== 'vi') savedLanguage = 'en';
-  applyLanguage(savedLanguage);
-})();
-</script>
-
-<script id="blockline-experience-polish-script">
-(() => {
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const progress = document.createElement('div');
-  progress.id = 'blockline-scroll-progress';
-  progress.setAttribute('aria-hidden', 'true');
-  document.body.prepend(progress);
-
-  let progressFrame = 0;
-  const updateProgress = () => {
-    progressFrame = 0;
-    const root = document.documentElement;
-    const maxScroll = root.scrollHeight - window.innerHeight;
-    const ratio = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
-    progress.style.transform = 'scaleX(' + ratio + ')';
-    progress.classList.toggle('is-active', window.scrollY > 80 && maxScroll > 0);
-  };
-  const queueProgress = () => {
-    if (!progressFrame) progressFrame = window.requestAnimationFrame(updateProgress);
-  };
-  window.addEventListener('scroll', queueProgress, {passive:true});
-  window.addEventListener('resize', queueProgress, {passive:true});
-  updateProgress();
-
-  if (!reducedMotion.matches && 'IntersectionObserver' in window) {
-    const targets = document.querySelectorAll('.sectionhead, .feature, .step, .downloadCard, .story-stage');
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        entry.target.classList.add('is-revealed');
-        observer.unobserve(entry.target);
-      }
-    }, {root:null,rootMargin:'0px 0px -8% 0px',threshold:0.08});
-    targets.forEach((target, index) => {
-      target.setAttribute('data-bl-reveal', '');
-      if (target.classList.contains('feature') || target.classList.contains('step')) {
-        target.style.setProperty('--bl-reveal-delay', (index % 3) * 55 + 'ms');
-      }
-      observer.observe(target);
-    });
-  }
-
-  const motionChange = () => {
-    if (reducedMotion.matches) {
-      document.querySelectorAll('[data-bl-reveal]').forEach((target) => target.classList.add('is-revealed'));
-    }
-  };
-  if (typeof reducedMotion.addEventListener === 'function') reducedMotion.addEventListener('change', motionChange);
-})();
-</script>
-
+  <dialog class="browser-dialog" id="browser-dialog" aria-labelledby="browser-dialog-title">
+    <form method="dialog" class="dialog-close-form"><button class="icon-button dialog-close" aria-label="Đóng hướng dẫn" value="close"><span></span><span></span></button></form>
+    <p class="eyebrow">HƯỚNG DẪN TẢI APK</p><h2 id="browser-dialog-title">Mở trang này bằng Chrome.</h2><p>Trình duyệt bên trong Zalo, Facebook hoặc Messenger có thể hạn chế tải tệp APK. Hãy mở trang bằng Chrome rồi thử tải lại.</p>
+    <div class="dialog-actions"><button class="button button-primary" type="button" data-copy-page>Chép liên kết trang</button><button class="button button-secondary" type="button" data-close-dialog>Đã hiểu</button></div><p class="copy-status" aria-live="polite"></p>
+  </dialog>
 </body>
 </html>
