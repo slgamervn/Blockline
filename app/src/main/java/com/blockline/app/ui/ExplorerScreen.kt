@@ -2,9 +2,13 @@ package com.blockline.app.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -13,6 +17,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Card
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -33,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
@@ -96,6 +105,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                                             if (vm.isFavorite(path)) Icon(Icons.Default.Favorite, "Favorite")
                                             IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.file_actions_cd)) }
                                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                                                if (file.isFile && isPreviewSupported(file.name)) DropdownMenuItem(text = { Text(stringResource(R.string.preview_resource)) }, onClick = { vm.loadResourcePreview(path); menu = false })
                                                 if (file.isFile) DropdownMenuItem(text = { Text(stringResource(if (vm.isFavorite(path)) R.string.remove_favorite else R.string.add_favorite)) }, onClick = { vm.toggleFavorite(path); menu = false })
                                                 DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { targetPath = path; name = file.name; dialog = "rename"; menu = false })
                                                 DropdownMenuItem(text = { Text(stringResource(R.string.move)) }, onClick = {
@@ -146,6 +156,61 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.cancel)) } }
         )
     }
+    if (vm.previewPath != null) {
+        ModalBottomSheet(onDismissRequest = vm::clearResourcePreview) {
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 640.dp)
+                    .verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp)
+            ) {
+                Text(stringResource(R.string.resource_preview_heading), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                Text(vm.previewPath.orEmpty(), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                when {
+                    vm.isLoadingPreview -> {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 24.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+                            CircularProgressIndicator()
+                        }
+                        Text(stringResource(R.string.resource_preview_loading))
+                    }
+                    vm.previewError != null -> Text(vm.previewError.orEmpty(), color = androidx.compose.material3.MaterialTheme.colorScheme.error)
+                    vm.resourcePreview != null -> {
+                        val preview = vm.resourcePreview!!
+                        Text(stringResource(resourceKindLabel(preview.kind)), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)) {
+                            Text(stringResource(R.string.resource_preview_size, preview.bytes))
+                            Text(stringResource(R.string.resource_preview_lines, preview.lineCount))
+                        }
+                        if (preview.metadata.isNotEmpty()) {
+                            Text(stringResource(R.string.resource_preview_metadata), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                            preview.metadata.forEach { field ->
+                                Card(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+                                    Column(Modifier.padding(10.dp)) {
+                                        Text(field.first, style = androidx.compose.material3.MaterialTheme.typography.labelMedium, color = androidx.compose.material3.MaterialTheme.colorScheme.primary)
+                                        Text(field.second, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(stringResource(R.string.resource_preview_no_metadata), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        Text(stringResource(R.string.resource_preview_source), style = androidx.compose.material3.MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+                        Card(Modifier.fillMaxWidth().padding(bottom = 22.dp)) {
+                            Text(
+                                preview.source,
+                                Modifier.padding(12.dp),
+                                fontFamily = FontFamily.Monospace,
+                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        if (preview.isTruncated) Text(stringResource(R.string.resource_preview_truncated), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                TextButton(onClick = vm::clearResourcePreview, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.resource_preview_close))
+                }
+            }
+        }
+    }
     if (dialog == "delete") {
         AlertDialog(
             onDismissRequest = { dialog = null },
@@ -155,4 +220,20 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.cancel)) } }
         )
     }
+}
+
+private fun isPreviewSupported(name: String): Boolean =
+    name.substringAfterLast('.', "").lowercase() in setOf("json", "mcmeta", "js", "mjs", "ts", "mcfunction", "lang", "properties")
+
+private fun resourceKindLabel(kind: com.blockline.app.data.ResourceKind): Int = when (kind) {
+    com.blockline.app.data.ResourceKind.MANIFEST -> R.string.resource_kind_manifest
+    com.blockline.app.data.ResourceKind.ENTITY -> R.string.resource_kind_entity
+    com.blockline.app.data.ResourceKind.ITEM -> R.string.resource_kind_item
+    com.blockline.app.data.ResourceKind.BLOCK -> R.string.resource_kind_block
+    com.blockline.app.data.ResourceKind.RECIPE -> R.string.resource_kind_recipe
+    com.blockline.app.data.ResourceKind.LOOT_TABLE -> R.string.resource_kind_loot
+    com.blockline.app.data.ResourceKind.FUNCTION -> R.string.resource_kind_function
+    com.blockline.app.data.ResourceKind.SCRIPT -> R.string.resource_kind_script
+    com.blockline.app.data.ResourceKind.LANGUAGE -> R.string.resource_kind_language
+    com.blockline.app.data.ResourceKind.JSON -> R.string.resource_kind_json
 }

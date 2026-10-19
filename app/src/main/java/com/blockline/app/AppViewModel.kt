@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.blockline.app.data.ExportMode
 import com.blockline.app.data.Project
 import com.blockline.app.data.ProjectRepository
+import com.blockline.app.data.ResourcePreview
+import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
@@ -46,6 +48,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var validationIssues by mutableStateOf<List<ValidationIssue>>(emptyList())
         private set
     var validationCompleted by mutableStateOf(false)
+        private set
+    var previewPath by mutableStateOf<String?>(null)
+        private set
+    var resourcePreview by mutableStateOf<ResourcePreview?>(null)
+        private set
+    var isLoadingPreview by mutableStateOf(false)
+        private set
+    var previewError by mutableStateOf<String?>(null)
         private set
     var isSearchingContent by mutableStateOf(false)
         private set
@@ -89,6 +99,36 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 message = text(R.string.validation_finished, errors, warnings, issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO })
             }.onFailure { message = it.message ?: text(R.string.validation_failed) }
         }
+    }
+
+    fun loadResourcePreview(path: String) {
+        val project = current ?: return
+        previewPath = path
+        resourcePreview = null
+        previewError = null
+        isLoadingPreview = true
+        val projectId = project.id
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val file = repo.resolve(projectId, path)
+                    require(file.isFile) { text(R.string.preview_file_missing) }
+                    require(file.length() <= 512L * 1024L) { text(R.string.resource_preview_too_large) }
+                    ResourcePreviewBuilder.build(path, file.readText(Charsets.UTF_8))
+                }
+            }
+            if (current?.id != projectId || previewPath != path) return@launch
+            isLoadingPreview = false
+            result.onSuccess { resourcePreview = it }
+                .onFailure { previewError = it.message ?: text(R.string.resource_preview_failed) }
+        }
+    }
+
+    fun clearResourcePreview() {
+        previewPath = null
+        resourcePreview = null
+        previewError = null
+        isLoadingPreview = false
     }
 
     fun searchProjectContentAsync(query: String) {

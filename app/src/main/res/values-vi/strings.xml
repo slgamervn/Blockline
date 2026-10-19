@@ -248,4 +248,27 @@
     <string name="validation_msg_json_decimal_digits">Cần có chữ số sau dấu thập phân.</string>
     <string name="validation_msg_json_exponent_digits">Cần có chữ số sau ký hiệu số mũ.</string>
     <string name="validation_msg_json_expected_token">Thiếu ký tự %1$s.</string>
+    <string name="preview_resource">Xem trước tài nguyên</string>
+    <string name="resource_preview_heading">Xem trước tài nguyên</string>
+    <string name="resource_preview_close">Đóng xem trước</string>
+    <string name="resource_preview_loading">Đang đọc tệp trong nền…</string>
+    <string name="resource_preview_failed">Không thể tải nội dung xem trước.</string>
+    <string name="preview_file_missing">Tệp này không còn tồn tại.</string>
+    <string name="resource_preview_too_large">Chỉ xem trước tệp tối đa 512 KB. Hãy mở tệp trong trình soạn thảo để kiểm tra.</string>
+    <string name="resource_preview_size">Dung lượng: %1$d byte</string>
+    <string name="resource_preview_lines">Số dòng: %1$d</string>
+    <string name="resource_preview_metadata">Các trường nhận diện được</string>
+    <string name="resource_preview_no_metadata">Không nhận diện được trường có cấu trúc. Mã nguồn được hiển thị bên dưới.</string>
+    <string name="resource_preview_source">Mã nguồn (chỉ đọc)</string>
+    <string name="resource_preview_truncated">Chỉ hiển thị 32.000 ký tự đầu. Mở trình soạn thảo để xem toàn bộ tệp.</string>
+    <string name="resource_kind_manifest">Manifest của pack</string>
+    <string name="resource_kind_entity">Định nghĩa entity</string>
+    <string name="resource_kind_item">Định nghĩa item</string>
+    <string name="resource_kind_block">Định nghĩa block</string>
+    <string name="resource_kind_recipe">Định nghĩa recipe</string>
+    <string name="resource_kind_loot">Loot table</string>
+    <string name="resource_kind_function">Tệp function</string>
+    <string name="resource_kind_script">Mã nguồn script</string>
+    <string name="resource_kind_language">Tệp ngôn ngữ</string>
+    <string name="resource_kind_json">Tài nguyên JSON</string>
 </resources>

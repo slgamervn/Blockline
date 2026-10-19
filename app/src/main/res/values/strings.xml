@@ -248,4 +248,27 @@
     <string name="validation_msg_json_decimal_digits">Expected digits after decimal point.</string>
     <string name="validation_msg_json_exponent_digits">Expected exponent digits.</string>
     <string name="validation_msg_json_expected_token">Expected %1$s.</string>
+    <string name="preview_resource">Preview resource</string>
+    <string name="resource_preview_heading">Resource preview</string>
+    <string name="resource_preview_close">Close preview</string>
+    <string name="resource_preview_loading">Reading the file in the background…</string>
+    <string name="resource_preview_failed">Could not load this preview.</string>
+    <string name="preview_file_missing">This file no longer exists.</string>
+    <string name="resource_preview_too_large">Preview is limited to 512 KB. Open the file in the editor to inspect it.</string>
+    <string name="resource_preview_size">Size: %1$d bytes</string>
+    <string name="resource_preview_lines">Lines: %1$d</string>
+    <string name="resource_preview_metadata">Recognized fields</string>
+    <string name="resource_preview_no_metadata">No structured fields were recognized. The source is shown below.</string>
+    <string name="resource_preview_source">Source (read-only)</string>
+    <string name="resource_preview_truncated">Only the first 32,000 characters are shown here. Open the editor for the full file.</string>
+    <string name="resource_kind_manifest">Pack manifest</string>
+    <string name="resource_kind_entity">Entity definition</string>
+    <string name="resource_kind_item">Item definition</string>
+    <string name="resource_kind_block">Block definition</string>
+    <string name="resource_kind_recipe">Recipe definition</string>
+    <string name="resource_kind_loot">Loot table</string>
+    <string name="resource_kind_function">Function file</string>
+    <string name="resource_kind_script">Script source</string>
+    <string name="resource_kind_language">Language file</string>
+    <string name="resource_kind_json">JSON resource</string>
 </resources>
