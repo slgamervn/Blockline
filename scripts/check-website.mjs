@@ -23,6 +23,13 @@ assert(/body\.menu-open\{overflow:hidden\}/.test(css) && !/body\.menu-open\{[^}]
 assert(/\.mobile-menu\{position:fixed;[^}]*padding:calc\(88px \+ env\(safe-area-inset-top\)\)/.test(css), "Mobile menu clears the fixed header and safe-area inset");
 assert(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present");
 assert(/IntersectionObserver/.test(js), "Scroll reveal uses IntersectionObserver");
+assert(/data-language-toggle/.test(html) && /const englishText = \\{/.test(js), "Vietnamese and English language toggle is present");
+assert(/localStorage\\.setItem\\('blockline-language'/.test(js) && /localStorage\\.getItem\\('blockline-language'/.test(js), "Language choice persists between visits");
+const englishDictionary = js.match(/const englishText = \\{([\\s\\S]*?)\\n  \\};/);
+assert(Boolean(englishDictionary) && (englishDictionary[1].match(/"[^"\\n]+"\\s*:/g) || []).length >= 140, "English translation covers the website copy");
+assert(/classList\\.remove\\('is-visible'\\)/.test(js) && !/observer\\.unobserve\\(entry\\.target\\)/.test(js), "Scroll reveal exits and re-enters when scrolling in either direction");
+assert(/--reveal-y/.test(css) && /scrollDirection > 0/.test(js), "Scroll reveal direction is motion-aware");
+
 assert(/aria-expanded/.test(js) && /Escape/.test(js), "Accessible mobile navigation has keyboard support");
 assert(/data-demo-tab/.test(html) && /activateDemoTab/.test(js), "Interactive demo tabs are present");
 assert(/data-reading-copy/.test(html) && /reading-progress/.test(js), "Manifesto scroll highlight is present");
