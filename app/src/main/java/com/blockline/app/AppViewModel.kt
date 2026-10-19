@@ -19,6 +19,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
+    private fun text(id: Int, vararg args: Any): String = getApplication<Application>().getString(id, *args)
+
     val repo = ProjectRepository(app)
     var projects by mutableStateOf<List<Project>>(emptyList())
         private set
@@ -58,7 +60,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun validateCurrentProject() {
         val project = current
         if (project == null) {
-            message = "Select a project before validating."
+            message = text(R.string.select_project_before_validating)
             return
         }
         if (isValidating) return
@@ -77,8 +79,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 val errors = issues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
                 val warnings = issues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
-                message = "Validation finished: $errors errors, $warnings warnings, ${issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }} info."
-            }.onFailure { message = it.message ?: "Validation failed." }
+                message = text(R.string.validation_finished, errors, warnings, issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO })
+            }.onFailure { message = it.message ?: text(R.string.validation_failed) }
         }
     }
 
@@ -91,7 +93,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val results = withContext(Dispatchers.IO) { searchProjectContent(query) }
             if (current?.id == project.id) contentSearchResults = results
             isSearchingContent = false
-            message = "Content search found ${results.size} matches" + if (results.size >= 500) " (first 500 shown)" else "."
+            message = text(R.string.content_search_found, results.size, if (results.size >= 500) text(R.string.first_500_shown) else "")
         }
     }
 
@@ -133,21 +135,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         contentSearchResults = emptyList()
     }
     fun createSample() = runCatching { repo.createSample() }.onSuccess {
-        refresh(); selectProject(it); message = "Sample project created"
-    }.onFailure { message = it.message ?: "Could not create sample project" }
+        refresh(); selectProject(it); message = text(R.string.sample_created)
+    }.onFailure { message = it.message ?: text(R.string.sample_create_failed) }
 
     fun importPack(uri: android.net.Uri) {
         viewModelScope.launch {
             isLoading = true
             try {
                 val p = withContext(Dispatchers.IO) { repo.importPack(uri, repo.displayName(uri)) }
-                refresh(); selectProject(p); message = "Imported ${p.name}"
-            } catch (e: Exception) { message = e.message ?: "Import failed" }
+                refresh(); selectProject(p); message = text(R.string.imported_project, p.name)
+            } catch (e: Exception) { message = e.message ?: text(R.string.import_failed) }
             finally { isLoading = false }
         }
     }
     fun renameProject(p: Project, name: String) = runCatching { repo.rename(p.id, name); refresh(); if (current?.id == p.id) current = repo.list().firstOrNull { it.id == p.id } }.onFailure { message = it.message }
-    fun duplicateProject(p: Project) = runCatching { repo.duplicate(p.id) }.onSuccess { refresh(); message = "Project duplicated" }.onFailure { message = it.message }
+    fun duplicateProject(p: Project) = runCatching { repo.duplicate(p.id) }.onSuccess { refresh(); message = text(R.string.project_duplicated) }.onFailure { message = it.message }
     fun deleteProject(p: Project) {
         repo.delete(p.id)
         if (current?.id == p.id) {
@@ -161,7 +163,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             validationCompleted = false
             contentSearchResults = emptyList()
         }
-        refresh(); message = "Project deleted"
+        refresh(); message = text(R.string.project_deleted)
     }
     fun openFile(path: String) = openFile(path, null)
 
@@ -171,7 +173,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val p = current ?: return
         runCatching {
             val file = repo.resolve(p.id, path)
-            require(file.isFile) { "File not found" }
+            require(file.isFile) { text(R.string.file_not_found) }
             val size = file.length()
             readOnly = size > 1024L * 1024L
             activeFile = path
@@ -180,7 +182,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             undo[path] = mutableListOf(content)
             redo[path] = mutableListOf()
             repo.addRecentFile(p.id, path)
-        }.onFailure { message = it.message ?: "Cannot open file" }
+        }.onFailure { message = it.message ?: text(R.string.cannot_open_file) }
     }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
@@ -200,15 +202,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun saveCurrent() {
         val p = current ?: return
         val path = activeFile ?: return
-        if (readOnly) { message = "Files larger than 1 MB are read-only"; return }
+        if (readOnly) { message = text(R.string.save_readonly); return }
         runCatching {
             val f = repo.resolve(p.id, path)
             f.parentFile?.mkdirs()
             val tmp = File(f.parentFile, f.name + ".saving")
             tmp.writeText(content)
             if (!tmp.renameTo(f)) { f.writeText(content); tmp.delete() }
-            message = "Saved $path"
-        }.onFailure { message = it.message ?: "Save failed" }
+            message = text(R.string.saved_path, path)
+        }.onFailure { message = it.message ?: text(R.string.save_failed) }
     }
     fun undo() {
         val path = activeFile ?: return
@@ -242,26 +244,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         runCatching {
             val f = repo.resolve(p.id, path)
             if (directory) check(f.mkdirs()) else { f.parentFile?.mkdirs(); check(f.createNewFile()) }
-            message = if (directory) "Folder created" else "File created"
-        }.onFailure { message = it.message ?: "Create failed" }
+            message = if (directory) text(R.string.folder_created) else text(R.string.file_created)
+        }.onFailure { message = it.message ?: text(R.string.create_failed) }
     }
     fun renameFile(path: String, name: String) {
         val p = current ?: return
         runCatching {
             val f = repo.resolve(p.id, path)
-            val new = com.blockline.app.data.FileOps.rename(f, name) ?: error("Invalid name or target already exists")
+            val new = com.blockline.app.data.FileOps.rename(f, name) ?: error(text(R.string.invalid_name_target))
             val newPath = repo.relative(p.id, new)
             repo.remapPathMetadata(p.id, path, newPath)
             remapOpenPaths(path, newPath)
             refresh()
             message = "Renamed"
-        }.onFailure { message = it.message ?: "Rename failed" }
+        }.onFailure { message = it.message ?: text(R.string.rename_failed) }
     }
     fun deleteFile(path: String) {
         val p = current ?: return
         runCatching {
             val f = repo.resolve(p.id, path)
-            check(f.deleteRecursively()) { "Could not delete file" }
+            check(f.deleteRecursively()) { text(R.string.delete_failed) }
             repo.removePathMetadata(p.id, path)
             val affectedTabs = openTabs.keys.filter { it == path || it.startsWith("$path/") }
             affectedTabs.forEach { tab ->
@@ -271,21 +273,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (activeFile == tab) { activeFile = null; content = "" }
             }
             message = "Deleted $path"
-        }.onFailure { message = it.message ?: "Delete failed" }
+        }.onFailure { message = it.message ?: text(R.string.delete_failed) }
     }
     fun moveFile(path: String, destination: String) {
         val p = current ?: return
         runCatching {
             val source = repo.resolve(p.id, path)
             val destDir = if (destination.isBlank() || destination == ".") repo.projectDir(p.id) else repo.resolve(p.id, destination)
-            require(destDir.isDirectory) { "Destination must be an existing folder" }
-            val moved = com.blockline.app.data.FileOps.move(source, destDir) ?: error("Cannot move: target exists or move is unsafe")
+            require(destDir.isDirectory) { text(R.string.destination_must_exist) }
+            val moved = com.blockline.app.data.FileOps.move(source, destDir) ?: error(text(R.string.move_unsafe))
             val newPath = repo.relative(p.id, moved)
             repo.remapPathMetadata(p.id, path, newPath)
             remapOpenPaths(path, newPath)
             refresh()
-            message = "Moved to $newPath"
-        }.onFailure { message = it.message ?: "Move failed" }
+            message = text(R.string.moved_to, newPath)
+        }.onFailure { message = it.message ?: text(R.string.move_unsafe) }
     }
     private fun remapOpenPaths(oldPath: String, newPath: String) {
         val affected = openTabs.keys.filter { it == oldPath || it.startsWith("$oldPath/") }
@@ -304,7 +306,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val p = current ?: return
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching { repo.backup(p.id) }
-            withContext(Dispatchers.Main) { message = result.fold({ "Backup saved" }, { it.message ?: "Backup failed" }) }
+            withContext(Dispatchers.Main) { message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) }) }
         }
     }
     fun restore() {
@@ -312,7 +314,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching { repo.restoreLatest(p.id) }
             withContext(Dispatchers.Main) {
-                message = if (result.getOrDefault(false)) "Latest backup restored" else "No backup found"
+                message = if (result.getOrDefault(false)) text(R.string.latest_backup_restored) else text(R.string.no_backup_found)
                 activeFile?.let { openFile(it) }
             }
         }
