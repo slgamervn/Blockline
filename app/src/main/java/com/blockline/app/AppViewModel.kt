@@ -175,6 +175,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }.getOrDefault(emptyList())
     }
     fun selectProject(p: Project) {
+        clearResourcePreview()
         if (current?.id == p.id) {
             repo.touch(p.id)
             refresh()
@@ -218,6 +219,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteProject(p: Project) {
         repo.delete(p.id)
         if (current?.id == p.id) {
+            clearResourcePreview()
             current = null
             activeFile = null
             content = ""

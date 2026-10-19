@@ -29,7 +29,7 @@ The project is in active development. The current build focuses on a reliable lo
 - **Pack import** — open `.mcpack` and `.mcaddon` archives through Android's system file picker.
 - **Project management** — create a sample project, open, rename, duplicate, and delete local projects.
 - **Pack overview** — inspect manifest metadata and jump to a manifest for editing.
-- **File explorer** — browse folders, create, rename, move, and delete files; mark files as favorites and reopen the most recently opened file.
+- **File explorer** — browse folders, create, rename, move, and delete files; mark favorites, browse up to 30 recent files, and open a read-only resource preview for JSON, scripts, functions, and language files.
 - **Editor foundation** — multi-tab editing, basic syntax coloring, undo/redo, JSON formatting that preserves line and block comments, find, and autosave.
 - **Safer archive handling** — archive extraction checks paths against the extraction root to guard against ZIP-slip.
 - **Backup and restore** — create a local project backup and restore the latest backup.
@@ -53,7 +53,7 @@ Blockline is being built in phases. The table below describes the current scope 
 - Project metadata currently uses a private JSON index and preferences; Room, Hilt, and the full Clean Architecture separation are not yet implemented.
 - Syntax highlighting is a lightweight first pass, not a full language parser or viewport-only renderer.
 - Content search scans supported text files up to 1 MB each and shows matching line numbers. Validation findings can open the affected file; precise cursor placement and identifier/UUID indexing remain future work.
-- Resource-specific previews and exhaustive reference resolution for entities, items, blocks, recipes, loot tables, functions, scripts, and language files are not yet complete. JSON diagnostics preserve comment-aware source positions, but the validator is not a complete Mojang schema validator.
+- Resource preview currently summarizes recognized JSON metadata and shows source text for entities, items, blocks, recipes, loot tables, manifests, functions, scripts, and language files. It is a read-only source/metadata preview, not an in-game renderer; exhaustive reference resolution remains incomplete. JSON diagnostics preserve comment-aware source positions, but the validator is not a complete Mojang schema validator.
 - Validation is an initial static analysis pass, not a complete Mojang schema validator. Automated tests and device-level verification are still needed before treating this as a production release.
 
 ## Download and install
@@ -63,7 +63,7 @@ Blockline is being built in phases. The table below describes the current scope 
 3. Open the downloaded APK on your Android device and follow the system installation prompts. Android may ask you to allow installation from the app used to download the file.
 4. If you prefer not to install an APK, build the app from source using Android Studio.
 
-**Release note:** current GitHub Actions releases contain a debug APK. This is an early-access build, not a Play Store release.
+**Release note:** GitHub Actions builds a signed release APK when repository signing secrets are configured; otherwise it falls back to a debug APK. This is an early-access build, not a Play Store release.
 
 ## Build from source
 

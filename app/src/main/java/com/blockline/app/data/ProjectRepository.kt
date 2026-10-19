@@ -57,7 +57,7 @@ class ProjectRepository(private val ctx: Context) {
         projectDir(id).deleteRecursively()
         backupDir(id).deleteRecursively()
         val editor = prefs.edit()
-        prefs.all.keys.filter { it.startsWith("filefav:$id:") || it == "recentFile:$id" }.forEach { editor.remove(it) }
+        prefs.all.keys.filter { it.startsWith("filefav:$id:") || it == "recentFile:$id" || it == "recentFiles:$id" }.forEach { editor.remove(it) }
         editor.apply()
         save(list().filter { it.id != id })
     }
@@ -188,7 +188,20 @@ class ProjectRepository(private val ctx: Context) {
 
     fun isFavorite(id: String, path: String) = prefs.getBoolean("filefav:$id:$path", false)
     fun toggleFavorite(id: String, path: String) { prefs.edit().putBoolean("filefav:$id:$path", !isFavorite(id, path)).apply() }
-    fun addRecentFile(id: String, path: String) { prefs.edit().putString("recentFile:$id", path).apply() }
+    fun addRecentFile(id: String, path: String) {
+        val updated = (listOf(path) + recentFiles(id).filterNot { it == path }).take(30)
+        val encoded = JSONArray().apply { updated.forEach { put(it) } }.toString()
+        prefs.edit().putString("recentFile:$id", path).putString("recentFiles:$id", encoded).apply()
+    }
+
+    fun recentFiles(id: String): List<String> {
+        val raw = prefs.getString("recentFiles:$id", null)
+        if (raw.isNullOrBlank()) return listOfNotNull(prefs.getString("recentFile:$id", null))
+        return runCatching {
+            val array = JSONArray(raw)
+            (0 until array.length()).mapNotNull { index -> array.optString(index).takeIf { it.isNotBlank() } }.distinct().take(30)
+        }.getOrElse { listOfNotNull(prefs.getString("recentFile:$id", null)) }
+    }
 
     fun remapPathMetadata(id: String, oldPath: String, newPath: String) {
         val prefix = "filefav:$id:"
@@ -208,6 +221,10 @@ class ProjectRepository(private val ctx: Context) {
         if (recent == oldPath || recent?.startsWith("$oldPath/") == true) {
             editor.putString(recentKey, newPath + recent!!.removePrefix(oldPath))
         }
+        val recentList = recentFiles(id).map { saved ->
+            if (saved == oldPath || saved.startsWith("$oldPath/")) newPath + saved.removePrefix(oldPath) else saved
+        }.distinct().take(30)
+        editor.putString("recentFiles:$id", JSONArray().apply { recentList.forEach { put(it) } }.toString())
         editor.apply()
     }
 
@@ -223,7 +240,11 @@ class ProjectRepository(private val ctx: Context) {
         }.forEach { key -> editor.remove(key) }
         val recentKey = "recentFile:$id"
         val recent = prefs.getString(recentKey, null)
-        if (recent == path || recent?.startsWith("$path/") == true) editor.remove(recentKey)
+        val recentList = recentFiles(id).filterNot { it == path || it.startsWith("$path/") }
+        if (recent == path || recent?.startsWith("$path/") == true) {
+            if (recentList.isEmpty()) editor.remove(recentKey) else editor.putString(recentKey, recentList.first())
+        }
+        editor.putString("recentFiles:$id", JSONArray().apply { recentList.forEach { put(it) } }.toString())
         editor.apply()
     }
     fun recentFile(id: String): String? = prefs.getString("recentFile:$id", null)

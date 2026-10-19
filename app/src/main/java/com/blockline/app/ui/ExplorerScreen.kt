@@ -60,7 +60,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
         val path = project?.let { vm.repo.relative(it.id, file) } ?: ""
         when (filter) {
             "Favorites" -> file.isFile && vm.isFavorite(path)
-            "Recent" -> file.isFile && project != null && vm.repo.recentFile(project.id) == path
+            "Recent" -> file.isFile && project != null && vm.repo.recentFiles(project.id).contains(path)
             else -> true
         }
     }

@@ -49,7 +49,6 @@ import com.blockline.app.R
 import com.blockline.app.data.JsonTools
 import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,10 +63,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         if (editorValue.text != vm.content) {
             val cursor = editorValue.selection.start.coerceAtMost(vm.content.length)
             editorValue = TextFieldValue(vm.content, TextRange(cursor))
-        }
-        if (path != null && !vm.readOnly) {
-            delay(900)
-            vm.saveCurrent(showMessage = false)
         }
     }
     LaunchedEffect(path, vm.pendingEditorLine, vm.content) {

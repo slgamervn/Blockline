@@ -26,7 +26,7 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 - **Nhập pack:** mở tệp `.mcpack` và `.mcaddon` bằng trình chọn tệp của Android.
 - **Quản lý dự án:** tạo project mẫu, mở, đổi tên, sao chép và xóa project.
 - **Tổng quan pack:** đọc metadata từ `manifest.json` và mở manifest để chỉnh sửa.
-- **File Explorer:** duyệt thư mục; tạo, đổi tên, di chuyển và xóa tệp/thư mục; đánh dấu yêu thích.
+- **File Explorer:** duyệt thư mục; tạo, đổi tên, di chuyển và xóa tệp/thư mục; đánh dấu yêu thích, xem tối đa 30 tệp gần đây và mở preview chỉ đọc cho JSON, script, function và file ngôn ngữ.
 - **Trình chỉnh sửa:** nhiều tab, tô màu cú pháp cơ bản, Undo/Redo, định dạng JSON, tìm kiếm và tự lưu.
 - **Giải nén an toàn hơn:** kiểm tra đường dẫn trong archive để hạn chế lỗi ZIP-slip.
 - **Sao lưu và khôi phục:** tạo backup cục bộ và khôi phục bản gần nhất.
@@ -47,7 +47,7 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 - Metadata đang được lưu bằng JSON riêng và preferences; Room, Hilt và Clean Architecture đầy đủ chưa được triển khai.
 - Syntax highlighting hiện là bản cơ bản, chưa phải parser ngôn ngữ đầy đủ.
 - Search hỗ trợ đường dẫn và nội dung tệp văn bản; báo cáo validation có thể mở tệp bị lỗi. Tìm kiếm identifier/UUID và định vị con trỏ chính xác vẫn cần hoàn thiện.
-- Chưa có màn hình preview chuyên biệt cho từng loại tài nguyên Bedrock.
+- Preview hiện nhận diện một số metadata JSON và hiển thị mã nguồn chỉ đọc cho entity, item, block, recipe, loot table, manifest, function, script và file ngôn ngữ. Đây chưa phải trình kết xuất trong game; kiểm tra tham chiếu tài nguyên vẫn chưa đầy đủ.
 - Validator hiện là phân tích tĩnh ban đầu, chưa thay thế đầy đủ schema chính thức của Mojang; vẫn cần kiểm thử tự động và kiểm tra trên thiết bị thực.
 
 ## Cài đặt
@@ -57,7 +57,7 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 3. Mở APK trên thiết bị Android và làm theo hướng dẫn của hệ thống. Android có thể yêu cầu cho phép cài đặt từ ứng dụng tải tệp.
 4. Nếu không muốn cài APK, bạn có thể build ứng dụng từ source bằng Android Studio.
 
-Bản phát hành hiện tại là **debug APK** được tạo từ GitHub Actions, chưa phải bản phát hành trên Google Play.
+GitHub Actions tạo **signed release APK** khi repository có đủ signing secrets; nếu không, workflow sẽ tạo debug APK thay thế. Đây là bản truy cập sớm, chưa phải bản phát hành trên Google Play.
 
 ## Build từ source
 
