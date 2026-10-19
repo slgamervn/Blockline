@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blockline — Tải xuống</title>
+  <style>
+    :root {
+      --ink: #101612;
+      --emerald: #3dba7a;
+      --amber: #e6b35a;
+      --surface: #151d18;
+      --text: #e3eae5;
+      --muted: #aeBBB3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--ink);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .logo {
+      width: 72px;
+      height: 72px;
+      background: var(--emerald);
+      border-radius: 16px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--ink);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 15px; }
+    .btn {
+      display: inline-block;
+      background: var(--emerald);
+      color: var(--ink);
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform .15s, opacity .15s;
+    }
+    .btn:hover { transform: translateY(-2px); opacity: .92; }
+    .btn.secondary {
+      background: transparent;
+      color: var(--amber);
+      border: 1.5px solid var(--amber);
+      margin-top: 12px;
+    }
+    .note {
+      margin-top: 28px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .version { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">B</div>
+    <h1>Blockline</h1>
+    <p class="subtitle">Mobile Studio cho Minecraft Bedrock Addon Coders</p>
+    <a class="btn" href="https://github.com/slgamervn/Blockline/actions" target="_blank">Tải APK (GitHub Actions)</a>
+    <br>
+    <a class="btn secondary" href="https://github.com/slgamervn/Blockline" target="_blank">Xem mã nguồn</a>
+    <p class="note">
+      Sau khi Actions chạy xong, vào artifact <b>blockline-debug-apk</b> để tải file APK.<br>
+      Cài đặt trên Android 8.0 trở lên.
+    </p>
+    <p class="version">Phase 1 • v0.1.0</p>
+  </div>
+</body>
+</html>
