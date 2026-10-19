@@ -31,6 +31,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var content by mutableStateOf("")
         private set
+    var pendingEditorLine by mutableStateOf<Int?>(null)
+        private set
     var readOnly by mutableStateOf(false)
         private set
     var isLoading by mutableStateOf(false)
@@ -161,7 +163,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         refresh(); message = "Project deleted"
     }
-    fun openFile(path: String) {
+    fun openFile(path: String) = openFile(path, null)
+
+    fun openFile(path: String, line: Int?) {
+        pendingEditorLine = line?.coerceAtLeast(1)
         if (activeFile != null && activeFile != path) saveCurrent()
         val p = current ?: return
         runCatching {
