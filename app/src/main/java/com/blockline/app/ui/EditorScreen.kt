@@ -67,7 +67,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         if (path != null && !vm.readOnly) {
             delay(900)
-            vm.saveCurrent()
+            vm.saveCurrent(showMessage = false)
         }
     }
     LaunchedEffect(path, vm.pendingEditorLine, vm.content) {
