@@ -69,7 +69,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     LaunchedEffect(path, vm.pendingEditorLine, vm.content) {
         val targetLine = vm.pendingEditorLine ?: return@LaunchedEffect
         if (path == null) return@LaunchedEffect
-        val starts = vm.content.indices.filter { vm.content[it] == '\n' }
         val offset = if (targetLine <= 1) 0 else {
             var line = 1
             var position = 0
