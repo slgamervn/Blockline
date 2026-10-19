@@ -79,6 +79,15 @@ object JsonTools {
                     emit(s.substring(st, i).trimEnd())
                     nl()
                 }
+                c == '/' && i + 1 < s.length && s[i + 1] == '*' -> {
+                    val st = i
+                    i += 2
+                    while (i < s.length && !(s[i] == '*' && i + 1 < s.length && s[i + 1] == '/')) i++
+                    i = minOf(i + 2, s.length)
+                    if (!lineStart) out.append(' ')
+                    emit(s.substring(st, i))
+                    nl()
+                }
                 c == '{' || c == '[' -> {
                     emit(c.toString())
                     depth++
