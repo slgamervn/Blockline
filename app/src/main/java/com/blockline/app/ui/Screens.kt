@@ -123,7 +123,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
             } catch (e: Exception) { vm.message = e.message ?: "Export failed" }
         }
     }
-    val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name == "manifest.json" } }.orEmpty()
+    val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name.equals("manifest.json", true) || f.name.equals("pack_manifest.json", true) } }.orEmpty()
     Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, "Back") } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, "Switch project") } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, "No project selected", "Choose a project from Projects", Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -149,7 +149,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                 Card { Column(Modifier.padding(16.dp)) {
                     Text("${file.parentFile?.name ?: "Pack"} manifest", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
                     Text(json?.optJSONObject("header")?.optString("name", "Unknown pack") ?: "Manifest could not be parsed")
-                    Text(json?.optJSONObject("header")?.optString("description", "No description") ?: "Check manifest.json syntax")
+                    Text(json?.optJSONObject("header")?.optString("description", "No description") ?: "Check pack manifest JSON syntax")
                     Text("UUID: ${json?.optJSONObject("header")?.optString("uuid", "Missing") ?: "Invalid"}")
                     Text("Version: ${json?.optJSONObject("header")?.optJSONArray("version")?.let { a -> (0 until a.length()).joinToString(".") { a.optString(it) } } ?: "Unknown"}")
                     Text("Modules: ${json?.optJSONArray("modules")?.length() ?: 0}")
