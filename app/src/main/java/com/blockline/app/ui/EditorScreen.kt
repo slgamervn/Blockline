@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -52,6 +53,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
     val path = vm.activeFile
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
@@ -102,7 +104,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             Row(Modifier.fillMaxWidth().imePadding().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TextButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, null); Text(stringResource(R.string.undo)) }
                 TextButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, null); Text(stringResource(R.string.redo)) }
-                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = "Formatting is available for JSON files" }) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
+                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
                 TextButton(onClick = { vm.saveCurrent() }) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
                 TextButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
             }
@@ -110,7 +112,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().imePadding().padding(12.dp)) {
             if (path == null) {
-                EmptyState(Icons.Default.ContentCopy, "No file open", "Choose a file in Explorer to start editing")
+                EmptyState(Icons.Default.ContentCopy, stringResource(R.string.no_file_open), stringResource(R.string.no_file_hint))
             } else {
                 if (vm.openTabs.isNotEmpty()) {
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Start) {
