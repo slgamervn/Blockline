@@ -27,8 +27,25 @@ internal fun localizeValidationMessage(context: Context, message: String): Strin
         message.startsWith("Invalid JSON: ") -> {
             val detail = message.removePrefix("Invalid JSON: ")
             val duplicate = Regex("""Duplicate object key (.+)\.""").matchEntire(detail)
-            if (duplicate != null) text(R.string.validation_msg_duplicate_json_key, duplicate.groupValues[1].trim('"'))
-            else text(R.string.validation_msg_invalid_json, detail)
+            when {
+                duplicate != null -> text(R.string.validation_msg_duplicate_json_key, duplicate.groupValues[1].trim('"'))
+                detail == "Expected a JSON value." -> text(R.string.validation_msg_json_expected_value)
+                detail == "Object keys must be double-quoted strings." -> text(R.string.validation_msg_json_object_key)
+                detail == "Trailing commas are not valid JSON." -> text(R.string.validation_msg_json_trailing_comma)
+                detail == "Incomplete escape sequence." -> text(R.string.validation_msg_json_incomplete_escape)
+                detail == "Invalid Unicode escape." -> text(R.string.validation_msg_json_unicode_escape)
+                detail == "Invalid escape sequence." -> text(R.string.validation_msg_json_escape)
+                detail == "Unescaped control character in string." -> text(R.string.validation_msg_json_control_character)
+                detail == "Unterminated string." -> text(R.string.validation_msg_json_unterminated_string)
+                detail == "Incomplete number." -> text(R.string.validation_msg_json_incomplete_number)
+                detail == "Leading zeros are not valid JSON numbers." -> text(R.string.validation_msg_json_leading_zero)
+                detail == "Invalid number." -> text(R.string.validation_msg_json_invalid_number)
+                detail == "Expected digits after decimal point." -> text(R.string.validation_msg_json_decimal_digits)
+                detail == "Expected exponent digits." -> text(R.string.validation_msg_json_exponent_digits)
+                Regex("""Expected '.*'\.""").matches(detail) ->
+                    text(R.string.validation_msg_json_expected_token, detail.removePrefix("Expected ").removeSuffix("."))
+                else -> text(R.string.validation_msg_invalid_json, detail)
+            }
         }
         message.startsWith("Could not validate JSON: ") -> text(R.string.validation_msg_cannot_validate_json, message.removePrefix("Could not validate JSON: "))
         match("""modules\[(\d+)] must be an object\.""") != null -> text(R.string.validation_msg_module_object, match("""modules\[(\d+)] must be an object\.""")!![1].toInt())
