@@ -268,7 +268,7 @@ object ProjectValidator {
         }
 
         private fun whitespace() {
-            while (index < source.length && source[index] in charArrayOf(' ', '\\t', '\\r', '\\n')) index++
+            while (index < source.length && source[index] in charArrayOf(' ', '\t', '\r', '\n')) index++
         }
 
         private fun take(ch: Char): Boolean {
