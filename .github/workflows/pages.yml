@@ -6,7 +6,9 @@ on:
     paths:
       - "index.html"
       - "favicon.svg"
-      - "scripts/check-site.mjs"
+      - "scripts/check-website.mjs"
+      - "assets/css/style.css"
+      - "assets/js/main.js"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,16 +29,18 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Validate website scripts, anchors and translations
-        run: node scripts/check-site.mjs
+        run: node scripts/check-website.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
       - name: Prepare static site
         run: |
-          mkdir -p _site
+          mkdir -p _site/assets/css _site/assets/js
           cp index.html _site/index.html
           cp favicon.svg _site/favicon.svg
+          cp assets/css/style.css _site/assets/css/style.css
+          cp assets/js/main.js _site/assets/js/main.js
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5
