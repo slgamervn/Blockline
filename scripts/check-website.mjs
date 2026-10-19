@@ -16,6 +16,11 @@ assert(/<h1\b/.test(html) && (html.match(/<h1\b/g) || []).length === 1, "Page ha
 assert(/name="description"/.test(html) && /property="og:title"/.test(html), "SEO and Open Graph metadata exist");
 assert(/assets\/css\/style\.css/.test(html) && /assets\/js\/main\.js/.test(html), "External CSS and deferred JavaScript are linked");
 assert(/href="Blockline\.apk" download/.test(html), "APK download link is present");
+const apkAnchors = [...html.matchAll(/<a\\b[^>]*href="Blockline\\.apk"[^>]*>/g)].map((match) => match[0]);
+assert(apkAnchors.length === 4 && apkAnchors.every((tag) => /\\bdata-apk-link\\b/.test(tag)), "All APK links support embedded-browser guidance");
+assert(!css.includes("\\\\n.site-header{") && /\\.site-header\\s*\\{\\s*position:fixed/.test(css), "Fixed header selector is not corrupted by a literal escape");
+assert(/body\\.menu-open\\{overflow:hidden\\}/.test(css) && !/body\\.menu-open\\{[^}]*touch-action/.test(css), "Mobile menu locks page scrolling without blocking menu touch gestures");
+assert(/\\.mobile-menu\\{position:fixed;[^}]*padding:calc\\(88px \\+ env\\(safe-area-inset-top\\)\\)/.test(css), "Mobile menu clears the fixed header and safe-area inset");
 assert(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present");
 assert(/IntersectionObserver/.test(js), "Scroll reveal uses IntersectionObserver");
 assert(/aria-expanded/.test(js) && /Escape/.test(js), "Accessible mobile navigation has keyboard support");
