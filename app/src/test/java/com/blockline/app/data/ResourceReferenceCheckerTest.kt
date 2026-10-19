@@ -41,4 +41,25 @@ class ResourceReferenceCheckerTest {
             root.deleteRecursively()
         }
     }
+
+    @Test
+    fun resolvesTexturesRelativeToNestedPackRoot() {
+        val root = createTempDir(prefix = "blockline-nested-pack-")
+        try {
+            val pack = File(root, "RP").apply { mkdirs() }
+            val manifest = File(pack, "manifest.json").apply { writeText("""{"header":{"name":"RP"}}""") }
+            val entity = File(pack, "entity/client_entity.json").apply {
+                parentFile?.mkdirs()
+                writeText("""{"description":{"textures":{"default":"textures/entity/mob"}}}""")
+            }
+            val texture = File(pack, "textures/entity").apply { mkdirs() }.resolve("mob.png")
+            texture.writeBytes(byteArrayOf(1, 2, 3))
+
+            val issues = ResourceReferenceChecker.check(root, listOf(manifest, entity, texture))
+
+            assertTrue("Valid texture inside RP should not be reported missing: $issues", issues.isEmpty())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
 }
