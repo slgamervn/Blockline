@@ -58,7 +58,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
     var renameValue by remember { mutableStateOf("") }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let(vm::importPack) }
     Scaffold(topBar = { TopAppBar(title = { Text("Blockline") }, actions = {
-        IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, "Import pack") }
+        IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, "Import pack") }
     }) }, floatingActionButton = {
         FloatingActionButton(onClick = { vm.createSample(); onOpen() }) { Icon(Icons.Default.Add, "Create sample project") }
     }) { pad ->
@@ -68,7 +68,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                 Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text("Import") }
             }
             if (vm.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, "No projects yet", "Import a .mcpack/.mcaddon or create a sample pack", Modifier.weight(1f))
+            if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, "No projects yet", "Import .zip, .mcpack, .mcaddon or create a sample pack", Modifier.weight(1f))
             else LazyColumn(Modifier.weight(1f)) {
                 items(vm.projects, key = { it.id }) { p ->
                     var menu by remember(p.id) { mutableStateOf(false) }
