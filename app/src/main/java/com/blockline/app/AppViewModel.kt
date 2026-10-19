@@ -53,6 +53,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val undo = mutableStateMapOf<String, MutableList<String>>()
     private val redo = mutableStateMapOf<String, MutableList<String>>()
     private var contentSearchRequestId = 0
+    private var validationRequestId = 0
 
     init { refresh() }
 
@@ -65,6 +66,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         if (isValidating) return
+        val requestId = ++validationRequestId
         isValidating = true
         validationIssues = emptyList()
         validationCompleted = false
@@ -72,12 +74,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val result = runCatching {
                 withContext(Dispatchers.IO) { ProjectValidator.validate(repo.projectDir(project.id)) }
             }
+            if (requestId != validationRequestId) return@launch
             isValidating = false
+            if (current?.id != project.id) return@launch
             result.onSuccess { issues ->
-                if (current?.id == project.id) {
-                    validationIssues = issues
-                    validationCompleted = true
-                }
+                validationIssues = issues
+                validationCompleted = true
                 val errors = issues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
                 val warnings = issues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
                 message = text(R.string.validation_finished, errors, warnings, issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO })
@@ -137,6 +139,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         saveCurrent(showMessage = false)
         current = p
         clearContentSearch()
+        validationRequestId++
+        isValidating = false
+        validationIssues = emptyList()
+        validationCompleted = false
         repo.touch(p.id)
         refresh()
         activeFile = null
@@ -318,6 +324,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun isFavorite(path: String) = current?.let { repo.isFavorite(it.id, path) } ?: false
     fun backup() {
         val p = current ?: return
+        saveCurrent(showMessage = false)
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching { repo.backup(p.id) }
             withContext(Dispatchers.Main) { message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) }) }
@@ -325,11 +332,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun restore() {
         val p = current ?: return
+        saveCurrent(showMessage = false)
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching { repo.restoreLatest(p.id) }
             withContext(Dispatchers.Main) {
-                message = if (result.getOrDefault(false)) text(R.string.latest_backup_restored) else text(R.string.no_backup_found)
-                activeFile?.let { openFile(it) }
+                val restored = result.getOrDefault(false)
+                message = if (restored) text(R.string.latest_backup_restored) else result.exceptionOrNull()?.message ?: text(R.string.no_backup_found)
+                if (restored) activeFile?.let { path -> openFile(path) }
+                refresh()
             }
         }
     }
