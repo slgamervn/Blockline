@@ -6,7 +6,7 @@
 
 **Import · Explore · Edit · Back up · Export**
 
-[![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
+[![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
 [![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
 
 [Download APK](https://github.com/slgamervn/Blockline/releases/latest/download/Blockline.apk) · [Project website](https://slgamervn.github.io/Blockline/) · [Report a bug](https://github.com/slgamervn/Blockline/issues)
@@ -21,7 +21,7 @@
 
 Blockline is an Android-native studio for working with **Minecraft Bedrock add-on files** directly on your phone. It is designed around a simple principle: your packs stay on your device, while the tools you need to inspect and edit them stay close at hand.
 
-The project is in active development. The current build focuses on a reliable local project workflow and a practical editor foundation. Advanced validation, generators, dependency analysis, and Script API reference browsing are planned for later phases.
+The project is in active development. The current build focuses on a reliable local project workflow and a practical editor foundation. Phase 2 is being implemented incrementally, including strict JSON syntax checks, manifest and UUID validation, script-entry checks, dependency review, and project text search. Generators and Script API reference browsing remain planned for later phases.
 
 ## Highlights
 
@@ -52,8 +52,8 @@ Blockline is being built in phases. The table below describes the current scope 
 
 - Project metadata currently uses a private JSON index and preferences; Room, Hilt, and the full Clean Architecture separation are not yet implemented.
 - Syntax highlighting is a lightweight first pass, not a full language parser or viewport-only renderer.
-- Content search currently scans supported text files up to 1 MB each and shows matching line numbers; identifier/UUID indexing and direct error-to-editor navigation remain future work.
-- Resource-specific previews and exhaustive reference resolution for entities, items, blocks, recipes, loot tables, functions, scripts, and language files are not yet complete.
+- Content search scans supported text files up to 1 MB each and shows matching line numbers. Validation findings can open the affected file; precise cursor placement and identifier/UUID indexing remain future work.
+- Resource-specific previews and exhaustive reference resolution for entities, items, blocks, recipes, loot tables, functions, scripts, and language files are not yet complete. JSON diagnostics preserve comment-aware source positions, but the validator is not a complete Mojang schema validator.
 - Validation is an initial static analysis pass, not a complete Mojang schema validator. Automated tests and device-level verification are still needed before treating this as a production release.
 
 ## Download and install
