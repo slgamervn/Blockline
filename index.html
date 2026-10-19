@@ -498,11 +498,30 @@ footer{border-top-color:#ffffff12}
 }
 
 </style>
+<style>
+/* Keep interaction calm and predictable; content should lead the page. */
+.language-toggle{flex:0 0 auto;min-height:40px;padding:0 13px;border:1px solid #ffffff22;border-radius:999px;background:transparent;color:var(--text);font:inherit;font-size:.84rem;font-weight:650;cursor:pointer}
+.language-toggle:hover{border-color:#9be7b580;background:#9be7b50c}
+@media(max-width:820px){.language-toggle{margin-left:auto;min-height:38px;padding:0 11px;font-size:.8rem}.navinner{gap:10px}}
+@media(max-width:560px){.navinner{gap:8px}.language-toggle{padding:0 9px}.nav-toggle{padding-inline:11px}}
+/* Remove scroll-linked parallax and oversized reveal movements. */
+.nav::after{display:none}
+.hero{min-height:0;display:block}
+.hero .eyebrow,.hero h1,.hero .lead,.hero .actions,.hero .trust{animation:none!important;transition:none!important;will-change:auto}
+.device{animation:none!important;will-change:auto}
+.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{transform:translate3d(0,8px,0);transition:opacity .28s ease,transform .28s ease;transition-delay:0ms;will-change:auto}
+.reveal.is-visible{transform:translate3d(0,0,0)}
+.feature,.feature:hover,.step,.step:hover{transform:none;box-shadow:none}
+.feature::before,.feature::after{display:none}
+.story-step{transition:opacity .2s ease}
+@media(prefers-reduced-motion:reduce){.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{opacity:1;transform:none;transition:none}}
+</style>
 </head>
 <body>
 <header class="nav"><div class="wrap navinner">
 <a class="brand" href="#" aria-label="Blockline home"><span class="mark">B</span><span>Blockline</span></a>
 <button class="nav-toggle" type="button" aria-controls="site-links" aria-expanded="false"><span class="menu-icon" aria-hidden="true">☰</span><span class="menu-label">Menu</span></button>
+<button class="language-toggle" type="button" data-language-toggle aria-label="Switch language">Tiếng Việt</button>
 <nav class="links" id="site-links" aria-label="Main navigation"><a href="#features">Features</a><a href="#workflow">How it works</a><a href="https://github.com/slgamervn/Blockline">Source</a><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a></nav>
 </div></header>
 <main>
@@ -625,46 +644,10 @@ footer{border-top-color:#ffffff12}
   document.addEventListener('click', event => {
     if (nav && !nav.contains(event.target)) closeNav();
   });
-  const hero = document.querySelector('.hero');
-  const heroCopy = hero?.querySelector('.heroGrid > div:first-child');
-  const device = document.querySelector('.device');
-  const glow = document.querySelector('.glow');
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let ticking = false;
-
   const updateScroll = () => {
-    const max = root.scrollHeight - window.innerHeight;
-    const progress = max > 0 ? Math.min(100, Math.max(0, window.scrollY / max * 100)) : 0;
-    root.style.setProperty('--scroll-progress', progress + '%');
     nav?.classList.toggle('is-scrolled', window.scrollY > 12);
-
-    if (!reducedMotion && hero && window.innerWidth > 820) {
-      const rect = hero.getBoundingClientRect();
-      const travel = Math.max(1, rect.height - window.innerHeight);
-      const p = Math.max(0, Math.min(1, -rect.top / travel));
-      if (heroCopy) {
-        heroCopy.style.opacity = String(1 - p * .72);
-        heroCopy.style.transform = 'translate3d(0,' + (-p * 30) + 'px,0)';
-      }
-      if (device) {
-        device.style.transform = 'translate3d(0,' + (p * -24) + 'px,0) rotateY(' + (-7 + p * 5) + 'deg) rotateX(' + (2 - p * 2) + 'deg) scale(' + (1 - p * .035) + ')';
-      }
-      if (glow) glow.style.transform = 'translate3d(0,' + (p * 30) + 'px,0) scale(' + (1 + p * .12) + ')';
-    } else {
-      if (heroCopy) { heroCopy.style.opacity = ''; heroCopy.style.transform = ''; }
-      if (device) device.style.transform = '';
-      if (glow) glow.style.transform = '';
-    }
-    ticking = false;
   };
-  const requestUpdate = () => {
-    if (!ticking) {
-      window.requestAnimationFrame(updateScroll);
-      ticking = true;
-    }
-  };
-  window.addEventListener('scroll', requestUpdate, { passive: true });
-  window.addEventListener('resize', requestUpdate, { passive: true });
+  window.addEventListener('scroll', updateScroll, { passive: true });
   updateScroll();
 
   const storySection = document.querySelector('#product-story');
@@ -674,20 +657,26 @@ footer{border-top-color:#ffffff12}
   const storyControls = [...document.querySelectorAll('[data-story-go]')];
   const isCompactStory = () => window.matchMedia('(max-width: 820px), (max-width: 1100px) and (pointer: coarse)').matches;
   const storyCopy = [
-    {caption:'01 / Import', title:'Start with your pack.', description:'Bring an existing Bedrock archive into a workspace on your device.', path:'workspace / projects', left:'3 files detected', right:'IMPORT READY'},
-    {caption:'02 / Inspect & edit', title:'Work at file level.', description:'Explore the pack structure and make focused changes in supported files.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 lines', right:'EDITOR OPEN'},
-    {caption:'03 / Export', title:'Ready for the next test.', description:'Check the project contents and prepare a pack to continue in Minecraft Bedrock.', path:'workspace / export', left:'Pack structure preserved', right:'EXPORT READY'}
+    en: [
+      {caption:'01 / Import', title:'Start with your pack.', description:'Open a .mcpack or .mcaddon from your device and keep a working copy in Blockline.', path:'workspace / projects', left:'Pack files found', right:'READY TO OPEN'},
+      {caption:'02 / Edit', title:'Work on the files that matter.', description:'Browse the pack and edit supported text files, including JSON and JavaScript.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 lines', right:'FILE OPEN'},
+      {caption:'03 / Export', title:'Make a copy for testing.', description:'Keep the pack structure, create a backup, and export the files you want to test in Minecraft.', path:'workspace / export', left:'Pack structure kept', right:'READY TO EXPORT'}
+    ],
+    vi: [
+      {caption:'01 / Nhập pack', title:'Bắt đầu từ pack của bạn.', description:'Mở tệp .mcpack hoặc .mcaddon trên điện thoại và tạo bản làm việc trong Blockline.', path:'workspace / projects', left:'Đã nhận diện tệp', right:'SẴN SÀNG MỞ'},
+      {caption:'02 / Chỉnh sửa', title:'Sửa đúng tệp cần dùng.', description:'Duyệt cấu trúc pack và chỉnh sửa các tệp văn bản được hỗ trợ, như JSON và JavaScript.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 dòng', right:'ĐANG MỞ TỆP'},
+      {caption:'03 / Xuất pack', title:'Tạo bản để kiểm tra.', description:'Giữ nguyên cấu trúc thư mục, sao lưu khi cần và xuất các tệp để thử trong Minecraft.', path:'workspace / export', left:'Đã giữ cấu trúc pack', right:'SẴN SÀNG XUẤT'}
+    ]
   ];
   let activeScene = -1;
-  let requestedStoryScene = null;
-  let storyScrollTimer = 0;
+  let currentLanguage = root.lang === 'vi' ? 'vi' : 'en';
   const setStoryScene = index => {
     if (!Number.isInteger(index) || index < 0 || index >= storyCopy.length) return;
     activeScene = index;
     if (storyStage) storyStage.dataset.scene = String(index);
     storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
     storyControls.forEach((control, i) => control.setAttribute('aria-pressed', String(i === index)));
-    const data = storyCopy[index];
+    const data = storyCopy[currentLanguage][index];
     const caption = document.querySelector('#stage-caption');
     const title = document.querySelector('#stage-title');
     const description = document.querySelector('#stage-description');
@@ -709,7 +698,11 @@ footer{border-top-color:#ffffff12}
       setStoryScene(index);
     });
   });
-  // Initialize the preview once. Scrolling the page must never override a button choice.
+  window.addEventListener('blockline:languagechange', event => {
+    currentLanguage = event.detail?.language === 'vi' ? 'vi' : 'en';
+    setStoryScene(activeScene < 0 ? 0 : activeScene);
+  });
+  // Keep the preview under the reader's control; scroll position never changes the selected step.
   setStoryScene(0);
 
   const targets = document.querySelectorAll(
@@ -735,5 +728,156 @@ footer{border-top-color:#ffffff12}
 </script>
 
 
+<script>
+(() => {
+  const messages = {
+    en: {
+      menu: 'Menu', featuresNav: 'Features', workflowNav: 'How it works', sourceNav: 'Source', download: '↓ Download APK',
+      heroKicker: '<span class="dot"></span> ANDROID APP · EARLY ACCESS',
+      heroTitle: 'Edit Bedrock packs.<br><em>Right on your phone.</em>',
+      heroLead: 'Blockline helps you open, organize, edit and export Minecraft Bedrock add-on files on Android. Your working files stay on your device.',
+      getApp: '↓ Get Blockline for Android', sourceAction: '⌘ View source code',
+      trustLocal: '<b class="check">✓</b> Files stay on your device', trustNoAccount: '<b class="check">✓</b> No account needed', trustOffline: '<b class="check">✓</b> Core tools work offline',
+      localBadge: 'ON-DEVICE WORKSPACE', workspace: 'Your workspace', projects: 'Projects', sampleOne: 'Survival Add-on', sampleTwo: 'Custom Textures',
+      behaviorPack: 'Behavior Pack · 24 files', resourcePack: 'Resource Pack · 18 files', openTag: 'OPEN', quickEdit: 'Quick edit',
+      tabProjects: '▦ Projects', tabExplorer: '▤ Explorer', tabSearch: '⌕ Search', tabTools: '⚒ Tools', tabMore: '⋯ More',
+      storyKicker: 'A straightforward workflow', storyTitle: 'From pack archive to your next test.', storyLead: 'Open a pack, work on its files, then export a copy when you are ready. Choose a step to preview it.',
+      controlImport: '<span>01</span> Import', controlEdit: '<span>02</span> Edit', controlExport: '<span>03</span> Export',
+      help: 'Choose a step above to change the preview.', stageLocal: 'ON-DEVICE WORKSPACE',
+      stepOneNum: '01 — IMPORT', stepOneTitle: 'Keep your packs in one place.', stepOneBody: 'Open a .mcpack or .mcaddon and work on a local copy. Your files stay in the app’s private storage.', stepOneNote: 'Import a pack from your device',
+      stepTwoNum: '02 — EDIT', stepTwoTitle: 'Find the file you need.', stepTwoBody: 'Browse folders and edit supported text files, including JSON, JavaScript and .mcfunction.', stepTwoNote: 'Browse and edit project files',
+      stepThreeNum: '03 — EXPORT', stepThreeTitle: 'Prepare a copy for Minecraft.', stepThreeBody: 'Back up the project when needed, then export a behavior pack, resource pack or combined add-on.', stepThreeNote: 'Back up or export your pack',
+      featuresKicker: 'What you can do today', featuresTitle: 'The tools you need for pack work.', featuresLead: 'Blockline is still in early access. The current build focuses on importing, browsing, editing and exporting files locally.',
+      featureImportTitle: 'Import packs', featureImportBody: 'Open .mcpack and .mcaddon files with Android’s file picker. Blockline works with a local copy.',
+      featureBrowseTitle: 'Browse files', featureBrowseBody: 'Open folders, create or move files, rename items, and mark frequently used files as favorites.',
+      featureEditTitle: 'Edit text files', featureEditBody: 'Use tabs, undo and redo, search, and JSON formatting in the built-in editor.',
+      featureExportTitle: 'Export a pack', featureExportBody: 'Export a behavior pack, resource pack, or combined .mcaddon for testing.',
+      featureBackupTitle: 'Back up your work', featureBackupBody: 'Create a local backup and restore the latest saved copy when you need it.',
+      featureMobileTitle: 'Made for Android', featureMobileBody: 'Material 3 interface, dark and light themes, adjustable editor text, and touch-friendly controls.',
+      workflowKicker: 'How it works', workflowTitle: 'Three steps, without the desktop detour.', workflowLead: 'Keep the project on your phone from import through export.',
+      workOneTitle: 'Import a pack', workOneBody: 'Choose an existing .mcpack or .mcaddon. Blockline copies its contents into app storage.',
+      workTwoTitle: 'Review and edit', workTwoBody: 'Open the project, inspect its folders and manifests, then edit a supported text file.',
+      workThreeTitle: 'Back up and export', workThreeBody: 'Save a backup if needed and export the pack you want to try in Minecraft Bedrock.',
+      downloadKicker: 'Try the current build', downloadTitle: 'A small studio for your phone.', downloadBody: 'Get the latest Android build or review the source code and project roadmap.',
+      fineprint: 'Early access · Android 8.0+ (API 26) · Debug APK', downloadAgain: '↓ Download APK', releasePage: 'View release page ↗',
+      downloadHelp: 'If the APK download does not appear in Downloads, open the release page and tap <strong>Blockline.apk</strong>. Some in-app browsers do not save APK files correctly.',
+      footerCopy: 'Made for Minecraft Bedrock creators. Blockline is in early access, and features may change as development continues.',
+      github: 'GitHub', issues: 'Report an issue', releases: 'Releases'
+    },
+    vi: {
+      menu: 'Menu', featuresNav: 'Tính năng', workflowNav: 'Cách dùng', sourceNav: 'Mã nguồn', download: '↓ Tải APK',
+      heroKicker: '<span class="dot"></span> ỨNG DỤNG ANDROID · TRUY CẬP SỚM',
+      heroTitle: 'Chỉnh sửa pack Bedrock.<br><em>Ngay trên điện thoại.</em>',
+      heroLead: 'Blockline giúp bạn mở, sắp xếp, chỉnh sửa và xuất tệp add-on Minecraft Bedrock trên Android. Các tệp làm việc được giữ trên thiết bị của bạn.',
+      getApp: '↓ Tải Blockline cho Android', sourceAction: '⌘ Xem mã nguồn',
+      trustLocal: '<b class="check">✓</b> Tệp được giữ trên máy', trustNoAccount: '<b class="check">✓</b> Không cần tài khoản', trustOffline: '<b class="check">✓</b> Công cụ chính dùng được ngoại tuyến',
+      localBadge: 'LÀM VIỆC TRÊN THIẾT BỊ', workspace: 'Không gian làm việc', projects: 'Dự án', sampleOne: 'Add-on Sinh tồn', sampleTwo: 'Bộ texture tùy chỉnh',
+      behaviorPack: 'Behavior Pack · 24 tệp', resourcePack: 'Resource Pack · 18 tệp', openTag: 'ĐANG MỞ', quickEdit: 'Chỉnh sửa nhanh',
+      tabProjects: '▦ Dự án', tabExplorer: '▤ Tệp', tabSearch: '⌕ Tìm kiếm', tabTools: '⚒ Công cụ', tabMore: '⋯ Thêm',
+      storyKicker: 'Quy trình làm việc rõ ràng', storyTitle: 'Từ tệp pack đến lần thử tiếp theo.', storyLead: 'Mở pack, chỉnh sửa các tệp cần thiết rồi xuất bản sao khi sẵn sàng. Chọn từng bước để xem trước.',
+      controlImport: '<span>01</span> Nhập pack', controlEdit: '<span>02</span> Chỉnh sửa', controlExport: '<span>03</span> Xuất pack',
+      help: 'Chọn một bước phía trên để đổi phần xem trước.', stageLocal: 'LÀM VIỆC TRÊN THIẾT BỊ',
+      stepOneNum: '01 — NHẬP PACK', stepOneTitle: 'Quản lý pack tại một nơi.', stepOneBody: 'Mở tệp .mcpack hoặc .mcaddon và làm việc trên bản sao cục bộ. Tệp được lưu trong vùng dữ liệu riêng của ứng dụng.', stepOneNote: 'Nhập pack từ thiết bị',
+      stepTwoNum: '02 — CHỈNH SỬA', stepTwoTitle: 'Tìm đúng tệp cần sửa.', stepTwoBody: 'Duyệt thư mục và chỉnh sửa các tệp văn bản được hỗ trợ, gồm JSON, JavaScript và .mcfunction.', stepTwoNote: 'Duyệt và sửa tệp dự án',
+      stepThreeNum: '03 — XUẤT PACK', stepThreeTitle: 'Chuẩn bị bản để thử trong game.', stepThreeBody: 'Sao lưu khi cần, sau đó xuất Behavior Pack, Resource Pack hoặc gói .mcaddon kết hợp.', stepThreeNote: 'Sao lưu hoặc xuất pack',
+      featuresKicker: 'Những gì bản hiện tại hỗ trợ', featuresTitle: 'Công cụ thiết yếu để làm việc với pack.', featuresLead: 'Blockline vẫn đang ở giai đoạn truy cập sớm. Bản hiện tại tập trung vào nhập, duyệt, chỉnh sửa và xuất tệp ngay trên thiết bị.',
+      featureImportTitle: 'Nhập pack', featureImportBody: 'Mở tệp .mcpack và .mcaddon bằng trình chọn tệp của Android. Ứng dụng thao tác trên bản sao cục bộ.',
+      featureBrowseTitle: 'Duyệt tệp', featureBrowseBody: 'Mở thư mục, tạo hoặc di chuyển tệp, đổi tên và đánh dấu các tệp thường dùng.',
+      featureEditTitle: 'Sửa tệp văn bản', featureEditBody: 'Trình chỉnh sửa hỗ trợ nhiều tab, hoàn tác, làm lại, tìm kiếm và định dạng JSON.',
+      featureExportTitle: 'Xuất pack', featureExportBody: 'Xuất Behavior Pack, Resource Pack hoặc gói .mcaddon kết hợp để kiểm tra.',
+      featureBackupTitle: 'Sao lưu dự án', featureBackupBody: 'Tạo bản sao lưu cục bộ và khôi phục bản gần nhất khi cần.',
+      featureMobileTitle: 'Thiết kế cho Android', featureMobileBody: 'Giao diện Material 3, giao diện sáng/tối, tùy chỉnh cỡ chữ trình sửa và nút bấm phù hợp màn hình cảm ứng.',
+      workflowKicker: 'Cách hoạt động', workflowTitle: 'Ba bước, không cần chuyển sang máy tính.', workflowLead: 'Từ lúc nhập đến khi xuất, dự án vẫn nằm trên điện thoại.',
+      workOneTitle: 'Nhập pack', workOneBody: 'Chọn tệp .mcpack hoặc .mcaddon có sẵn. Blockline sao chép nội dung vào vùng lưu trữ của ứng dụng.',
+      workTwoTitle: 'Kiểm tra và chỉnh sửa', workTwoBody: 'Mở dự án, xem cấu trúc thư mục và manifest, rồi sửa các tệp văn bản được hỗ trợ.',
+      workThreeTitle: 'Sao lưu và xuất', workThreeBody: 'Tạo bản sao lưu nếu cần, sau đó xuất pack để thử trong Minecraft Bedrock.',
+      downloadKicker: 'Dùng thử bản hiện tại', downloadTitle: 'Bộ công cụ nhỏ gọn trên điện thoại.', downloadBody: 'Tải bản Android mới nhất hoặc xem mã nguồn và kế hoạch phát triển.',
+      fineprint: 'Truy cập sớm · Android 8.0+ (API 26) · APK debug', downloadAgain: '↓ Tải APK', releasePage: 'Xem trang phát hành ↗',
+      downloadHelp: 'Nếu tải xong nhưng không thấy APK trong thư mục Tải xuống, hãy mở trang phát hành và nhấn vào <strong>Blockline.apk</strong>. Một số trình duyệt bên trong ứng dụng không lưu APK đúng cách.',
+      footerCopy: 'Dành cho người làm add-on Minecraft Bedrock. Blockline đang trong giai đoạn truy cập sớm, nên tính năng có thể thay đổi trong quá trình phát triển.',
+      github: 'GitHub', issues: 'Báo lỗi', releases: 'Bản phát hành'
+    }
+  };
+  const bindings = [
+    ['.nav-toggle .menu-label','menu'],['.links a[href="#features"]','featuresNav'],['.links a[href="#workflow"]','workflowNav'],
+    ['.links a[href="https://github.com/slgamervn/Blockline"]','sourceNav'],['.links a.button','download'],
+    ['.hero .eyebrow','heroKicker',true],['.hero h1','heroTitle',true],['.hero .lead','heroLead'],
+    ['.actions a.primary','getApp'],['.actions a.secondary','sourceAction'],
+    ['.trust span','trustLocal',true,0],['.trust span','trustNoAccount',true,1],['.trust span','trustOffline',true,2],
+    ['.apphead .pill','localBadge'],['.screenbody .screenlabel','workspace',false,0],['.screenTitle','projects'],
+    ['.miniCard:nth-of-type(1) .mininame','sampleOne'],['.miniCard:nth-of-type(2) .mininame','sampleTwo'],
+    ['.miniCard:nth-of-type(1) .minisub','behaviorPack'],['.miniCard:nth-of-type(2) .minisub','resourcePack'],['.miniCard .tag','openTag'],
+    ['.screenbody .screenlabel','quickEdit',false,1],
+    ['.tabbar span','tabProjects',false,0],['.tabbar b','tabExplorer'],['.tabbar span','tabSearch',false,1],['.tabbar span','tabTools',false,2],['.tabbar span','tabMore',false,3],
+    ['.story-head .kicker','storyKicker'],['#story-title','storyTitle'],['.story-head > p','storyLead',false,0],
+    ['.story-controls button[data-story-go="0"]','controlImport',true],['.story-controls button[data-story-go="1"]','controlEdit',true],['.story-controls button[data-story-go="2"]','controlExport',true],
+    ['.story-help','help'],['.stage-live','stageLocal'],
+    ['.story-step-number','stepOneNum',false,0],['.story-step h3','stepOneTitle',false,0],['.story-step p','stepOneBody',false,0],['.story-step .step-note','stepOneNote',false,0],
+    ['.story-step-number','stepTwoNum',false,1],['.story-step h3','stepTwoTitle',false,1],['.story-step p','stepTwoBody',false,1],['.story-step .step-note','stepTwoNote',false,1],
+    ['.story-step-number','stepThreeNum',false,2],['.story-step h3','stepThreeTitle',false,2],['.story-step p','stepThreeBody',false,2],['.story-step .step-note','stepThreeNote',false,2],
+    ['#features .sectionhead .kicker','featuresKicker'],['#features .sectionhead h2','featuresTitle'],['#features .sectionhead p','featuresLead'],
+    ['#features .feature h3','featureImportTitle',false,0],['#features .feature p','featureImportBody',false,0],
+    ['#features .feature h3','featureBrowseTitle',false,1],['#features .feature p','featureBrowseBody',false,1],
+    ['#features .feature h3','featureEditTitle',false,2],['#features .feature p','featureEditBody',false,2],
+    ['#features .feature h3','featureExportTitle',false,3],['#features .feature p','featureExportBody',false,3],
+    ['#features .feature h3','featureBackupTitle',false,4],['#features .feature p','featureBackupBody',false,4],
+    ['#features .feature h3','featureMobileTitle',false,5],['#features .feature p','featureMobileBody',false,5],
+    ['#workflow .sectionhead .kicker','workflowKicker'],['#workflow .sectionhead h2','workflowTitle'],['#workflow .sectionhead p','workflowLead'],
+    ['#workflow .step h3','workOneTitle',false,0],['#workflow .step p','workOneBody',false,0],
+    ['#workflow .step h3','workTwoTitle',false,1],['#workflow .step p','workTwoBody',false,1],
+    ['#workflow .step h3','workThreeTitle',false,2],['#workflow .step p','workThreeBody',false,2],
+    ['.downloadCard .kicker','downloadKicker'],['.downloadCard h2','downloadTitle'],['.downloadCard > div > p','downloadBody'],
+    ['.downloadCard .fineprint','fineprint',false,0],['.downloadActions a','downloadAgain',false,0],['.downloadActions a','releasePage',false,1],
+    ['.downloadCard .fineprint','downloadHelp',true,1],['.footinner > span','footerCopy'],
+    ['.footlinks a','github',false,0],['.footlinks a','issues',false,1],['.footlinks a','releases',false,2]
+  ];
+  const attrBindings = [
+    ['.nav-toggle','aria-label',{en:'Open navigation menu',vi:'Mở menu điều hướng'}],
+    ['nav.links','aria-label',{en:'Main navigation',vi:'Điều hướng chính'}],
+    ['.mockWrap','aria-label',{en:'Illustration of the Blockline app interface',vi:'Hình minh họa giao diện ứng dụng Blockline'}],
+    ['.story-controls','aria-label',{en:'Choose a workflow stage',vi:'Chọn một bước trong quy trình'}],
+    ['.story-controls button[data-story-go="0"]','aria-label',{en:'Show step 1: Import',vi:'Xem bước 1: Nhập pack'}],
+    ['.story-controls button[data-story-go="1"]','aria-label',{en:'Show step 2: Edit',vi:'Xem bước 2: Chỉnh sửa'}],
+    ['.story-controls button[data-story-go="2"]','aria-label',{en:'Show step 3: Export',vi:'Xem bước 3: Xuất pack'}]
+  ];
+  function applyLanguage(language) {
+    const lang = language === 'vi' ? 'vi' : 'en';
+    const dict = messages[lang];
+    document.documentElement.lang = lang;
+    bindings.forEach(([selector,key,html=false,index=0]) => {
+      const element = document.querySelectorAll(selector)[index];
+      if (!element || dict[key] == null) return;
+      if (html) element.innerHTML = dict[key];
+      else element.textContent = dict[key];
+    });
+    attrBindings.forEach(([selector,attribute,values]) => {
+      const element = document.querySelector(selector);
+      if (element) element.setAttribute(attribute, values[lang]);
+    });
+    const toggle = document.querySelector('[data-language-toggle]');
+    if (toggle) {
+      toggle.textContent = lang === 'en' ? 'Tiếng Việt' : 'English';
+      toggle.setAttribute('aria-label', lang === 'en' ? 'Switch website language to Vietnamese' : 'Chuyển ngôn ngữ trang web sang tiếng Anh');
+      toggle.setAttribute('aria-pressed', String(lang === 'vi'));
+    }
+    document.title = lang === 'vi' ? 'Blockline — Công cụ chỉnh sửa add-on Bedrock trên Android' : 'Blockline — Bedrock Add-on Studio for Android';
+    const description = lang === 'vi'
+      ? 'Blockline là ứng dụng Android giúp mở, duyệt, chỉnh sửa và xuất tệp add-on Minecraft Bedrock ngay trên thiết bị.'
+      : 'Blockline is an Android app for opening, browsing, editing and exporting Minecraft Bedrock add-on files on your device.';
+    document.querySelector('meta[name="description"]')?.setAttribute('content',description);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content',document.title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content',description);
+    try { localStorage.setItem('blockline-language', lang); } catch (_) {}
+    window.dispatchEvent(new CustomEvent('blockline:languagechange',{detail:{language:lang}}));
+  }
+  document.querySelector('[data-language-toggle]')?.addEventListener('click', () => {
+    applyLanguage(document.documentElement.lang === 'en' ? 'vi' : 'en');
+  });
+  let savedLanguage = 'en';
+  try { savedLanguage = localStorage.getItem('blockline-language') || 'en'; } catch (_) {}
+  if (savedLanguage !== 'en' && savedLanguage !== 'vi') savedLanguage = 'en';
+  applyLanguage(savedLanguage);
+})();
+</script>
 </body>
 </html>
