@@ -1,6 +1,7 @@
 package com.blockline.app.data
 
 import java.io.File
+import java.nio.file.Files
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -8,7 +9,7 @@ import org.junit.Test
 class ResourceReferenceCheckerTest {
     @Test
     fun warnsWhenExplicitTexturePathIsMissing() {
-        val root = createTempDir(prefix = "blockline-texture-missing-")
+        val root = Files.createTempDirectory("blockline-texture-missing-").toFile()
         try {
             val entityDir = File(root, "entities").apply { mkdirs() }
             val entity = File(entityDir, "client_entity.json")
@@ -26,7 +27,7 @@ class ResourceReferenceCheckerTest {
 
     @Test
     fun acceptsExistingTextureAndIgnoresAliases() {
-        val root = createTempDir(prefix = "blockline-texture-existing-")
+        val root = Files.createTempDirectory("blockline-texture-existing-").toFile()
         try {
             val entityDir = File(root, "entities").apply { mkdirs() }
             val texture = File(root, "textures/entity").apply { mkdirs() }.resolve("mob.png")
@@ -44,7 +45,7 @@ class ResourceReferenceCheckerTest {
 
     @Test
     fun resolvesTexturesRelativeToNestedPackRoot() {
-        val root = createTempDir(prefix = "blockline-nested-pack-")
+        val root = Files.createTempDirectory("blockline-nested-pack-").toFile()
         try {
             val pack = File(root, "RP").apply { mkdirs() }
             val manifest = File(pack, "manifest.json").apply { writeText("""{"header":{"name":"RP"}}""") }
