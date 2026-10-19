@@ -1,0 +1,33 @@
+name: Website validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "scripts/check-website.mjs"
+      - ".github/workflows/website-validation.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "scripts/check-website.mjs"
+      - ".github/workflows/website-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate landing page
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check HTML links, scripts, CSS, and motion safeguards
+        run: node scripts/check-website.mjs
