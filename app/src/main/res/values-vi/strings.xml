@@ -189,4 +189,7 @@
     <string name="file_actions_cd">Thao tác với tệp</string>
     <string name="last_opened_date">Mở lần cuối: %1$s</string>
     <string name="export_count">%1$d tệp</string>
+    <string name="export_pack">Xuất pack</string>
+    <string name="renamed">Đã đổi tên</string>
+    <string name="deleted_path">Đã xóa %1$s</string>
 </resources>
