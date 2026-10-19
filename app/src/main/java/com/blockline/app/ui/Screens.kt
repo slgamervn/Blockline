@@ -69,14 +69,14 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                 Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text(stringResource(R.string.import_pack)) }
             }
             if (vm.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, "No projects yet", "Import .zip, .mcpack, .mcaddon or create a sample pack", Modifier.weight(1f))
+            if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_projects), stringResource(R.string.no_projects_hint), Modifier.weight(1f))
             else LazyColumn(Modifier.weight(1f)) {
                 items(vm.projects, key = { it.id }) { p ->
                     var menu by remember(p.id) { mutableStateOf(false) }
                     Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
                         ListItem(
                             headlineContent = { Text(p.name) },
-                            supportingContent = { Text(if (p.id == vm.current?.id) "Currently open" else "Last opened ${java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened))}") },
+                            supportingContent = { Text(if (p.id == vm.current?.id) stringResource(R.string.current_open) else stringResource(R.string.last_opened_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened)))) },
                             leadingContent = { Icon(Icons.Default.Archive, null) },
                             trailingContent = {
                                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
@@ -125,8 +125,8 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
         }
     }
     val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name.equals("manifest.json", true) || f.name.equals("pack_manifest.json", true) } }.orEmpty()
-    Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
-        if (p == null) EmptyState(Icons.Default.FolderOpen, "No project selected", "Choose a project from Projects", Modifier.padding(pad))
+    Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: stringResource(R.string.overview)) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
+        if (p == null) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_project_selected), stringResource(R.string.choose_project_hint), Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item {
                 Card(Modifier.fillMaxWidth()) {
@@ -170,7 +170,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
             vm.projects.forEach { item ->
                 ListItem(
                     headlineContent = { Text(item.name) },
-                    supportingContent = { Text(if (item.id == vm.current?.id) "Current project" else "Local project") },
+                    supportingContent = { Text(stringResource(if (item.id == vm.current?.id) R.string.current_project else R.string.local_project)) },
                     leadingContent = { Icon(Icons.Default.FolderOpen, null) },
                     modifier = Modifier.clickable { vm.selectProject(item); showSwitcher = false }
                 )
@@ -270,7 +270,7 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                             com.blockline.app.data.IssueSeverity.WARNING -> androidx.compose.material3.MaterialTheme.colorScheme.tertiary
                             com.blockline.app.data.IssueSeverity.INFO -> androidx.compose.material3.MaterialTheme.colorScheme.primary
                         }, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
-                        Text(issue.path.ifBlank { "Project" }, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+                        Text(issue.path.ifBlank { stringResource(R.string.project_label) }, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
                         Text(if (issue.line != null) stringResource(R.string.issue_line_column, issue.line, issue.column?.let { ":$it" } ?: "", issue.message) else issue.message)
                     }
                 }
@@ -339,7 +339,7 @@ fun MoreScreen(vm: AppViewModel) {
                 }
                 androidx.compose.material3.HorizontalDivider()
                 Text(stringResource(R.string.privacy), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
-                Text("Project files stay in app-private storage. Phase 1 does not require an internet connection and includes no analytics or tracking.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.privacy_detail), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Text(stringResource(R.string.early_notice), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
