@@ -20,7 +20,7 @@ svg{display:block}
 .wrap{width:min(var(--wrap),calc(100% - var(--gutter)*2));margin-inline:auto}
 .skip-link{position:fixed;top:10px;left:10px;z-index:1000;padding:12px 16px;background:var(--green);color:#071b10;transform:translateY(-150%);transition:transform .2s}
 .skip-link:focus{transform:translateY(0)}
-body.menu-open{overflow:hidden;touch-action:none}
+body.menu-open{overflow:hidden}
 .site-header{position:fixed;inset:0 0 auto;z-index:50;border-bottom:1px solid transparent;transition:background .3s,border-color .3s,box-shadow .3s; padding-top:env(safe-area-inset-top)}
 .site-header.is-scrolled{background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:var(--line);box-shadow:0 8px 30px #00000008}
 .header-inner{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px}
@@ -285,7 +285,7 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 @media(max-width:820px){
   :root{--gutter:25px;--section:90px}
   .header-inner{min-height:70px}.desktop-nav,.header-download{display:none}.header-actions{margin-left:auto}.menu-toggle{display:grid}
-  .mobile-menu{position:fixed;z-index:49;inset:0;display:flex;flex-direction:column;padding:calc(26px + env(safe-area-inset-top)) var(--gutter) calc(25px + env(safe-area-inset-bottom));background:var(--bg);visibility:hidden;opacity:0;transform:translate3d(0,-8px,0);pointer-events:none;transition:opacity .3s var(--ease),transform .4s var(--ease),visibility .3s;overflow-y:auto}
+  .mobile-menu{position:fixed;z-index:49;inset:0;display:flex;flex-direction:column;padding:calc(88px + env(safe-area-inset-top)) var(--gutter) calc(25px + env(safe-area-inset-bottom));background:var(--bg);visibility:hidden;opacity:0;transform:translate3d(0,-8px,0);pointer-events:none;transition:opacity .3s var(--ease),transform .4s var(--ease),visibility .3s;overflow-y:auto}
   .mobile-menu.is-open{visibility:visible;opacity:1;transform:translate3d(0,0,0);pointer-events:auto}
   .mobile-menu-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:25px;border-bottom:1px solid var(--line)}
   .menu-caption{color:var(--subtle);font:500 .65rem var(--mono);letter-spacing:.1em}
