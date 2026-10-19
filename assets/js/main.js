@@ -156,6 +156,24 @@
     document.querySelector('.demo-tabs')?.setAttribute('aria-label', english ? 'Steps in the Blockline workflow' : 'Các bước trong quy trình Blockline');
     document.querySelector('.comparison-wrap')?.setAttribute('aria-label', english ? 'Blockline capability comparison' : 'Bảng so sánh phạm vi sử dụng Blockline');
     document.querySelector('.dialog-close')?.setAttribute('aria-label', english ? 'Close download guide' : 'Đóng hướng dẫn');
+    const selectedDemoKey = document.querySelector('[data-demo-tab][aria-selected="true"]')?.dataset.demoTab;
+    const activeDemoLabel = document.querySelector('#demo-screen-label');
+    const localizedDemoLabels = {
+      import: ['NHẬP PACK / TỆP', 'IMPORT / PACK FILE'],
+      edit: ['SOẠN THẢO / TỆP VĂN BẢN', 'EDITOR / TEXT FILE'],
+      manifest: ['MANIFEST / CHI TIẾT', 'MANIFEST / DETAILS'],
+      export: ['XUẤT PACK', 'EXPORT / PACK']
+    };
+    if (activeDemoLabel && selectedDemoKey && localizedDemoLabels[selectedDemoKey]) {
+      activeDemoLabel.textContent = localizedDemoLabels[selectedDemoKey][english ? 1 : 0];
+    }
+    const copyStatus = document.querySelector('.copy-status');
+    if (copyStatus?.dataset.state === 'copied') copyStatus.textContent = english
+      ? 'Link copied. Open Chrome and paste it into the address bar.'
+      : 'Đã chép liên kết. Hãy mở Chrome và dán liên kết vào thanh địa chỉ.';
+    else if (copyStatus?.dataset.state === 'failed') copyStatus.textContent = english
+      ? 'Could not copy automatically. Copy the address from your browser bar.'
+      : 'Không thể tự chép liên kết. Hãy sao chép địa chỉ trên thanh trình duyệt.';
     const languageToggle = document.querySelector('[data-language-toggle]');
     if (languageToggle) {
       languageToggle.textContent = english ? 'VI' : 'EN';
@@ -474,9 +492,9 @@
         temporary.remove();
         if (!copied) throw new Error('copy failed');
       }
-      if (status) status.textContent = currentLanguage === 'en' ? 'Link copied. Open Chrome and paste it into the address bar.' : 'Đã chép liên kết. Hãy mở Chrome và dán liên kết vào thanh địa chỉ.';
+      if (status) { status.dataset.state = 'copied'; status.textContent = currentLanguage === 'en' ? 'Link copied. Open Chrome and paste it into the address bar.' : 'Đã chép liên kết. Hãy mở Chrome và dán liên kết vào thanh địa chỉ.'; }
     } catch (_) {
-      if (status) status.textContent = currentLanguage === 'en' ? 'Could not copy automatically. Copy the address from your browser bar.' : 'Không thể tự chép liên kết. Hãy sao chép địa chỉ trên thanh trình duyệt.';
+      if (status) { status.dataset.state = 'failed'; status.textContent = currentLanguage === 'en' ? 'Could not copy automatically. Copy the address from your browser bar.' : 'Không thể tự chép liên kết. Hãy sao chép địa chỉ trên thanh trình duyệt.'; }
     }
   });
   dialog?.addEventListener('click', (event) => {
