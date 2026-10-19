@@ -656,7 +656,7 @@ footer{border-top-color:#ffffff12}
   const storySteps = [...document.querySelectorAll('[data-story-step]')];
   const storyControls = [...document.querySelectorAll('[data-story-go]')];
   const isCompactStory = () => window.matchMedia('(max-width: 820px), (max-width: 1100px) and (pointer: coarse)').matches;
-  const storyCopy = [
+  const storyCopy = {
     en: [
       {caption:'01 / Import', title:'Start with your pack.', description:'Open a .mcpack or .mcaddon from your device and keep a working copy in Blockline.', path:'workspace / projects', left:'Pack files found', right:'READY TO OPEN'},
       {caption:'02 / Edit', title:'Work on the files that matter.', description:'Browse the pack and edit supported text files, including JSON and JavaScript.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 lines', right:'FILE OPEN'},
@@ -667,11 +667,11 @@ footer{border-top-color:#ffffff12}
       {caption:'02 / Chỉnh sửa', title:'Sửa đúng tệp cần dùng.', description:'Duyệt cấu trúc pack và chỉnh sửa các tệp văn bản được hỗ trợ, như JSON và JavaScript.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 dòng', right:'ĐANG MỞ TỆP'},
       {caption:'03 / Xuất pack', title:'Tạo bản để kiểm tra.', description:'Giữ nguyên cấu trúc thư mục, sao lưu khi cần và xuất các tệp để thử trong Minecraft.', path:'workspace / export', left:'Đã giữ cấu trúc pack', right:'SẴN SÀNG XUẤT'}
     ]
-  ];
+  };
   let activeScene = -1;
   let currentLanguage = root.lang === 'vi' ? 'vi' : 'en';
   const setStoryScene = index => {
-    if (!Number.isInteger(index) || index < 0 || index >= storyCopy.length) return;
+    if (!Number.isInteger(index) || index < 0 || index >= storyCopy[currentLanguage].length) return;
     activeScene = index;
     if (storyStage) storyStage.dataset.scene = String(index);
     storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
@@ -694,7 +694,7 @@ footer{border-top-color:#ffffff12}
   storyControls.forEach(control => {
     control.addEventListener('click', () => {
       const index = Number(control.dataset.storyGo);
-      if (!Number.isInteger(index) || index < 0 || index >= storyCopy.length) return;
+      if (!Number.isInteger(index) || index < 0 || index >= storyCopy[currentLanguage].length) return;
       setStoryScene(index);
     });
   });
@@ -805,8 +805,8 @@ footer{border-top-color:#ffffff12}
     ['.actions a.primary','getApp'],['.actions a.secondary','sourceAction'],
     ['.trust span','trustLocal',true,0],['.trust span','trustNoAccount',true,1],['.trust span','trustOffline',true,2],
     ['.apphead .pill','localBadge'],['.screenbody .screenlabel','workspace',false,0],['.screenTitle','projects'],
-    ['.miniCard:nth-of-type(1) .mininame','sampleOne'],['.miniCard:nth-of-type(2) .mininame','sampleTwo'],
-    ['.miniCard:nth-of-type(1) .minisub','behaviorPack'],['.miniCard:nth-of-type(2) .minisub','resourcePack'],['.miniCard .tag','openTag'],
+    ['.miniCard:nth-of-type(3) .mininame','sampleOne'],['.miniCard:nth-of-type(4) .mininame','sampleTwo'],
+    ['.miniCard:nth-of-type(3) .minisub','behaviorPack'],['.miniCard:nth-of-type(4) .minisub','resourcePack'],['.miniCard .tag','openTag'],
     ['.screenbody .screenlabel','quickEdit',false,1],
     ['.tabbar span','tabProjects',false,0],['.tabbar b','tabExplorer'],['.tabbar span','tabSearch',false,1],['.tabbar span','tabTools',false,2],['.tabbar span','tabMore',false,3],
     ['.story-head .kicker','storyKicker'],['#story-title','storyTitle'],['.story-head > p','storyLead',false,0],
