@@ -45,6 +45,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
+import com.blockline.app.R
 import com.blockline.app.data.JsonTools
 import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
