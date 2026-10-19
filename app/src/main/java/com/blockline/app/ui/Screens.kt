@@ -120,7 +120,8 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null && p != null) vm.exportProject(uri, exportMode)
     }
-    val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name.equals("manifest.json", true) || f.name.equals("pack_manifest.json", true) } }.orEmpty()
+    val projectFiles = p?.let { vm.projectEntries[it.id].orEmpty() }.orEmpty().filter { it.isFile }
+    val manifestFiles = projectFiles.filter { it.name.equals("manifest.json", true) || it.name.equals("pack_manifest.json", true) }
     Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: stringResource(R.string.overview)) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_project_selected), stringResource(R.string.choose_project_hint), Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -132,7 +133,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                         Text(stringResource(R.string.project_local_notice), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
-                                Text(stringResource(R.string.files_count, vm.repo.allFiles(p.id).size), Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                                Text(if (vm.isIndexingProjectFiles) stringResource(R.string.scanning_files) else stringResource(R.string.files_count, projectFiles.size), Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                             }
                             androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
                                 Text("ID · ${p.id.take(8)}", Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
@@ -219,7 +220,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     var contentMode by remember { mutableStateOf(false) }
     val p = vm.current
     val pathMatches = p?.let { project ->
-        vm.repo.allFiles(project.id).filter { vm.repo.relative(project.id, it).contains(query, true) }
+        vm.projectEntries[project.id].orEmpty().filter { it.isFile && vm.repo.relative(project.id, it).contains(query, true) }
     }.orEmpty()
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text(stringResource(R.string.search_project), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
@@ -238,7 +239,8 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         if (p == null) {
             Text(stringResource(R.string.select_project_first))
         } else if (!contentMode) {
-            if (pathMatches.isEmpty()) Text(stringResource(if (query.isBlank()) R.string.enter_file_name else R.string.no_matching_files))
+            if (vm.isIndexingProjectFiles) Text(stringResource(R.string.scanning_files))
+            else if (pathMatches.isEmpty()) Text(stringResource(if (query.isBlank()) R.string.enter_file_name else R.string.no_matching_files))
             else LazyColumn(Modifier.weight(1f)) {
                 items(pathMatches, key = { it.path }) { file ->
                     val path = vm.repo.relative(p.id, file)
@@ -307,7 +309,7 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         }
         item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text(stringResource(R.string.create_backup)) } }
         item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text(stringResource(R.string.restore_latest_backup)) } }
-        item { Button(onClick = { vm.current?.let { vm.message = context.getString(R.string.project_contains_files, vm.repo.allFiles(it.id).size) } ?: run { vm.message = context.getString(R.string.select_project_first) } }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text(stringResource(R.string.count_project_files)) } }
+        item { Button(onClick = { vm.current?.let { vm.message = context.getString(R.string.project_contains_files, vm.projectEntries[it.id].orEmpty().count { file -> file.isFile }) } ?: run { vm.message = context.getString(R.string.select_project_first) } }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text(stringResource(R.string.count_project_files)) } }
     }
 }
 

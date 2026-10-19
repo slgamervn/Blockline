@@ -31,6 +31,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var current by mutableStateOf<Project?>(null)
         private set
+    val projectEntries = mutableStateMapOf<String, List<File>>()
+    var isIndexingProjectFiles by mutableStateOf(false)
+        private set
     var message by mutableStateOf<String?>(null)
     var themeMode by mutableStateOf(ThemeMode.DARK)
     var fontSize by mutableStateOf(14)
@@ -70,11 +73,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val lastEditAt = mutableMapOf<String, Long>()
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
+    private var fileIndexRequestId = 0
     private var autoSaveJob: Job? = null
 
     init { refresh() }
 
     fun refresh() { projects = repo.list() }
+
+    private fun refreshProjectEntries(projectId: String) {
+        val requestId = ++fileIndexRequestId
+        if (current?.id == projectId) isIndexingProjectFiles = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) { repo.allEntries(projectId) }
+            }
+            if (requestId != fileIndexRequestId) return@launch
+            if (current?.id == projectId) isIndexingProjectFiles = false
+            result.onSuccess { projectEntries[projectId] = it }
+                .onFailure { if (current?.id == projectId) message = it.message ?: text(R.string.scanning_files) }
+        }
+    }
 
     fun validateCurrentProject() {
         val project = current
@@ -182,6 +200,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (current?.id == p.id) {
             repo.touch(p.id)
             refresh()
+            refreshProjectEntries(p.id)
             return
         }
         saveCurrent(showMessage = false)
@@ -193,6 +212,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         validationCompleted = false
         repo.touch(p.id)
         refresh()
+        refreshProjectEntries(p.id)
         activeFile = null
         content = ""
         openTabs.clear()
@@ -234,6 +254,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             validationCompleted = false
             contentSearchResults = emptyList()
         }
+        projectEntries.remove(p.id)
         refresh(); message = text(R.string.project_deleted)
     }
     fun openFile(path: String) = openFile(path, null)
@@ -355,6 +376,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val f = repo.resolve(p.id, path)
             if (directory) check(f.mkdirs()) else { f.parentFile?.mkdirs(); check(f.createNewFile()) }
             message = if (directory) text(R.string.folder_created) else text(R.string.file_created)
+            refreshProjectEntries(p.id)
         }.onFailure { message = it.message ?: text(R.string.create_failed) }
     }
     fun renameFile(path: String, name: String) {
@@ -365,7 +387,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val newPath = repo.relative(p.id, new)
             repo.remapPathMetadata(p.id, path, newPath)
             remapOpenPaths(path, newPath)
-            refresh()
+            refreshProjectEntries(p.id)
             message = text(R.string.renamed)
         }.onFailure { message = it.message ?: text(R.string.rename_failed) }
     }
@@ -383,6 +405,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 lastEditAt.remove(tab)
                 if (activeFile == tab) { activeFile = null; content = "" }
             }
+            refreshProjectEntries(p.id)
             message = text(R.string.deleted_path, path)
         }.onFailure { message = it.message ?: text(R.string.delete_failed) }
     }
@@ -396,7 +419,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val newPath = repo.relative(p.id, moved)
             repo.remapPathMetadata(p.id, path, newPath)
             remapOpenPaths(path, newPath)
-            refresh()
+            refreshProjectEntries(p.id)
             message = text(R.string.moved_to, newPath)
         }.onFailure { message = it.message ?: text(R.string.move_unsafe) }
     }

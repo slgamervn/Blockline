@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Card
@@ -55,7 +56,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     var dialog by remember { mutableStateOf<String?>(null) }
     var name by remember { mutableStateOf("") }
     var targetPath by remember { mutableStateOf("") }
-    val allEntries = project?.let { vm.repo.allEntries(it.id) }.orEmpty()
+    val allEntries = project?.let { vm.projectEntries[it.id] }.orEmpty()
     val entries = allEntries.filter { file ->
         val path = project?.let { vm.repo.relative(it.id, file) } ?: ""
         when (filter) {
@@ -85,9 +86,13 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                         )
                     }
                 }
-                if (entries.isEmpty()) {
+                if (vm.isIndexingProjectFiles) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text(stringResource(R.string.scanning_files), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                }
+                if (!vm.isIndexingProjectFiles && entries.isEmpty()) {
                     EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())
-                } else {
+                } else if (entries.isNotEmpty()) {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(entries, key = { vm.repo.relative(project.id, it) }) { file ->
                             val path = vm.repo.relative(project.id, file)
