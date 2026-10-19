@@ -29,11 +29,11 @@ object JsonTools {
                 i += 2
                 while (i < s.length && !(s[i] == '*' && i + 1 < s.length && s[i + 1] == '/')) i++
                 if (i >= s.length) {
-                    sb.append(s.substring(start))
+                    s.substring(start).forEach { sb.append(if (it == '\n' || it == '\r') it else ' ') }
                     break
                 }
                 val comment = s.substring(start, i + 2)
-                comment.forEach { if (it == '\n') sb.append('\n') }
+                comment.forEach { sb.append(if (it == '\n' || it == '\r') it else ' ') }
                 i += 2
             } else {
                 sb.append(c)
