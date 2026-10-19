@@ -27,7 +27,7 @@ internal object ResourceReferenceChecker {
                 val root = runCatching { JSONObject(JsonTools.stripComments(file.readText(Charsets.UTF_8))) }.getOrNull()
                     ?: return@forEach
                 inspectTextures(root, false) { reference ->
-                    val normalized = reference.trim().replace('\\\\', '/').removePrefix("/")
+                    val normalized = reference.trim().replace('\\', '/').removePrefix("/")
                     if (!normalized.startsWith("textures/", true) || normalized.contains("..")) return@inspectTextures
                     val candidate = if (normalized.substringAfterLast('/').contains('.')) normalized
                         else "$normalized.png"
