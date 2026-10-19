@@ -179,6 +179,22 @@ class ProjectRepository(private val ctx: Context) {
         }
         editor.apply()
     }
+
+    fun removePathMetadata(id: String, path: String) {
+        val prefix = "filefav:$id:"
+        val editor = prefs.edit()
+        prefs.all.keys.filter { key ->
+            if (!key.startsWith(prefix)) false
+            else {
+                val savedPath = key.removePrefix(prefix)
+                savedPath == path || savedPath.startsWith("$path/")
+            }
+        }.forEach(editor::remove)
+        val recentKey = "recentFile:$id"
+        val recent = prefs.getString(recentKey, null)
+        if (recent == path || recent?.startsWith("$path/") == true) editor.remove(recentKey)
+        editor.apply()
+    }
     fun recentFile(id: String): String? = prefs.getString("recentFile:$id", null)
 
     fun backup(id: String): File {
