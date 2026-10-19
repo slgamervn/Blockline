@@ -32,7 +32,7 @@ const englishKeys = new Set([...(englishDictionary?.[1] || "").matchAll(/"([^"]+
 const bodyMarkup = (html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i) || [null, ""])[1];
 const visibleTextNodes = [...bodyMarkup.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").matchAll(/>([^<>]+)</g)]
   .map((match) => match[1].replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim())
-  .filter((value) => value && /[À-ỹ]/.test(value));
+  .filter((value) => value && !["×", "ƒ"].includes(value) && /[À-ỹ]/.test(value));
 const untranslatedVisibleText = [...new Set(visibleTextNodes)].filter((value) => !englishKeys.has(value));
 assert(untranslatedVisibleText.length === 0, "All visible Vietnamese copy has an English translation");
 assert(/og:locale/.test(html) && /ogLocale\.content = currentLanguage === 'en'/.test(js), "Social metadata follows the selected language");
