@@ -127,12 +127,23 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, "Back") } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, "Switch project") } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, "No project selected", "Choose a project from Projects", Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item { Text("Project overview", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
-            item { Card { Column(Modifier.padding(16.dp)) {
-                Text("Local project copy", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                Text("${vm.repo.allFiles(p.id).size} files")
-                Text("Project ID: ${p.id.take(8)}")
-            } } }
+            item {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("PROJECT OVERVIEW", color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                        Text(p.name, style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
+                        Text("A local copy on this device. Your pack contents are not uploaded by Blockline.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
+                                Text("${vm.repo.allFiles(p.id).size} files", Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                            }
+                            androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
+                                Text("ID · ${p.id.take(8)}", Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                    }
+                }
+            }
             items(manifestFiles) { file ->
                 val json = runCatching { org.json.JSONObject(com.blockline.app.data.JsonTools.stripComments(file.readText())) }.getOrNull()
                 Card { Column(Modifier.padding(16.dp)) {
@@ -207,19 +218,60 @@ fun ToolsScreen(vm: AppViewModel) {
 
 @Composable
 fun MoreScreen(vm: AppViewModel) {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Settings", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
-        Text("Theme")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = { vm.themeMode = ThemeMode.DARK }) { Text("Dark") }
-            TextButton(onClick = { vm.themeMode = ThemeMode.LIGHT }) { Text("Light") }
-            TextButton(onClick = { vm.themeMode = ThemeMode.SYSTEM }) { Text("System") }
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text("More", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
+            Text("Tune your workspace to fit the way you code.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text("Editor font size: ${vm.fontSize} sp")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }) { Text("A−") }
-            TextButton(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }) { Text("A+") }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    androidx.compose.material3.Surface(color = com.blockline.app.ui.theme.Emerald.copy(alpha = .16f), shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)) {
+                        Text("◐", Modifier.padding(12.dp), color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    }
+                    Column {
+                        Text("Appearance", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text("Choose the theme used throughout Blockline.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text("Dark") })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text("Light") })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.SYSTEM, onClick = { vm.themeMode = ThemeMode.SYSTEM }, label = { Text("System") })
+                }
+            }
         }
-        Text("Blockline stores project files in app-private storage. No analytics or tracking.")
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)) {
+                        Text("Aa", Modifier.padding(10.dp), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                    }
+                    Column {
+                        Text("Editor typography", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text("Monospace editor text · ${vm.fontSize} sp", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.OutlinedButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }, enabled = vm.fontSize > 10) { Text("A− Smaller") }
+                    Button(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }, enabled = vm.fontSize < 24) { Text("A+ Larger") }
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("About Blockline", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text("Mobile-first tools for Minecraft Bedrock add-on creators.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text("Version", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                    Text("0.1.0 · Phase 1")
+                }
+                androidx.compose.material3.HorizontalDivider()
+                Text("Privacy", style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                Text("Project files stay in app-private storage. Phase 1 does not require an internet connection and includes no analytics or tracking.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Text("Blockline is in early development. Some advanced features are planned for later phases.", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

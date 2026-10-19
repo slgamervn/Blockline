@@ -63,34 +63,29 @@ class ProjectRepository(private val ctx: Context) {
     fun createSample(): Project {
         val id = UUID.randomUUID().toString()
         val dest = projectDir(id)
-        val bp = File(dest, "BP")
-        val rp = File(dest, "RP")
-        File(bp, "functions").mkdirs()
-        File(bp, "scripts").mkdirs()
-        File(rp, "texts").mkdirs()
-        val bpHeader = UUID.randomUUID().toString()
-        val bpData = UUID.randomUUID().toString()
-        val bpScript = UUID.randomUUID().toString()
-        val rpHeader = UUID.randomUUID().toString()
-        val rpModule = UUID.randomUUID().toString()
-        File(bp, "manifest.json").writeText("""{
-  "format_version": 2,
-  "header": { "name": "Blockline Sample BP", "description": "Offline sample behavior pack", "uuid": "$bpHeader", "version": [1, 0, 0], "min_engine_version": [1, 20, 0] },
-  "modules": [
-    { "type": "data", "uuid": "$bpData", "version": [1, 0, 0] },
-    { "type": "script", "language": "javascript", "entry": "scripts/main.js", "uuid": "$bpScript", "version": [1, 0, 0] }
-  ],
-  "dependencies": [{ "module_name": "@minecraft/server", "version": "1.0.0" }]
-}""")
-        File(bp, "scripts/main.js").writeText("import { world } from \"@minecraft/server\";\n\nworld.afterEvents.worldLoad.subscribe(() => {\n  world.sendMessage(\"Blockline sample loaded\");\n});\n")
-        File(bp, "functions/hello.mcfunction").writeText("say Hello from Blockline!\n")
-        File(rp, "manifest.json").writeText("""{
-  "format_version": 2,
-  "header": { "name": "Blockline Sample RP", "description": "Offline sample resource pack", "uuid": "$rpHeader", "version": [1, 0, 0], "min_engine_version": [1, 20, 0] },
-  "modules": [{ "type": "resources", "uuid": "$rpModule", "version": [1, 0, 0] }]
-}""")
-        File(rp, "texts/languages.json").writeText(JSONArray().put("en_US").put("vi_VN").toString())
-        File(rp, "texts/en_US.lang").writeText("pack.name=Blockline Sample\n")
+        val replacements = mapOf(
+            "__BP_HEADER_UUID__" to UUID.randomUUID().toString(),
+            "__BP_DATA_UUID__" to UUID.randomUUID().toString(),
+            "__BP_SCRIPT_UUID__" to UUID.randomUUID().toString(),
+            "__RP_HEADER_UUID__" to UUID.randomUUID().toString(),
+            "__RP_MODULE_UUID__" to UUID.randomUUID().toString()
+        )
+        val sampleFiles = listOf(
+            "BP/manifest.json",
+            "BP/scripts/main.js",
+            "BP/functions/hello.mcfunction",
+            "RP/manifest.json",
+            "RP/texts/languages.json",
+            "RP/texts/en_US.lang",
+            "RP/texts/vi_VN.lang"
+        )
+        sampleFiles.forEach { relative ->
+            val target = File(dest, relative)
+            target.parentFile?.mkdirs()
+            var content = ctx.assets.open("sample-pack/$relative").bufferedReader().use { it.readText() }
+            replacements.forEach { (token, value) -> content = content.replace(token, value) }
+            target.writeText(content)
+        }
         val now = System.currentTimeMillis()
         return Project(id, "Blockline Sample", now, now).also { save(list() + it) }
     }
