@@ -46,7 +46,7 @@ jobs:
           echo "BLOCKLINE_KEYSTORE_PATH=$RUNNER_TEMP/blockline-upload.jks" >> "$GITHUB_ENV"
 
       - name: Build signed release APK
-        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_SIGNING_KEY == 'true' }}
         env:
           BLOCKLINE_KEYSTORE_PASSWORD: ${{ secrets.BLOCKLINE_KEYSTORE_PASSWORD }}
           BLOCKLINE_KEY_ALIAS: ${{ secrets.BLOCKLINE_KEY_ALIAS }}
@@ -58,11 +58,11 @@ jobs:
         run: gradle assembleDebug -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=0.1.${{ github.run_number }} --stacktrace --no-daemon
 
       - name: Prepare release APK
-        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_SIGNING_KEY == 'true' }}
         run: cp app/build/outputs/apk/release/app-release.apk Blockline.apk
 
       - name: Prepare fallback debug APK
-        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 == '' }}
+        if: ${{ env.HAS_SIGNING_KEY != 'true' }}
         run: cp app/build/outputs/apk/debug/app-debug.apk Blockline.apk
 
       - name: Upload artifact
