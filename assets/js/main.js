@@ -24,8 +24,8 @@
     "BLOCKLINE / ĐIỀU HƯỚNG":"BLOCKLINE / NAVIGATION","Câu hỏi thường gặp":"Frequently asked questions","Tải Blockline APK":"Download Blockline APK",
     "Android 8.0 trở lên · APK mới nhất":"Android 8.0+ · Latest APK",
     "Android 8.0 trở lên":"Android 8.0 or later","Bản phát hành mới nhất":"Latest release",
-    "CÔNG CỤ LÀM PACK TRÊN ANDROID":"A PACK TOOLKIT FOR ANDROID","Làm chủ pack.":"Your pack. Your rules.","Ngay trên điện thoại.":"Right on your phone.",
-    "Mở, chỉnh sửa và chuẩn bị add-on Minecraft Bedrock ngay trên thiết bị Android. Từ cấu trúc thư mục đến những dòng JSON — tất cả trong một không gian làm việc gọn gàng.":"Open, edit, and prepare Minecraft Bedrock add-ons on Android. From folder structures to JSON lines, keep your pack workflow in one organized workspace.",
+    "CÔNG CỤ LÀM PACK TRÊN ANDROID":"A PACK TOOLKIT FOR ANDROID","Làm chủ pack.":"Own your pack.","Ngay trên điện thoại.":"Right on your phone.",
+    "Mở, chỉnh sửa và chuẩn bị add-on Minecraft Bedrock ngay trên thiết bị Android. Từ cấu trúc thư mục đến những dòng JSON — tất cả trong một không gian làm việc gọn gàng.":"Open and prepare Minecraft Bedrock add-ons on Android. From organizing files to editing JSON, keep your pack workflow in one focused workspace.",
     "Khám phá cách hoạt động":"See how it works","Mới nhất":"Latest","Bản phát hành":"Release","Yêu cầu":"Required","Dùng ngoại tuyến":"Works offline",
     "GIAO DIỆN MINH HỌA":"INTERFACE CONCEPT","ĐANG CHỈNH SỬA":"CURRENTLY EDITING","Đã lưu cục bộ":"Saved locally","Dự án":"Projects","Tệp":"Files","Tìm":"Search","Thêm":"More","Thay bằng ảnh thật khi có":"Replace with real screenshots later",
     "MỘT KHÔNG GIAN LÀM VIỆC KHÁC":"A DIFFERENT KIND OF WORKSPACE",
@@ -33,13 +33,13 @@
     "Blockline đưa công việc ấy lên điện thoại — để bạn có thể duyệt, chỉnh sửa, sao lưu và xuất pack ngay tại nơi mình đang làm việc.":"Blockline brings that workflow to your phone, so you can browse, edit, back up, and export packs wherever you work.",
     "01 — TỪ CẤU TRÚC ĐẾN BẢN XUẤT":"01 — FROM STRUCTURE TO EXPORT","Thiết kế cho quy trình làm pack trên Android":"Designed for Android pack workflows",
     "CÔNG CỤ THỰC DỤNG":"TOOLS THAT DO THE WORK","Tập trung vào phần việc":"Focus on the work","quan trọng nhất.":"that matters most.",
-    "Không cần biến điện thoại thành máy tính. Blockline tập trung vào những thao tác thường gặp khi làm việc với pack.":"Your phone does not need to become a desktop. Blockline focuses on everyday pack tasks.",
-    "01 / CẤU TRÚC":"01 / STRUCTURE","Một pack. Rõ từng tệp.":"One pack. Every file in view.",
+    "Không cần biến điện thoại thành máy tính. Blockline tập trung vào những thao tác thường gặp khi làm việc với pack.":"You shouldn’t need a desktop for everyday pack work. Blockline brings the essential tools to your Android device.",
+    "01 / CẤU TRÚC":"01 / STRUCTURE","Một pack. Rõ từng tệp.":"One pack. Every file, organized.",
     "Nhập .mcpack hoặc .mcaddon, tự tách Behavior Pack và Resource Pack, rồi duyệt cây thư mục có thể thu gọn. Tạo, đổi tên, di chuyển, xóa và đánh dấu tệp yêu thích ngay trong dự án.":"Import .mcpack or .mcaddon files, separate Behavior and Resource Packs, and browse a collapsible file tree. Create, rename, move, delete, and favorite files in your project.",
-    "Nhập pack có bảo vệ zip-slip":"Pack import with zip-slip protection","Cây tệp thu gọn và yêu thích":"Collapsible file tree and favorites","Tạo, đổi tên, di chuyển và xóa tệp":"Create, rename, move, and delete files",
+    "Nhập pack có bảo vệ zip-slip":"Safer archive imports with Zip Slip protection","Cây tệp thu gọn và yêu thích":"Collapsible file tree and favorites","Tạo, đổi tên, di chuyển và xóa tệp":"Create, rename, move, and delete files",
     "Đang chọn":"Selected file","Nhấn vào tệp để đổi lựa chọn minh họa.":"Select a file to change this preview.",
     "02 / CHỈNH SỬA":"02 / EDITING","Mã nguồn dễ đọc hơn.":"Code that is easier to read.",
-    "Editor hỗ trợ tô màu cú pháp cho JSON, JavaScript và .mcfunction, nhiều tab, hoàn tác/làm lại, tìm trong tệp, tự lưu và định dạng JSON có giữ comment.":"The editor highlights JSON, JavaScript, and .mcfunction syntax, with multiple tabs, undo/redo, in-file search, autosave, and JSON formatting that preserves comments.",
+    "Editor hỗ trợ tô màu cú pháp cho JSON, JavaScript và .mcfunction, nhiều tab, hoàn tác/làm lại, tìm trong tệp, tự lưu và định dạng JSON có giữ comment.":"The editor provides syntax highlighting for JSON, JavaScript, and .mcfunction, plus multiple tabs, undo/redo, find-in-file, autosave, and JSON formatting that preserves comments.",
     "Chuyển tab không mất mạch làm việc":"Switch tabs without losing your place","Undo / redo và tìm nội dung":"Undo / redo and find text","Định dạng JSON giữ comment":"Format JSON while preserving comments","Mô phỏng editor":"Editor preview",
     "03 / CẤU HÌNH PACK":"03 / PACK DETAILS","Đọc manifest có ngữ cảnh.":"Understand your manifest.",
     "Xem UUID, module và dependency trong manifest để hiểu pack đang khai báo những gì. Sao lưu và khôi phục dự án khi cần, trước khi xuất bản thử nghiệm.":"Inspect UUIDs, modules, and dependencies declared in the manifest. Back up and restore your project before testing an export.",
@@ -86,7 +86,7 @@
     "Blockline đã kiểm tra pack tự động chưa?":"Does Blockline validate packs automatically yet?",
     "Kiểm tra pack đang phát triển. Phiên bản hiện tại có thể đọc thông tin manifest như UUID, module và dependency, nhưng việc đọc đó không đồng nghĩa xác thực toàn bộ pack.":"Pack validation is in development. The current version can read manifest details such as UUIDs, modules, and dependencies, but that does not validate the entire pack.",
     "APK có sẵn trong kho mã nguồn không?":"Is the APK stored in the source repository?",
-    "Nút tải trỏ đến tệp":"The download button points to",". Nếu liên kết chưa có tệp tương ứng trên máy chủ, bạn sẽ cần cung cấp APK hoặc cập nhật đường dẫn tải trước khi phát hành trang.":". If the server does not have the matching file, provide the APK or update the download URL before publishing.",
+    "Tải APK ở đâu?":"Where can I download the APK?","Nút tải trên trang dẫn đến tệp APK của bản phát hành mới nhất trên GitHub. Hãy kiểm tra tên dự án và nguồn phát hành trước khi cài đặt.":"The download button links to the APK attached to the latest GitHub release. Confirm that you’re on the official Blockline project page before installing.",
     "Pack của bạn.":"Your pack.","Quy trình của bạn.":"Your workflow.",
     "Mở, chỉnh sửa, sao lưu và xuất pack Minecraft Bedrock ngay trên điện thoại Android.":"Open, edit, back up, and export Minecraft Bedrock packs right on your Android phone.",
     "Xem mã nguồn":"View source code","Công cụ chính dùng ngoại tuyến":"Core tools work offline",
@@ -100,6 +100,23 @@
     "Trình duyệt bên trong Zalo, Facebook hoặc Messenger có thể hạn chế tải tệp APK. Hãy mở trang bằng Chrome rồi thử tải lại.":"In-app browsers in Zalo, Facebook, or Messenger may restrict APK downloads. Open this page in Chrome and try again.",
     "Chép liên kết trang":"Copy page link","Đã hiểu":"Got it"
   };
+  const vietnameseText = {
+    "PROJECT EXPLORER":"CÂY THƯ MỤC",
+    "LOCAL FILES":"TỆP CỤC BỘ",
+    "EDITOR / MY ADD-ON":"TRÌNH SOẠN THẢO / MY ADD-ON",
+    "HTML / CSS CONCEPT":"MÔ PHỎNG HTML / CSS",
+    "01 / EDITOR":"01 / TRÌNH SOẠN THẢO",
+    "IMPORT / PACK FILE":"NHẬP PACK / TỆP",
+    "EDITOR / TEXT FILE":"SOẠN THẢO / TỆP VĂN BẢN",
+    "MANIFEST / DETAILS":"MANIFEST / CHI TIẾT",
+    "EXPORT / PACK":"XUẤT PACK",
+    "WORKSPACE":"KHÔNG GIAN LÀM VIỆC",
+    "LOCAL":"CỤC BỘ",
+    "MANIFEST INSPECTOR":"KIỂM TRA MANIFEST",
+    "2 PACKS":"2 GÓI",
+    "Hướng dẫn tải APK":"HƯỚNG DẪN TẢI APK"
+  };
+
   const localizedTextNodes = [];
   const textWalker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
   while (textWalker.nextNode()) {
@@ -109,9 +126,9 @@
   }
 
   const translateTextNode = (original, language) => {
-    if (language !== 'en') return original;
     const key = original.trim();
-    const value = englishText[key];
+    const dictionary = language === 'en' ? englishText : vietnameseText;
+    const value = dictionary[key];
     if (!value) return original;
     const leading = original.match(/^\\s*/)?.[0] || '';
     const trailing = original.match(/\\s*$/)?.[0] || '';
@@ -159,6 +176,8 @@
     const description = document.querySelector('meta[name="description"]');
     const ogTitle = document.querySelector('meta[property="og:title"]');
     const ogDescription = document.querySelector('meta[property="og:description"]');
+    const ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.content = currentLanguage === 'en' ? 'en_US' : 'vi_VN';
     if (description) description.content = currentLanguage === 'en'
       ? 'Blockline is an Android app for opening, editing, inspecting, and exporting Minecraft Bedrock add-ons and resource packs.'
       : 'Blockline là ứng dụng Android giúp mở, chỉnh sửa, kiểm tra và xuất add-on/resource pack Minecraft Bedrock ngay trên điện thoại.';
@@ -382,7 +401,7 @@
   const demoTabs = [...document.querySelectorAll('[data-demo-tab]')];
   const demoPanel = document.querySelector('[data-demo-panel]');
   const demoLabel = document.querySelector('#demo-screen-label');
-  const demoLabels = { import: 'IMPORT / PACK FILE', edit: 'EDITOR / TEXT FILE', manifest: 'MANIFEST / DETAILS', export: 'EXPORT / PACK' };
+  const demoLabels = { import: ['NHẬP PACK / TỆP', 'IMPORT / PACK FILE'], edit: ['SOẠN THẢO / TỆP VĂN BẢN', 'EDITOR / TEXT FILE'], manifest: ['MANIFEST / CHI TIẾT', 'MANIFEST / DETAILS'], export: ['XUẤT PACK', 'EXPORT / PACK'] };
   const activateDemoTab = (key, focus = false) => {
     const selected = demoTabs.find((tab) => tab.dataset.demoTab === key);
     if (!selected) return;
@@ -395,7 +414,7 @@
       panel.hidden = panel.dataset.demoContent !== key;
     });
     if (demoPanel) demoPanel.setAttribute('aria-labelledby', selected.id);
-    if (demoLabel) demoLabel.textContent = demoLabels[key] || 'BLOCKLINE / DEMO';
+    if (demoLabel) demoLabel.textContent = demoLabels[key] ? demoLabels[key][currentLanguage === 'en' ? 1 : 0] : 'BLOCKLINE / DEMO';
     const activeContent = document.querySelector('[data-demo-content="' + key + '"]');
     if (activeContent && !reducedMotion.matches) {
       activeContent.style.animation = 'none';
