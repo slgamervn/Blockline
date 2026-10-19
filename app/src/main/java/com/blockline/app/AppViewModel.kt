@@ -256,7 +256,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             repo.remapPathMetadata(p.id, path, newPath)
             remapOpenPaths(path, newPath)
             refresh()
-            message = "Renamed"
+            message = text(R.string.renamed)
         }.onFailure { message = it.message ?: text(R.string.rename_failed) }
     }
     fun deleteFile(path: String) {
@@ -272,7 +272,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 redo.remove(tab)
                 if (activeFile == tab) { activeFile = null; content = "" }
             }
-            message = "Deleted $path"
+            message = text(R.string.deleted_path, path)
         }.onFailure { message = it.message ?: text(R.string.delete_failed) }
     }
     fun moveFile(path: String, destination: String) {
