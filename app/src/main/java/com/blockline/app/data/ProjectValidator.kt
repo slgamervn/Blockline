@@ -163,15 +163,31 @@ object ProjectValidator {
                     issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i].uuid is not a valid UUID.")
                     continue
                 }
+                val versionValue = dependency.opt("version")
                 val localVersion = internalVersions[uuid.lowercase(Locale.ROOT)]
-                if (localVersion != null) {
-                    val required = intVersion(dependency.opt("version"))
-                    if (required == null) {
-                        issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid has a missing or invalid three-part version.")
-                    } else if (localVersion != required) {
-                        issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid requests version ${required.joinToString(".")}, but this project contains ${localVersion.joinToString(".")}.")
+                if (versionValue == null || versionValue == JSONObject.NULL) {
+                    if (localVersion != null) {
+                        issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid has no version.")
+                    } else {
+                        issues += ValidationIssue(IssueSeverity.INFO, path, message = "External dependency $uuid was not found in this project; it may be supplied by another installed pack.")
                     }
-                } else {
+                    continue
+                }
+                when (versionValue) {
+                    is JSONArray -> {
+                        val required = intVersion(versionValue)
+                        if (required == null) {
+                            issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid has an invalid three-part numeric version array.")
+                        } else if (localVersion != null && localVersion != required) {
+                            issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid requests version ${required.joinToString(".")}, but this project contains ${localVersion.joinToString(".")}.")
+                        }
+                    }
+                    is String -> if (versionValue.isBlank()) {
+                        issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid has an empty version string.")
+                    }
+                    else -> issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid version must be a three-part integer array or a version string.")
+                }
+                if (localVersion == null) {
                     issues += ValidationIssue(IssueSeverity.INFO, path, message = "External dependency $uuid was not found in this project; it may be supplied by another installed pack.")
                 }
             }
