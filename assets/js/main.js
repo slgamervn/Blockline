@@ -27,7 +27,7 @@
     "CÔNG CỤ LÀM PACK TRÊN ANDROID":"A PACK TOOLKIT FOR ANDROID","Làm chủ pack.":"Own your pack.","Ngay trên điện thoại.":"Right on your phone.",
     "Mở, chỉnh sửa và chuẩn bị add-on Minecraft Bedrock ngay trên thiết bị Android. Từ cấu trúc thư mục đến những dòng JSON — tất cả trong một không gian làm việc gọn gàng.":"Open and prepare Minecraft Bedrock add-ons on Android. From organizing files to editing JSON, keep your pack workflow in one focused workspace.",
     "Khám phá cách hoạt động":"See how it works","Mới nhất":"Latest","Bản phát hành":"Release","Yêu cầu":"Required","Dùng ngoại tuyến":"Works offline",
-    "GIAO DIỆN MINH HỌA":"INTERFACE CONCEPT","ĐANG CHỈNH SỬA":"CURRENTLY EDITING","Đã lưu cục bộ":"Saved locally","Dự án":"Projects","Tệp":"Files","Tìm":"Search","Thêm":"More","Thay bằng ảnh thật khi có":"Replace with real screenshots later",
+    "GIAO DIỆN MINH HỌA":"INTERFACE CONCEPT","ĐANG CHỈNH SỬA":"CURRENTLY EDITING","Đã lưu cục bộ":"Saved locally","Dự án":"Projects","Tệp":"Files","Tìm":"Search","Thêm":"More","Chỉ mang tính minh họa":"For illustrative purposes only",
     "MỘT KHÔNG GIAN LÀM VIỆC KHÁC":"A DIFFERENT KIND OF WORKSPACE",
     "Pack không chỉ là một tệp để nhập vào game. Đó là cấu trúc, dữ liệu và những chi tiết bạn muốn tự tay hoàn thiện.":"A pack is more than a file you import into a game. It is structure, data, and details you shape yourself.",
     "Blockline đưa công việc ấy lên điện thoại — để bạn có thể duyệt, chỉnh sửa, sao lưu và xuất pack ngay tại nơi mình đang làm việc.":"Blockline brings that workflow to your phone, so you can browse, edit, back up, and export packs wherever you work.",
@@ -320,6 +320,22 @@
   window.addEventListener('resize', () => {
     if (window.innerWidth > 820 && menuIsOpen) closeMenu(false);
   }, { passive: true });
+
+  const navigationLinks = [...document.querySelectorAll('.desktop-nav a, .mobile-menu-links a')];
+  const navigationSections = ['features', 'demo', 'roadmap', 'faq'].map((id) => document.getElementById(id)).filter(Boolean);
+  if ('IntersectionObserver' in window && navigationSections.length) {
+    const navigationObserver = new IntersectionObserver((entries) => {
+      const visibleSection = entries.filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visibleSection) return;
+      navigationLinks.forEach((link) => {
+        const active = link.getAttribute('href') === '#' + visibleSection.target.id;
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    }, { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.15, 0.3, 0.5] });
+    navigationSections.forEach((section) => navigationObserver.observe(section));
+  }
 
   const revealTargets = [...document.querySelectorAll('.section-intro, .feature-row, .demo-layout, .comparison-wrap, .roadmap-item, .setup-step, .faq-list, .download-panel')];
   if (!reducedMotion.matches && 'IntersectionObserver' in window) {
