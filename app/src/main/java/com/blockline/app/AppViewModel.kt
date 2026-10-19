@@ -238,18 +238,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         autoSaveJob?.cancel()
         autoSaveJob = viewModelScope.launch {
             delay(850)
-            val projectRoot = repo.projectDir(projectId).canonicalFile
-            val target = repo.resolve(projectId, path).canonicalFile
+            val paths = runCatching {
+                repo.projectDir(projectId).canonicalFile to repo.resolve(projectId, path).canonicalFile
+            }.getOrNull() ?: return@launch
+            val (projectRoot, target) = paths
             if (current?.id != projectId || activeFile != path || readOnly || openTabs[path] != value) return@launch
-            withContext(Dispatchers.IO) {
-                require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
-                check(target.isFile) { "File no longer exists." }
-                val temp = File(target.parentFile, target.name + ".autosaving")
-                temp.writeText(value, Charsets.UTF_8)
-                if (!temp.renameTo(target)) {
-                    target.writeText(value, Charsets.UTF_8)
-                    temp.delete()
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
+                    check(target.isFile) { "File no longer exists." }
+                    val temp = File(target.parentFile, target.name + ".autosaving")
+                    temp.writeText(value, Charsets.UTF_8)
+                    if (!temp.renameTo(target)) {
+                        target.writeText(value, Charsets.UTF_8)
+                        temp.delete()
+                    }
                 }
+            }
+            if (result.isFailure && current?.id == projectId && activeFile == path) {
+                message = result.exceptionOrNull()?.message ?: text(R.string.save_failed)
             }
         }
     }
