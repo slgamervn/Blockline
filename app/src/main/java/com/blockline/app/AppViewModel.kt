@@ -208,8 +208,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         runCatching {
             val f = repo.resolve(p.id, path)
             val new = com.blockline.app.data.FileOps.rename(f, name) ?: error("Invalid name or target already exists")
-            if (activeFile == path) activeFile = repo.relative(p.id, new)
-            refresh(); message = "Renamed"
+            val newPath = repo.relative(p.id, new)
+            repo.remapPathMetadata(p.id, path, newPath)
+            remapOpenPaths(path, newPath)
+            refresh()
+            message = "Renamed"
         }.onFailure { message = it.message ?: "Rename failed" }
     }
     fun deleteFile(path: String) {
@@ -228,11 +231,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val destDir = if (destination.isBlank() || destination == ".") repo.projectDir(p.id) else repo.resolve(p.id, destination)
             require(destDir.isDirectory) { "Destination must be an existing folder" }
             val moved = com.blockline.app.data.FileOps.move(source, destDir) ?: error("Cannot move: target exists or move is unsafe")
-            if (activeFile == path) activeFile = repo.relative(p.id, moved)
+            val newPath = repo.relative(p.id, moved)
+            repo.remapPathMetadata(p.id, path, newPath)
+            remapOpenPaths(path, newPath)
             refresh()
-            message = "Moved to ${repo.relative(p.id, moved)}"
+            message = "Moved to $newPath"
         }.onFailure { message = it.message ?: "Move failed" }
     }
+    private fun remapOpenPaths(oldPath: String, newPath: String) {
+        val affected = openTabs.keys.filter { it == oldPath || it.startsWith("$oldPath/") }
+        affected.forEach { oldTab ->
+            val newTab = newPath + oldTab.removePrefix(oldPath)
+            openTabs.remove(oldTab)?.let { openTabs[newTab] = it }
+            undo.remove(oldTab)?.let { undo[newTab] = it }
+            redo.remove(oldTab)?.let { redo[newTab] = it }
+            if (activeFile == oldTab) activeFile = newTab
+        }
+    }
+
     fun toggleFavorite(path: String) { current?.let { repo.toggleFavorite(it.id, path) } }
     fun isFavorite(path: String) = current?.let { repo.isFavorite(it.id, path) } ?: false
     fun backup() {
