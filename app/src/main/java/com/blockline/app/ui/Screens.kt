@@ -119,9 +119,9 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null && p != null) {
             try {
-                context.contentResolver.openOutputStream(uri)?.use { vm.repo.export(p.id, exportMode, it) } ?: error("Could not open export destination")
-                vm.message = "Pack exported"
-            } catch (e: Exception) { vm.message = e.message ?: "Export failed" }
+                context.contentResolver.openOutputStream(uri)?.use { vm.repo.export(p.id, exportMode, it) } ?: error(context.getString(R.string.export_destination_failed))
+                vm.message = context.getString(R.string.pack_exported)
+            } catch (e: Exception) { vm.message = e.message ?: context.getString(R.string.export_failed) }
         }
     }
     val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name.equals("manifest.json", true) || f.name.equals("pack_manifest.json", true) } }.orEmpty()
@@ -191,6 +191,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
 
 @Composable
 fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
+    val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     var contentMode by remember { mutableStateOf(false) }
     val p = vm.current
@@ -202,19 +203,19 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it; vm.clearContentSearch() },
-            label = { Text(if (contentMode) "Search inside text files" else "File name or path") },
+            label = { Text(stringResource(if (contentMode) R.string.search_inside_text else R.string.file_name_or_path)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             androidx.compose.material3.FilterChip(selected = !contentMode, onClick = { contentMode = false }, label = { Text(stringResource(R.string.file_paths)) })
             androidx.compose.material3.FilterChip(selected = contentMode, onClick = { contentMode = true }, label = { Text(stringResource(R.string.file_contents)) })
-            if (contentMode) Button(onClick = { vm.searchProjectContentAsync(query) }, enabled = query.isNotBlank() && !vm.isSearchingContent) { Text(if (vm.isSearchingContent) "Searching…" else "Search") }
+            if (contentMode) Button(onClick = { vm.searchProjectContentAsync(query) }, enabled = query.isNotBlank() && !vm.isSearchingContent) { Text(stringResource(if (vm.isSearchingContent) R.string.searching else R.string.nav_search)) }
         }
         if (p == null) {
             Text(stringResource(R.string.select_project_first))
         } else if (!contentMode) {
-            if (pathMatches.isEmpty()) Text(if (query.isBlank()) "Enter a file name or path." else "No matching files")
+            if (pathMatches.isEmpty()) Text(stringResource(if (query.isBlank()) R.string.enter_file_name else R.string.no_matching_files))
             else LazyColumn(Modifier.weight(1f)) {
                 items(pathMatches, key = { it.path }) { file ->
                     val path = vm.repo.relative(p.id, file)
@@ -222,7 +223,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                 }
             }
         } else {
-            if (vm.contentSearchResults.isEmpty()) Text(if (query.isBlank()) "Enter text, then tap Search." else "No results yet. Tap Search to scan the project.")
+            if (vm.contentSearchResults.isEmpty()) Text(stringResource(if (query.isBlank()) R.string.enter_text_search else R.string.no_search_results))
             else LazyColumn(Modifier.weight(1f)) {
                 items(vm.contentSearchResults, key = { "${it.first}:${it.second}" }) { result ->
                     ListItem(
@@ -264,7 +265,7 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                     onOpenEditor()
                 }) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(issue.severity.name, color = when (issue.severity) {
+                        Text(stringResource(when (issue.severity) { com.blockline.app.data.IssueSeverity.ERROR -> R.string.severity_error; com.blockline.app.data.IssueSeverity.WARNING -> R.string.severity_warning; com.blockline.app.data.IssueSeverity.INFO -> R.string.severity_info }), color = when (issue.severity) {
                             com.blockline.app.data.IssueSeverity.ERROR -> androidx.compose.material3.MaterialTheme.colorScheme.error
                             com.blockline.app.data.IssueSeverity.WARNING -> androidx.compose.material3.MaterialTheme.colorScheme.tertiary
                             com.blockline.app.data.IssueSeverity.INFO -> androidx.compose.material3.MaterialTheme.colorScheme.primary
