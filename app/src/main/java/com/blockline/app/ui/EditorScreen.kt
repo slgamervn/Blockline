@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
@@ -84,26 +85,26 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Column { Text(path?.substringAfterLast('/') ?: "Editor"); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) } },
                 actions = {
-                    IconButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, "Undo") }
-                    IconButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, "Redo") }
-                    IconButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, "Find") }
+                    IconButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, stringResource(R.string.editor_undo_cd)) }
+                    IconButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, stringResource(R.string.editor_redo_cd)) }
+                    IconButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
                     IconButton(onClick = {
                         if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content))
                         vm.saveCurrent()
-                    }) { Icon(Icons.Default.Save, "Save", tint = Emerald) }
+                    }) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
             )
         },
         bottomBar = {
             Row(Modifier.fillMaxWidth().imePadding().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, null); Text("Undo") }
-                TextButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, null); Text("Redo") }
-                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = "Formatting is available for JSON files" }) { Icon(Icons.Default.FormatAlignLeft, null); Text("Format") }
-                TextButton(onClick = { vm.saveCurrent() }) { Icon(Icons.Default.Save, null); Text("Save") }
-                TextButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, null); Text("Find") }
+                TextButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, null); Text(stringResource(R.string.undo)) }
+                TextButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, null); Text(stringResource(R.string.redo)) }
+                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = "Formatting is available for JSON files" }) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
+                TextButton(onClick = { vm.saveCurrent() }) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
+                TextButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
             }
         }
     ) { pad ->
@@ -115,11 +116,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Start) {
                         vm.openTabs.keys.toList().forEach { tab ->
                             TextButton(onClick = { vm.openFile(tab) }) { Text(tab.substringAfterLast('/'), maxLines = 1) }
-                            IconButton(onClick = { vm.closeTab(tab) }) { Icon(Icons.Default.Close, "Close tab") }
+                            IconButton(onClick = { vm.closeTab(tab) }) { Icon(Icons.Default.Close, stringResource(R.string.close_tab)) }
                         }
                     }
                 }
-                if (vm.readOnly) Text("Large file: read-only mode (over 1 MB)", color = androidx.compose.material3.MaterialTheme.colorScheme.error)
+                if (vm.readOnly) Text(stringResource(R.string.large_file_readonly), color = androidx.compose.material3.MaterialTheme.colorScheme.error)
                 BasicTextField(
                     value = editorValue,
                     onValueChange = {
@@ -142,11 +143,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     }
     if (showFind) AlertDialog(
         onDismissRequest = { showFind = false },
-        title = { Text("Find in file") },
+        title = { Text(stringResource(R.string.find_in_file)) },
         text = { Column {
-            OutlinedTextField(value = findText, onValueChange = { findText = it }, label = { Text("Text to find") }, singleLine = true)
-            Text(if (findText.isBlank()) "Enter text to count matches" else "${Regex(Regex.escape(findText), RegexOption.IGNORE_CASE).findAll(vm.content).count()} matches")
+            OutlinedTextField(value = findText, onValueChange = { findText = it }, label = { Text(stringResource(R.string.text_to_find)) }, singleLine = true)
+            Text(if (findText.isBlank()) stringResource(R.string.enter_text_to_count) else stringResource(R.string.matches_count, Regex(Regex.escape(findText), RegexOption.IGNORE_CASE).findAll(vm.content).count()))
         } },
-        confirmButton = { TextButton(onClick = { showFind = false }) { Text("Close") } }
+        confirmButton = { TextButton(onClick = { showFind = false }) { Text(stringResource(R.string.close)) } }
     )
 }
