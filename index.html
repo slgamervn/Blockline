@@ -745,6 +745,7 @@ body{background:#080b0a;background-image:none;background-attachment:scroll}
     } else el.dataset.reveal = 'up';
   });
 
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reducedMotion || !('IntersectionObserver' in window)) {
     targets.forEach(el => el.classList.add('is-visible'));
     return;
