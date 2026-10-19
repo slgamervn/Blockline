@@ -87,6 +87,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun clearContentSearch() { contentSearchResults = emptyList() }
+
     fun searchProjectContent(query: String): List<Pair<String, Int>> {
         val project = current ?: return emptyList()
         if (query.isBlank()) return emptyList()
@@ -109,6 +111,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         refresh()
         activeFile = null
         content = ""
+        validationIssues = emptyList()
+        contentSearchResults = emptyList()
     }
     fun createSample() = runCatching { repo.createSample() }.onSuccess {
         refresh(); selectProject(it); message = "Sample project created"
@@ -220,7 +224,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         runCatching {
             val f = repo.resolve(p.id, path)
             check(f.deleteRecursively()) { "Could not delete file" }
-            if (activeFile == path) { activeFile = null; content = "" }
+            repo.removePathMetadata(p.id, path)
+            val affectedTabs = openTabs.keys.filter { it == path || it.startsWith("$path/") }
+            affectedTabs.forEach { tab ->
+                openTabs.remove(tab)
+                undo.remove(tab)
+                redo.remove(tab)
+                if (activeFile == tab) { activeFile = null; content = "" }
+            }
             message = "Deleted $path"
         }.onFailure { message = it.message ?: "Delete failed" }
     }
