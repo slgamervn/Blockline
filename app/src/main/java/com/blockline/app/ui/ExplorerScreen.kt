@@ -57,13 +57,18 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var targetPath by remember { mutableStateOf("") }
     val allEntries = project?.let { vm.projectEntries[it.id] }.orEmpty()
+    val recentPaths = project?.let { vm.repo.recentFiles(it.id) }.orEmpty()
     val entries = allEntries.filter { file ->
         val path = project?.let { vm.repo.relative(it.id, file) } ?: ""
         when (filter) {
             "Favorites" -> file.isFile && vm.isFavorite(path)
-            "Recent" -> file.isFile && project != null && vm.repo.recentFiles(project.id).contains(path)
+            "Recent" -> file.isFile && path in recentPaths
             else -> true
         }
+    }.let { filtered ->
+        if (filter == "Recent" && project != null) {
+            filtered.sortedBy { file -> recentPaths.indexOf(vm.repo.relative(project.id, file)).let { if (it < 0) Int.MAX_VALUE else it } }
+        } else filtered
     }
 
     Scaffold(topBar = {
@@ -97,7 +102,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                         items(entries, key = { vm.repo.relative(project.id, it) }) { file ->
                             val path = vm.repo.relative(project.id, file)
                             val parentPath = file.parentFile?.let { vm.repo.relative(project.id, it) }
-                            val visible = parentPath == null || parentPath == "." || parentPath.isEmpty() || expanded.contains(parentPath)
+                            val visible = filter != "All" || parentPath == null || parentPath == "." || parentPath.isEmpty() || expanded.contains(parentPath)
                             if (visible) {
                                 var menu by remember(path) { mutableStateOf(false) }
                                 val depth = path.count { it == '/' }

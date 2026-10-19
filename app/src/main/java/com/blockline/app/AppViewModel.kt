@@ -289,21 +289,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openFile(path: String, line: Int?) {
         pendingEditorLine = line?.coerceAtLeast(1)
-        if (activeFile != null && activeFile != path) saveCurrent(showMessage = false)
         val p = current ?: return
+        if (activeFile == path) {
+            if (line == null) pendingEditorLine = null
+            return
+        }
+        if (activeFile != null) saveCurrent(showMessage = false)
         runCatching {
             val file = repo.resolve(p.id, path)
             require(file.isFile) { text(R.string.file_not_found) }
             val size = file.length()
             readOnly = size > 1024L * 1024L
             activeFile = path
-            content = if (size <= 2L * 1024L * 1024L) file.readText() else ""
+            val buffered = openTabs[path]
+            content = buffered ?: if (size <= 2L * 1024L * 1024L) file.readText(Charsets.UTF_8) else ""
             openTabs[path] = content
-            undo[path] = mutableListOf()
-            redo[path] = mutableListOf()
-            lastEditAt.remove(path)
+            if (buffered == null) {
+                undo[path] = mutableListOf()
+                redo[path] = mutableListOf()
+                lastEditAt.remove(path)
+            }
             repo.addRecentFile(p.id, path)
-        }.onFailure { message = it.message ?: text(R.string.cannot_open_file) }
+        }.onFailure {
+            pendingEditorLine = null
+            message = it.message ?: text(R.string.cannot_open_file)
+        }
     }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
@@ -358,12 +368,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val p = current ?: return
         val path = activeFile ?: return
         if (readOnly) { if (showMessage) message = text(R.string.save_readonly); return }
+        autoSaveJob?.cancel()
         runCatching {
             val f = repo.resolve(p.id, path)
             f.parentFile?.mkdirs()
             val tmp = File(f.parentFile, f.name + ".saving")
-            tmp.writeText(content)
-            if (!tmp.renameTo(f)) { f.writeText(content); tmp.delete() }
+            tmp.writeText(content, Charsets.UTF_8)
+            if (!tmp.renameTo(f)) { f.writeText(content, Charsets.UTF_8); tmp.delete() }
             if (showMessage) message = text(R.string.saved_path, path)
         }.onFailure { message = it.message ?: text(R.string.save_failed) }
     }
