@@ -239,6 +239,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 
 @Composable
 fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
+    val context = LocalContext.current
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text(stringResource(R.string.local_project_tools_hint)) }
@@ -271,7 +272,8 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                             com.blockline.app.data.IssueSeverity.INFO -> androidx.compose.material3.MaterialTheme.colorScheme.primary
                         }, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                         Text(issue.path.ifBlank { stringResource(R.string.project_label) }, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
-                        Text(if (issue.line != null) stringResource(R.string.issue_line_column, issue.line, issue.column?.let { ":$it" } ?: "", issue.message) else issue.message)
+                        val localizedMessage = localizeValidationMessage(context, issue.message)
+                        Text(if (issue.line != null) stringResource(R.string.issue_line_column, issue.line, issue.column?.let { ":$it" } ?: "", localizedMessage) else localizedMessage)
                     }
                 }
             }
