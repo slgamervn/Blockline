@@ -28,7 +28,10 @@ object ProjectValidator {
         }
 
         val files = projectRoot.walkTopDown().filter { it.isFile }.toList()
-        val jsonFiles = files.filter { it.extension.lowercase(Locale.ROOT) in jsonExtensions }
+        val jsonFiles = files.filter { file ->
+            val extension = file.extension.lowercase(Locale.ROOT)
+            extension in jsonExtensions && (extension != "nx" || file.name.equals("pack_manifest.nx", true))
+        }
         val parsed = linkedMapOf<File, Any>()
 
         jsonFiles.forEach { file ->
