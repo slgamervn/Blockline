@@ -16,8 +16,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var message by mutableStateOf<String?>(null)
     var themeMode by mutableStateOf(ThemeMode.DARK)
     var fontSize by mutableStateOf(14)
-    val tabs = mutableListOf<Any>()
-    var activeTab by mutableStateOf(0)
 
     fun selectProject(p: Project) { current = p }
     fun saveTab(tab: Any) {}
