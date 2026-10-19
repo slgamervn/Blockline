@@ -190,10 +190,14 @@ object ProjectValidator {
             expect('{')
             whitespace()
             if (take('}')) return
+            val keys = HashSet<String>()
             while (true) {
                 whitespace()
                 if (index >= source.length || source[index] != '"') fail("Object keys must be double-quoted strings.")
+                val keyStart = index
                 stringValue()
+                val rawKey = source.substring(keyStart, index)
+                if (!keys.add(rawKey)) fail("Duplicate object key $rawKey.")
                 whitespace()
                 expect(':')
                 value()
