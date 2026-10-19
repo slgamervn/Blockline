@@ -30,7 +30,7 @@ internal object ResourceReferenceChecker {
                 val packPath = packRoot.path + File.separator
                 val packTextures = pngFiles.filter { it.path.startsWith(packPath) }.toSet()
                 inspectTextures(root, false) { reference ->
-                    val normalized = reference.trim().replace('\\\\', '/').removePrefix("/")
+                    val normalized = reference.trim().replace('\\', '/').removePrefix("/")
                     if (!normalized.startsWith("textures/", true) || normalized.contains("..")) return@inspectTextures
                     val candidate = if (normalized.substringAfterLast('/').contains('.')) normalized
                         else "$normalized.png"
