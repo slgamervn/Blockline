@@ -434,6 +434,48 @@ footer{border-top-color:#ffffff12}
  .stage-files{grid-template-columns:minmax(66px,.7fr) minmax(0,1.3fr)}
  .story-step{flex-basis:88%;padding:20px 17px 22px}
 }
+
+/* Desktop composition: balanced columns and a preview that follows the selected step */
+@media(min-width:821px) and (pointer:fine){
+ .product-story .story-layout{
+   display:grid;
+   grid-template-columns:minmax(0,1fr) minmax(340px,.94fr);
+   align-items:start;
+   gap:clamp(36px,5.2vw,84px);
+ }
+ .product-story .story-stage-wrap{
+   position:sticky;
+   top:clamp(88px,12vh,136px);
+   width:100%;
+   max-width:620px;
+   margin-inline:auto;
+   align-self:start;
+ }
+ .product-story .story-stage{
+   width:100%;
+   max-width:100%;
+ }
+ .product-story .story-steps{
+   min-width:0;
+   display:flex;
+   flex-direction:column;
+   gap:clamp(26px,4vh,44px);
+ }
+ .product-story .story-step{
+   min-width:0;
+   padding:clamp(24px,3vw,38px);
+ }
+ .product-story .story-step h3{font-size:clamp(1.55rem,2.2vw,2.25rem);line-height:1.12}
+ .product-story .story-step p{max-width:44ch;line-height:1.8}
+ .story-controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+ .story-controls button{min-height:46px;padding-inline:16px}
+ .story-help{display:none}
+}
+@media(min-width:821px) and (max-width:1100px){
+ .product-story .story-layout{grid-template-columns:minmax(0,.95fr) minmax(0,1fr);gap:28px}
+ .product-story .story-stage-wrap{top:100px}
+ .product-story .story-step{padding:22px}
+}
 </style>
 </head>
 <body>
@@ -679,6 +721,7 @@ footer{border-top-color:#ffffff12}
     if (requestedStoryScene !== null) armStoryScrollFallback(220);
   };
   window.addEventListener('scroll', scheduleStorySync, {passive: true});
+  window.addEventListener('scrollend', finishRequestedStoryScroll);
   window.addEventListener('resize', scheduleStorySync, {passive: true});
   storyTrack?.addEventListener('scroll', handleStoryTrackScroll, {passive: true});
   storyTrack?.addEventListener('scrollend', finishRequestedStoryScroll);
@@ -687,12 +730,12 @@ footer{border-top-color:#ffffff12}
       const index = Number(control.dataset.storyGo);
       const step = storySteps[index];
       if (!step) return;
+      requestedStoryScene = index;
       setStoryScene(index);
-      if (isCompactStory() && storyTrack) {
-        requestedStoryScene = index;
-        armStoryScrollFallback(900);
-        window.requestAnimationFrame(() => {
-          if (requestedStoryScene !== index || !storyTrack.isConnected || !step.isConnected) return;
+      armStoryScrollFallback(900);
+      window.requestAnimationFrame(() => {
+        if (requestedStoryScene !== index || !step.isConnected) return;
+        if (isCompactStory() && storyTrack) {
           const trackRect = storyTrack.getBoundingClientRect();
           const stepRect = step.getBoundingClientRect();
           const paddingLeft = Number.parseFloat(window.getComputedStyle(storyTrack).paddingLeft) || 0;
@@ -701,9 +744,15 @@ footer{border-top-color:#ffffff12}
             left: storyTrack.scrollLeft + stepRect.left - visibleStart,
             behavior: reducedMotion ? 'auto' : 'smooth'
           });
-          armStoryScrollFallback(900);
-        });
-      }
+        } else {
+          step.scrollIntoView({
+            behavior: reducedMotion ? 'auto' : 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+        armStoryScrollFallback(900);
+      });
     });
   });
   setStoryScene(0);
