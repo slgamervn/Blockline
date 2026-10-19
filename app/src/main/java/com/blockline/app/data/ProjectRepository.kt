@@ -56,7 +56,9 @@ class ProjectRepository(private val ctx: Context) {
     fun delete(id: String) {
         projectDir(id).deleteRecursively()
         backupDir(id).deleteRecursively()
-        prefs.edit().remove("fav_$id").remove("recent_$id").apply()
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith("filefav:$id:") || it == "recentFile:$id" }.forEach { editor.remove(it) }
+        editor.apply()
         save(list().filter { it.id != id })
     }
 
