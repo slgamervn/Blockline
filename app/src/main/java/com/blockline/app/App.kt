@@ -38,7 +38,6 @@ import com.blockline.app.ui.ToolsScreen
 import com.blockline.app.ui.theme.BlocklineTheme
 
 private class TabDef(val route: String, val label: Int, val icon: ImageVector)
-
 private val TABS = listOf(
     TabDef("projects", R.string.nav_projects, Icons.Default.Dashboard),
     TabDef("explorer", R.string.nav_explorer, Icons.Default.FolderOpen),
@@ -46,12 +45,8 @@ private val TABS = listOf(
     TabDef("tools", R.string.nav_tools, Icons.Default.Build),
     TabDef("more", R.string.nav_more, Icons.Default.MoreHoriz)
 )
-
 private fun goTab(nav: NavController, route: String) {
-    nav.navigate(route) {
-        popUpTo(nav.graph.findStartDestination().id)
-        launchSingleTop = true
-    }
+    nav.navigate(route) { popUpTo(nav.graph.findStartDestination().id); launchSingleTop = true }
 }
 
 @Composable
@@ -60,40 +55,30 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
         val nav = rememberNavController()
         val snack = remember { SnackbarHostState() }
         val msg = vm.message
-        LaunchedEffect(msg) {
-            if (msg != null) {
-                snack.showSnackbar(msg)
-                vm.message = null
-            }
-        }
+        LaunchedEffect(msg) { if (msg != null) { snack.showSnackbar(msg); vm.message = null } }
         val backStack by nav.currentBackStackEntryAsState()
         val route = backStack?.destination?.route
-
         Scaffold(
             snackbarHost = { SnackbarHost(snack) },
             bottomBar = {
-                if (route != "editor") {
-                    NavigationBar {
-                        TABS.forEach { t ->
-                            NavigationBarItem(
-                                selected = route == t.route || (t.route == "projects" && route == "overview"),
-                                onClick = { goTab(nav, t.route) },
-                                icon = { Icon(t.icon, null) },
-                                label = { Text(stringResource(t.label)) }
-                            )
-                        }
+                if (route != "editor") NavigationBar {
+                    TABS.forEach { t ->
+                        NavigationBarItem(
+                            selected = route == t.route || (t.route == "overview" && t.route == route),
+                            onClick = { goTab(nav, t.route) },
+                            icon = { Icon(t.icon, null) },
+                            label = { Text(stringResource(t.label)) }
+                        )
                     }
                 }
             }
         ) { pad ->
             NavHost(nav, startDestination = "projects", modifier = Modifier.padding(pad)) {
                 composable("projects") { ProjectsScreen(vm) { nav.navigate("overview") } }
-                composable("overview") {
-                    OverviewScreen(vm, onBack = { nav.popBackStack() }, onExplorer = { goTab(nav, "explorer") })
-                }
+                composable("overview") { OverviewScreen(vm, onBack = { nav.popBackStack() }, onExplorer = { goTab(nav, "explorer") }) }
                 composable("explorer") { ExplorerScreen(vm) { nav.navigate("editor") } }
-                composable("search") { SearchScreen() }
-                composable("tools") { ToolsScreen() }
+                composable("search") { SearchScreen(vm) { nav.navigate("editor") } }
+                composable("tools") { ToolsScreen(vm) }
                 composable("more") { MoreScreen(vm) }
                 composable("editor") { EditorScreen(vm) { nav.popBackStack() } }
             }

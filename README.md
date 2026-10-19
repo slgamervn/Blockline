@@ -1,22 +1,30 @@
-# Blockline (Phase 1)
+# Blockline — Phase 1
 
-Android app (Kotlin + Jetpack Compose + Material 3) for reading, editing and exporting Minecraft Bedrock packs on a phone.
+Blockline is an Android-native, mobile-first workspace for Minecraft Bedrock pack files. The app stores imported projects in app-private storage and does not upload pack contents.
 
-## Build the APK with GitHub Actions
-1. Push this whole folder to the root of a GitHub repo (include the hidden `.github` folder).
-2. Open the repo's **Actions** tab, run **Build APK** (it also runs on every push to main/master).
-3. When it finishes, open the run and download the artifact **blockline-debug-apk**. Unzip it and install `app-debug.apk`.
+## Build
+Open this repository in Android Studio and sync Gradle, or use **Actions → Build APK**. The workflow builds a debug APK and uploads it as the `blockline-debug-apk` artifact.
 
-No Gradle wrapper is committed: the workflow installs Gradle 8.10.2 itself. For local builds, open the folder in Android Studio and sync.
+## Phase 1 implemented
+- Import .mcpack/.mcaddon archives through Android's document picker; nested archives are expanded and behavior/resource packs are separated by manifest module type.
+- Zip-slip protection during extraction.
+- Project list, recent ordering, sample project, rename, duplicate and delete.
+- Manifest overview, file explorer, create/rename/delete files, favorites, editor tabs, undo/redo, autosave and JSON formatting that preserves comments.
+- Read-only editor mode for files larger than 1 MiB.
+- Local backups and latest-backup restore.
+- Export of the selected project to a .mcaddon archive.
+- Dark/light/system themes and adjustable editor font size.
+- Core pack operations work offline.
 
-## Phase 1 contents
-- Projects: import `.mcpack` / `.mcaddon` (SAF, zip-slip safe, nested packs split into BP/RP), sample project, recent, rename, duplicate, delete, project switcher
-- Overview: parsed manifests (comments allowed), quick actions, backup / restore, export BP / RP / both
-- Explorer: collapsible tree, create / rename / move / delete files and folders, favorites, recent files
-- Editor: JSON / `.mcfunction` / JS highlight, multi-tab, undo / redo, comment-preserving JSON format, find, autosave
-- Settings: theme (dark / light / system), editor font size; UI in English and Vietnamese
+## Known limitations
+- Project metadata uses a small private JSON index rather than Room; Hilt and Clean Architecture layers are not yet introduced.
+- The Phase 1 editor has basic regex-based highlighting rather than viewport-only syntax parsing.
+- Export currently provides a combined .mcaddon action; individual BP-only and RP-only export choices are not exposed in the UI yet.
+- Favorite/recent metadata is stored in private preferences.
+- Search currently filters file paths only; content/identifier/UUID indexing belongs to Phase 2.
+- The included sample project is generated locally by the app; the repository does not yet bundle a separate sample pack under assets.
 
-## Known limits in Phase 1
-- Project metadata is stored in a small JSON index (not Room/Hilt yet).
-- Highlighting runs over the whole text (disabled above 200 KB); files over 1 MB open read-only.
-- Search and Tools tabs are placeholders until Phases 2 and 3.
+## Security and privacy
+- No analytics or tracking dependencies.
+- No internet permission is requested in Phase 1.
+- Imports are copied into app-private storage; archive entries are checked against the extraction root before writing.

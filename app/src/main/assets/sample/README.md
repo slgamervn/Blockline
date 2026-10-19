@@ -1,0 +1,1 @@
+# Sample pack\n\nThe app currently creates the sample BP/RP locally with fresh UUIDs so each project has independent manifest identifiers. This folder documents the sample pack location for the bundled template added in a later Phase 1 revision.

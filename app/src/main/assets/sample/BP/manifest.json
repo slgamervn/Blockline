@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Blockline Sample BP",
+    "description": "Sample behavior pack",
+    "uuid": "17b0b13e-1b34-4db6-9f5f-6c35d94a11b1",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "f95db0e1-3b80-4f4b-9c10-8a5aebf63d02",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

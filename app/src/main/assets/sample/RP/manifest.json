@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Blockline Sample RP",
+    "description": "Sample resource pack",
+    "uuid": "93c3b1a9-bf6c-45a5-8e88-feb8e83b9b30",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "fa7a0e0e-ccf8-4d82-8f90-f9dcb934f8bc",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}
