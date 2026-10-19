@@ -380,3 +380,12 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 }
 .language-toggle[aria-pressed="true"]{border-color:var(--green);background:color-mix(in srgb,var(--green) 10%,transparent);color:var(--green-bright)}
 .language-toggle:focus-visible{outline-offset:3px}
+.desktop-nav a{position:relative;display:inline-flex;align-items:center;min-height:44px}
+.desktop-nav a::after{content:"";position:absolute;left:0;right:0;bottom:5px;height:2px;border-radius:2px;background:var(--green);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
+.desktop-nav a[aria-current="location"]{color:var(--text)}
+.desktop-nav a[aria-current="location"]::after{transform:scaleX(1)}
+.mobile-menu-links a[aria-current="location"]{color:var(--green-bright)}
+.mobile-menu-links a[aria-current="location"] span{color:var(--text)}
+@media(prefers-reduced-motion:reduce){
+  .desktop-nav a::after{transition:none}
+}
