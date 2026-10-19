@@ -154,6 +154,8 @@ object ProjectValidator {
             }
         }
 
+        issues += ResourceReferenceChecker.check(projectRoot, files)
+
         return issues.distinctBy { listOf(it.severity, it.path, it.line, it.column, it.message) }
             .sortedWith(compareBy<ValidationIssue> { it.severity.ordinal }.thenBy { it.path }.thenBy { it.line ?: 0 })
     }
