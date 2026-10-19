@@ -30,7 +30,7 @@ The project is in active development. The current build focuses on a reliable lo
 - **Project management** — create a sample project, open, rename, duplicate, and delete local projects.
 - **Pack overview** — inspect manifest metadata and jump to a manifest for editing.
 - **File explorer** — browse folders, create, rename, move, and delete files; mark files as favorites and reopen the most recently opened file.
-- **Editor foundation** — multi-tab editing, basic syntax coloring, undo/redo, JSON formatting, find, and autosave.
+- **Editor foundation** — multi-tab editing, basic syntax coloring, undo/redo, JSON formatting that preserves line and block comments, find, and autosave.
 - **Safer archive handling** — archive extraction checks paths against the extraction root to guard against ZIP-slip.
 - **Backup and restore** — create a local project backup and restore the latest backup.
 - **Export choices** — export a behavior pack, resource pack, or combined add-on when the project contains the corresponding packs.
@@ -52,9 +52,9 @@ Blockline is being built in phases. The table below describes the current scope 
 
 - Project metadata currently uses a private JSON index and preferences; Room, Hilt, and the full Clean Architecture separation are not yet implemented.
 - Syntax highlighting is a lightweight first pass, not a full language parser or viewport-only renderer.
-- Search currently filters file paths only; content, identifier, and UUID indexing belongs to Phase 2.
-- Resource-specific previews for entities, items, blocks, recipes, loot tables, functions, scripts, and language files are not yet complete.
-- Automated tests and device-level verification are still needed before treating this as a production release.
+- Content search currently scans supported text files up to 1 MB each and shows matching line numbers; identifier/UUID indexing and direct error-to-editor navigation remain future work.
+- Resource-specific previews and exhaustive reference resolution for entities, items, blocks, recipes, loot tables, functions, scripts, and language files are not yet complete.
+- Validation is an initial static analysis pass, not a complete Mojang schema validator. Automated tests and device-level verification are still needed before treating this as a production release.
 
 ## Download and install
 
@@ -71,7 +71,7 @@ Blockline is being built in phases. The table below describes the current scope 
 
 - Android Studio with Android SDK Platform 35
 - JDK 17
-- Gradle 8.10.2 (the GitHub Actions workflow provisions this version)
+- Gradle 8.14.6 (the GitHub Actions workflow provisions this version)
 - Android 8.0 (API 26) or newer to run on a device
 
 ### Build
@@ -85,7 +85,7 @@ cd Blockline
 
 Open the project in Android Studio, sync Gradle, and run the `app` configuration.
 
-To build a debug APK from a terminal with Gradle 8.10.2 installed:
+To build a debug APK from a terminal with Gradle 8.14.6 installed:
 
 ```bash
 gradle assembleDebug
