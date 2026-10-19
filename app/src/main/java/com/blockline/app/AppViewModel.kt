@@ -112,7 +112,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }.getOrDefault(emptyList())
     }
     fun selectProject(p: Project) {
-        if (current?.id != p.id) saveCurrent()
+        if (current?.id == p.id) {
+            repo.touch(p.id)
+            refresh()
+            return
+        }
+        saveCurrent()
         current = p
         repo.touch(p.id)
         refresh()
