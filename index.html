@@ -873,8 +873,8 @@ footer{border-top-color:#ffffff12}
   document.querySelector('[data-language-toggle]')?.addEventListener('click', () => {
     applyLanguage(document.documentElement.lang === 'en' ? 'vi' : 'en');
   });
-  let savedLanguage = 'en';
-  try { savedLanguage = localStorage.getItem('blockline-language') || 'en'; } catch (_) {}
+  let savedLanguage = (navigator.language || 'en').toLowerCase().startsWith('vi') ? 'vi' : 'en';
+  try { savedLanguage = localStorage.getItem('blockline-language') || savedLanguage; } catch (_) {}
   if (savedLanguage !== 'en' && savedLanguage !== 'vi') savedLanguage = 'en';
   applyLanguage(savedLanguage);
 })();
