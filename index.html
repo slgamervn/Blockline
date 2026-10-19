@@ -31,7 +31,7 @@
         <span>blockline<span class="brand-period">.</span></span>
       </a>
       <nav class="desktop-nav" aria-label="Điều hướng chính">
-        <a href="#features">Tính năng</a><a href="#demo">Trải nghiệm</a><a href="#roadmap">Lộ trình</a><a href="#faq">FAQ</a>
+        <a href="#features">Tính năng</a><a href="#demo">Trải nghiệm</a><a href="#roadmap">Lộ trình</a><a href="#faq">Hỏi đáp</a>
       </nav>
       <div class="header-actions">
         <button class="language-toggle" type="button" data-language-toggle aria-label="Chuyển ngôn ngữ sang English" title="Chuyển sang English">EN</button>
@@ -112,7 +112,7 @@
         </div>
       </article>
       <article class="feature-row feature-row-editor reveal">
-        <div class="feature-copy"><p class="feature-index">02 / CHỈNH SỬA</p><h3>Mã nguồn dễ đọc hơn.</h3><p>Editor hỗ trợ tô màu cú pháp cho JSON, JavaScript và .mcfunction, nhiều tab, hoàn tác/làm lại, tìm trong tệp, tự lưu và định dạng JSON có giữ comment.</p><ul class="plain-list"><li>Chuyển tab không mất mạch làm việc</li><li>Undo / redo và tìm nội dung</li><li>Định dạng JSON giữ comment</li></ul></div>
+        <div class="feature-copy"><p class="feature-index">02 / CHỈNH SỬA</p><h3>Mã nguồn dễ đọc hơn.</h3><p>Trình soạn thảo hỗ trợ tô màu cú pháp cho JSON, JavaScript và .mcfunction, nhiều tab, hoàn tác/làm lại, tìm trong tệp, tự lưu và định dạng JSON có giữ comment.</p><ul class="plain-list"><li>Chuyển tab không mất mạch làm việc</li><li>Undo / redo và tìm nội dung</li><li>Định dạng JSON giữ comment</li></ul></div>
         <div class="feature-visual editor-preview" aria-label="Minh họa editor với các tab có thể chọn">
           <div class="editor-window-head"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-title">EDITOR / MY ADD-ON</span></div>
           <div class="editor-tab-buttons" role="tablist" aria-label="Chọn tệp xem trước"><button type="button" role="tab" id="tab-manifest" aria-selected="true" aria-controls="editor-tab-panel" data-editor-tab="manifest">manifest.json</button><button type="button" role="tab" id="tab-script" aria-selected="false" aria-controls="editor-tab-panel" data-editor-tab="script">main.js</button><button type="button" role="tab" id="tab-function" aria-selected="false" aria-controls="editor-tab-panel" data-editor-tab="function">tick.mcfunction</button></div>
@@ -129,7 +129,7 @@
 <span class="code-muted">6</span>   <span class="code-punct">});</span></pre><pre class="sample-code" data-code-sample="function" hidden><span class="code-muted">1</span> <span class="code-comment"># Example function file</span>
 <span class="code-muted">2</span> <span class="code-command">say</span> Hello from Blockline
 <span class="code-muted">3</span> <span class="code-command">time</span> query daytime</pre></div>
-          <div class="editor-status"><span><i></i> Mô phỏng editor</span><span id="editor-language">JSON</span></div>
+          <div class="editor-status"><span><i></i> Mô phỏng trình soạn thảo</span><span id="editor-language">JSON</span></div>
         </div>
       </article>
       <article class="feature-row feature-row-manifest reveal">
@@ -170,7 +170,7 @@
       <div class="comparison-wrap reveal" role="region" aria-label="Bảng so sánh phạm vi sử dụng Blockline" tabindex="0">
         <table class="comparison-table"><thead><tr><th scope="col">Nhu cầu</th><th scope="col">Blockline hiện hỗ trợ</th><th scope="col">Giới hạn cần biết</th></tr></thead><tbody>
           <tr><th scope="row">Mở và quản lý pack</th><td><span class="table-mark yes">✓</span> Nhập .mcpack / .mcaddon, duyệt BP/RP và quản lý tệp.</td><td>Chỉ dùng trên Android 8.0 trở lên.</td></tr>
-          <tr><th scope="row">Sửa nội dung</th><td><span class="table-mark yes">✓</span> Editor JSON, JavaScript, .mcfunction; tab, undo/redo và tự lưu.</td><td>Tệp trên 1 MB chỉ mở đọc; tệp trên 5 MB không mở được.</td></tr>
+          <tr><th scope="row">Sửa nội dung</th><td><span class="table-mark yes">✓</span> Editor JSON, JavaScript, .mcfunction; tab, undo/redo và tự lưu.</td><td>Tệp trên 1 MB chỉ mở ở chế độ đọc; tệp trên 5 MB không mở được.</td></tr>
           <tr><th scope="row">Đọc manifest</th><td><span class="table-mark yes">✓</span> Đọc UUID, module và dependency.</td><td>Đọc manifest không đồng nghĩa kiểm tra toàn bộ tính đúng đắn của pack.</td></tr>
           <tr><th scope="row">Kiểm tra pack tự động</th><td><span class="table-mark progress-mark">↗</span> Đang phát triển.</td><td>Chưa giới thiệu như tính năng đã phát hành.</td></tr>
           <tr><th scope="row">Tạo entity/item/block</th><td><span class="table-mark progress-mark">↗</span> Đang phát triển.</td><td>Chưa phải trình tạo tài nguyên hoàn chỉnh.</td></tr>
@@ -206,7 +206,7 @@
         <div class="faq-list reveal">
           <details><summary>Blockline hỗ trợ thiết bị nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Blockline là ứng dụng Android, yêu cầu Android 8.0 trở lên. Liên kết tải xuống luôn trỏ tới APK của bản phát hành mới nhất trên GitHub.</p></div></details>
           <details><summary>Có cần kết nối mạng để chỉnh sửa pack không?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Các công cụ chính được mô tả có thể dùng ngoại tuyến. Trang web chỉ là trang giới thiệu và cung cấp liên kết tải APK.</p></div></details>
-          <details><summary>Blockline có thể mở những loại tệp nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Ứng dụng nhận .mcpack và .mcaddon; editor hỗ trợ tệp văn bản JSON, JavaScript và .mcfunction. Tệp trên 1 MB chỉ mở đọc, còn tệp trên 5 MB không mở được.</p></div></details>
+          <details><summary>Blockline có thể mở những loại tệp nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Ứng dụng nhận .mcpack và .mcaddon; editor hỗ trợ tệp văn bản JSON, JavaScript và .mcfunction. Tệp trên 1 MB chỉ mở ở chế độ đọc; tệp trên 5 MB không mở được.</p></div></details>
           <details><summary>Blockline đã kiểm tra pack tự động chưa?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Kiểm tra pack đang phát triển. Phiên bản hiện tại có thể đọc thông tin manifest như UUID, module và dependency, nhưng việc đọc đó không đồng nghĩa xác thực toàn bộ pack.</p></div></details>
           <details><summary>Tải APK ở đâu?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Nút tải trên trang dẫn đến tệp APK của bản phát hành mới nhất trên GitHub. Hãy kiểm tra tên dự án và nguồn phát hành trước khi cài đặt.</p></div></details>
         </div>
