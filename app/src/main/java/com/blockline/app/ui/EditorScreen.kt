@@ -3,6 +3,7 @@ package com.blockline.app.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
@@ -18,30 +19,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blockline.app.AppViewModel
-import com.blockline.app.ui.theme.OnSurface
 import com.blockline.app.ui.theme.Emerald
+import com.blockline.app.ui.theme.OnSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
-    var content by remember { mutableStateOf("{\n  \"format_version\": 2,\n  \"header\": {\n    \"name\": \"Sample\"\n  }\n}") }
+    var content by remember { mutableStateOf("{\n  \"format_version\": 2\n}") }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Editor") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* save */ }) {
-                        Icon(Icons.Default.Save, null, tint = Emerald)
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.Save, contentDescription = null, tint = Emerald)
                     }
                 }
             )

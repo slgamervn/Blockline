@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -18,7 +19,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
     Scaffold(topBar = { TopAppBar(title = { Text("Projects") }) }) { pad ->
         Column(Modifier.padding(pad).padding(16.dp)) {
             Text("Blockline Phase 1")
-            Button(onClick = onOpen) { Text("Open sample") }
+            Button(onClick = onOpen) { Text("Open") }
         }
     }
 }

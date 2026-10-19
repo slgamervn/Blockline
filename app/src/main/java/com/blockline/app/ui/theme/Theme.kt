@@ -13,8 +13,9 @@ import androidx.core.view.WindowCompat
 
 enum class ThemeMode { DARK, LIGHT, SYSTEM }
 
-private val Emerald = Color(0xFF3DBA7A)
-private val Amber = Color(0xFFE6B35A)
+val Emerald = Color(0xFF3DBA7A)
+val Amber = Color(0xFFE6B35A)
+val OnSurface = Color(0xFFE3EAE5)
 
 private val DarkColors = darkColorScheme(
     primary = Emerald,
@@ -27,18 +28,13 @@ private val DarkColors = darkColorScheme(
     onSecondaryContainer = Color(0xFFFFE2A8),
     tertiary = Color(0xFF7FB8E8),
     background = Color(0xFF101612),
-    onBackground = Color(0xFFE3EAE5),
+    onBackground = OnSurface,
     surface = Color(0xFF151D18),
-    onSurface = Color(0xFFE3EAE5),
+    onSurface = OnSurface,
     surfaceVariant = Color(0xFF212B25),
     onSurfaceVariant = Color(0xFFAEBBB3),
     outline = Color(0xFF55655B),
-    error = Color(0xFFFF8A80),
-    surfaceContainerLowest = Color(0xFF0D120F),
-    surfaceContainerLow = Color(0xFF131A16),
-    surfaceContainer = Color(0xFF18211C),
-    surfaceContainerHigh = Color(0xFF1E2822),
-    surfaceContainerHighest = Color(0xFF242F29)
+    error = Color(0xFFFF8A80)
 )
 
 private val LightColors = lightColorScheme(
