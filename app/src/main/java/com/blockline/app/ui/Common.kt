@@ -43,9 +43,7 @@ fun AppTopBar(
     TopAppBar(
         title = {
             Row(
-                Modifier
-                    .heightIn(min = 48.dp)
-                    .clickable(enabled = onTitleClick != null) { onTitleClick?.invoke() },
+                Modifier.heightIn(min = 48.dp).clickable(enabled = onTitleClick != null) { onTitleClick?.invoke() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
