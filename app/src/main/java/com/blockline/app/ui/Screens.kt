@@ -236,7 +236,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 }
 
 @Composable
-fun ToolsScreen(vm: AppViewModel) {
+fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Project tools", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text("Tools operate on the selected local project only.") }
@@ -258,7 +258,10 @@ fun ToolsScreen(vm: AppViewModel) {
                 }
             }
             items(vm.validationIssues) { issue ->
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().clickable(enabled = issue.path.isNotBlank()) {
+                    vm.openFile(issue.path)
+                    onOpenEditor()
+                }) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(issue.severity.name, color = when (issue.severity) {
                             com.blockline.app.data.IssueSeverity.ERROR -> androidx.compose.material3.MaterialTheme.colorScheme.error
