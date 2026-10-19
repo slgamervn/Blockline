@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
+import com.blockline.app.R
 import com.blockline.app.data.ExportMode
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
