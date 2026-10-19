@@ -28,6 +28,15 @@ assert(/data-language-toggle/.test(html) && /const englishText = \{/.test(js), "
 assert(/localStorage\.setItem\('blockline-language'/.test(js) && /localStorage\.getItem\('blockline-language'/.test(js), "Language choice persists between visits");
 const englishDictionary = js.match(/const englishText = \{([\s\S]*?)\n  \};/);
 assert(Boolean(englishDictionary) && (englishDictionary[1].match(/"[^"\n]+"\s*:/g) || []).length >= 140, "English translation covers the website copy");
+const englishKeys = new Set([...(englishDictionary?.[1] || "").matchAll(/"([^"]+)"\s*:/g)].map((match) => match[1]));
+const bodyMarkup = (html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i) || [null, ""])[1];
+const visibleTextNodes = [...bodyMarkup.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").matchAll(/>([^<>]+)</g)]
+  .map((match) => match[1].replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim())
+  .filter((value) => value && /[À-ỹ]/.test(value));
+const untranslatedVisibleText = [...new Set(visibleTextNodes)].filter((value) => !englishKeys.has(value));
+assert(untranslatedVisibleText.length === 0, "All visible Vietnamese copy has an English translation");
+assert(/og:locale/.test(html) && /ogLocale\.content = currentLanguage === 'en'/.test(js), "Social metadata follows the selected language");
+assert(/filter:blur\(4px\)/.test(css) && /filter:none!important/.test(css), "Reveal blur respects reduced-motion preferences");
 assert(/classList\.remove\('is-visible'\)/.test(js) && !/observer\.unobserve\(entry\.target\)/.test(js), "Scroll reveal exits and re-enters when scrolling in either direction");
 assert(/--reveal-y/.test(css) && /scrollDirection > 0/.test(js), "Scroll reveal direction is motion-aware");
 
