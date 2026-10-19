@@ -192,4 +192,8 @@
     <string name="export_pack">Export pack</string>
     <string name="renamed">Renamed</string>
     <string name="deleted_path">Deleted %1$s</string>
+    <string name="project_label">Project</string>
+    <string name="filter_all">All</string>
+    <string name="filter_favorites">Favorites</string>
+    <string name="filter_recent">Recent</string>
 </resources>
