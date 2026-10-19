@@ -682,27 +682,6 @@ footer{border-top-color:#ffffff12}
   let requestedStoryScene = null;
   let storyScrollTimer = 0;
   const setStoryScene = index => {
-    if (index === activeScene || index < 0 || index > 2) return;
-    activeScene = index;
-    if (storyStage) storyStage.dataset.scene = String(index);
-    storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
-    storyControls.forEach((control, i) => control.setAttribute('aria-pressed', String(i === index)));
-    const data = storyCopy[index];
-    const caption = document.querySelector('#stage-caption');
-    const title = document.querySelector('#stage-title');
-    const description = document.querySelector('#stage-description');
-    const path = document.querySelector('#stage-path');
-    const footerLeft = document.querySelector('#stage-footer-left');
-    const footerRight = document.querySelector('#stage-footer-right');
-    if (caption) caption.textContent = data.caption;
-    if (title) title.textContent = data.title;
-    if (description) description.textContent = data.description;
-    if (path) path.textContent = data.path;
-    if (footerLeft) footerLeft.textContent = data.left;
-    if (footerRight) footerRight.textContent = data.right;
-    storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
-  };
-  const setStoryScene = index => {
     if (!Number.isInteger(index) || index < 0 || index >= storyCopy.length) return;
     activeScene = index;
     if (storyStage) storyStage.dataset.scene = String(index);
