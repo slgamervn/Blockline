@@ -113,7 +113,7 @@
     <string name="about_blockline">About Blockline</string>
     <string name="about_blurb">Tools for creating Minecraft Bedrock add-ons on Android.</string>
     <string name="version">Version</string>
-    <string name="version_phase">0.1.0 · Phase 1 and Phase 2 preview</string>
+    <string name="version_phase">%1$s · Phase 1 and Phase 2 preview</string>
     <string name="privacy">Privacy</string>
     <string name="privacy_detail">Project files stay in app-private storage. The current build works offline and has no analytics or tracking.</string>
     <string name="early_notice">Blockline is still in development. Some advanced tools will arrive in later releases.</string>
