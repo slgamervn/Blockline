@@ -44,8 +44,7 @@ object ProjectValidator {
                 if (value !is JSONObject && value !is JSONArray) {
                     issues += ValidationIssue(IssueSeverity.ERROR, path, 1, 1, "JSON root must be an object or array.")
                 } else if (tokener.nextClean() != '\u0000') {
-                    val pos = clean.length - tokener.toString().length
-                    issues += locationIssue(IssueSeverity.ERROR, path, source, "Unexpected content after the JSON value.", pos)
+                    issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Unexpected content after the JSON value.")
                 } else {
                     parsed[file] = value
                 }
