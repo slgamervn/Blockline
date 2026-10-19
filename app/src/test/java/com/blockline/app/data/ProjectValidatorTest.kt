@@ -77,4 +77,21 @@ class ProjectValidatorTest {
         }
     }
 
+    @Test
+    fun acceptsSchemaSupportedStringVersionForUuidDependency() {
+        val root = Files.createTempDirectory("blockline-validator-").toFile()
+        try {
+            val pack = File(root, "BP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"dependencies":[{"uuid":"12345678-1234-1234-1234-123456789abd","version":"1.0.0"}]}"""
+            )
+
+            val issues = ProjectValidator.validate(root)
+            assertTrue(issues.none { it.message.contains("Dependency 12345678-1234-1234-1234-123456789abd has an invalid three-part") })
+            assertTrue(issues.none { it.message.contains("Internal dependency 12345678-1234-1234-1234-123456789abd requests version") })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
 }
