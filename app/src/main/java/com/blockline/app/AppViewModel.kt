@@ -121,7 +121,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             refresh()
             return
         }
-        saveCurrent()
+        saveCurrent(showMessage = false)
         current = p
         repo.touch(p.id)
         refresh()
@@ -169,7 +169,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openFile(path: String, line: Int?) {
         pendingEditorLine = line?.coerceAtLeast(1)
-        if (activeFile != null && activeFile != path) saveCurrent()
+        if (activeFile != null && activeFile != path) saveCurrent(showMessage = false)
         val p = current ?: return
         runCatching {
             val file = repo.resolve(p.id, path)
@@ -199,17 +199,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             openTabs[path] = value
         }
     }
-    fun saveCurrent() {
+    fun saveCurrent(showMessage: Boolean = true) {
         val p = current ?: return
         val path = activeFile ?: return
-        if (readOnly) { message = text(R.string.save_readonly); return }
+        if (readOnly) { if (showMessage) message = text(R.string.save_readonly); return }
         runCatching {
             val f = repo.resolve(p.id, path)
             f.parentFile?.mkdirs()
             val tmp = File(f.parentFile, f.name + ".saving")
             tmp.writeText(content)
             if (!tmp.renameTo(f)) { f.writeText(content); tmp.delete() }
-            message = text(R.string.saved_path, path)
+            if (showMessage) message = text(R.string.saved_path, path)
         }.onFailure { message = it.message ?: text(R.string.save_failed) }
     }
     fun undo() {
@@ -233,7 +233,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun closeTab(path: String) {
-        if (activeFile == path) saveCurrent()
+        if (activeFile == path) saveCurrent(showMessage = false)
         openTabs.remove(path)
         undo.remove(path)
         redo.remove(path)
