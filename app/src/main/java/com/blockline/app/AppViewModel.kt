@@ -112,11 +112,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }.getOrDefault(emptyList())
     }
     fun selectProject(p: Project) {
+        if (current?.id != p.id) saveCurrent()
         current = p
         repo.touch(p.id)
         refresh()
         activeFile = null
         content = ""
+        openTabs.clear()
+        undo.clear()
+        redo.clear()
         validationIssues = emptyList()
         validationCompleted = false
         contentSearchResults = emptyList()
@@ -139,7 +143,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun duplicateProject(p: Project) = runCatching { repo.duplicate(p.id) }.onSuccess { refresh(); message = "Project duplicated" }.onFailure { message = it.message }
     fun deleteProject(p: Project) {
         repo.delete(p.id)
-        if (current?.id == p.id) { current = null; activeFile = null; content = "" }
+        if (current?.id == p.id) {
+            current = null
+            activeFile = null
+            content = ""
+            openTabs.clear()
+            undo.clear()
+            redo.clear()
+            validationIssues = emptyList()
+            validationCompleted = false
+            contentSearchResults = emptyList()
+        }
         refresh(); message = "Project deleted"
     }
     fun openFile(path: String) {
