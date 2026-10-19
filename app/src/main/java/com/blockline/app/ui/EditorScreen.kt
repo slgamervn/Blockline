@@ -30,19 +30,19 @@ import com.blockline.app.ui.theme.OnSurface
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
-    var content by remember { mutableStateOf("{\n  \"format_version\": 2\n}") }
+    var content by remember { mutableStateOf("{\n  \"format_version\": 2,\n  \"header\": {\n    \"name\": \"Blockline Sample\"\n  }\n}") }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Editor") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 },
                 actions = {
                     IconButton(onClick = {}) {
-                        Icon(Icons.Default.Save, contentDescription = null, tint = Emerald)
+                        Icon(Icons.Default.Save, null, tint = Emerald)
                     }
                 }
             )
