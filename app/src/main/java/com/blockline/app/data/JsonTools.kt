@@ -38,4 +38,78 @@ object JsonTools {
         }
         return sb.toString()
     }
+
+    /** Pretty-prints JSON without removing comments. Works on text that is not strictly valid JSON. */
+    fun format(s: String, unit: String = "  "): String {
+        val out = StringBuilder()
+        var depth = 0
+        var i = 0
+        var lineStart = true
+
+        fun nl() {
+            out.append('\n')
+            lineStart = true
+        }
+
+        fun emit(t: String) {
+            if (lineStart) {
+                repeat(depth) { out.append(unit) }
+                lineStart = false
+            }
+            out.append(t)
+        }
+
+        while (i < s.length) {
+            val c = s[i]
+            when {
+                c == '"' -> {
+                    val st = i
+                    i++
+                    while (i < s.length && s[i] != '"') {
+                        if (s[i] == '\\') i++
+                        i++
+                    }
+                    i = minOf(i + 1, s.length)
+                    emit(s.substring(st, i))
+                }
+                c == '/' && i + 1 < s.length && s[i + 1] == '/' -> {
+                    val st = i
+                    while (i < s.length && s[i] != '\n') i++
+                    if (!lineStart) out.append(' ')
+                    emit(s.substring(st, i).trimEnd())
+                    nl()
+                }
+                c == '{' || c == '[' -> {
+                    emit(c.toString())
+                    depth++
+                    nl()
+                    i++
+                }
+                c == '}' || c == ']' -> {
+                    depth = maxOf(0, depth - 1)
+                    if (!lineStart) nl()
+                    emit(c.toString())
+                    i++
+                }
+                c == ',' -> {
+                    emit(",")
+                    i++
+                    nl()
+                }
+                c == ':' -> {
+                    out.append(": ")
+                    i++
+                    while (i < s.length && (s[i] == ' ' || s[i] == '\t')) i++
+                }
+                c.isWhitespace() -> i++
+                else -> {
+                    val st = i
+                    while (i < s.length && !s[i].isWhitespace() && s[i] !in ",:]}{[\"/") i++
+                    if (i == st) i++
+                    emit(s.substring(st, i))
+                }
+            }
+        }
+        return out.toString().trimEnd() + "\n"
+    }
 }
