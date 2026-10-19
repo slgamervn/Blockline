@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
+import com.blockline.app.BuildConfig
 import com.blockline.app.R
 import com.blockline.app.data.ExportMode
 import com.blockline.app.ui.theme.ThemeMode
@@ -338,7 +339,7 @@ fun MoreScreen(vm: AppViewModel) {
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text(stringResource(R.string.version), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                     androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-                    Text(stringResource(R.string.version_phase))
+                    Text(stringResource(R.string.version_phase, BuildConfig.VERSION_NAME))
                 }
                 androidx.compose.material3.HorizontalDivider()
                 Text(stringResource(R.string.privacy), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
