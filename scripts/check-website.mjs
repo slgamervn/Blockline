@@ -130,6 +130,25 @@ assert(
   "Product mockup and feature cards provide restrained hover feedback"
 );
 
+
+assert(
+  /id="blockline-experience-polish"/.test(html) &&
+    /id="blockline-scroll-progress"/.test(html) &&
+    /requestAnimationFrame\(updateProgress\)/.test(html),
+  "Blockline scroll progress is requestAnimationFrame-throttled"
+);
+assert(
+  /IntersectionObserver/.test(html) &&
+    /data-bl-reveal/.test(html) &&
+    /is-revealed/.test(html),
+  "Viewport reveal effects use IntersectionObserver"
+);
+assert(
+  /prefers-reduced-motion:\s*no-preference/.test(html) &&
+    /prefers-reduced-motion:\s*reduce/.test(html),
+  "New motion effects respect reduced-motion preferences"
+);
+
 if (errors.length) {
   console.error("Website validation failed:");
   for (const error of errors) console.error("- " + error);
