@@ -200,7 +200,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         Text("Search project", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = { query = it; vm.clearContentSearch() },
             label = { Text(if (contentMode) "Search inside text files" else "File name or path") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
