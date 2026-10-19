@@ -52,6 +52,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val openTabs = mutableStateMapOf<String, String>()
     private val undo = mutableStateMapOf<String, MutableList<String>>()
     private val redo = mutableStateMapOf<String, MutableList<String>>()
+    private val lastEditAt = mutableMapOf<String, Long>()
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
 
@@ -150,6 +151,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         openTabs.clear()
         undo.clear()
         redo.clear()
+        lastEditAt.clear()
         validationIssues = emptyList()
         validationCompleted = false
         contentSearchResults = emptyList()
@@ -179,6 +181,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             openTabs.clear()
             undo.clear()
             redo.clear()
+            lastEditAt.clear()
             validationIssues = emptyList()
             validationCompleted = false
             contentSearchResults = emptyList()
@@ -199,8 +202,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             activeFile = path
             content = if (size <= 2L * 1024L * 1024L) file.readText() else ""
             openTabs[path] = content
-            undo[path] = mutableListOf(content)
+            undo[path] = mutableListOf()
             redo[path] = mutableListOf()
+            lastEditAt.remove(path)
             repo.addRecentFile(p.id, path)
         }.onFailure { message = it.message ?: text(R.string.cannot_open_file) }
     }
@@ -212,11 +216,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val path = activeFile ?: return
         if (readOnly) return
         if (value != content) {
-            undo.getOrPut(path) { mutableListOf(content) }.add(content)
-            if (undo[path]!!.size > 80) undo[path]!!.removeAt(0)
+            val now = System.currentTimeMillis()
+            val history = undo.getOrPut(path) { mutableListOf() }
+            val lastEdit = lastEditAt[path] ?: 0L
+            if (lastEdit == 0L || now - lastEdit > 700L) {
+                history.add(content)
+                if (history.size > 80) history.removeAt(0)
+            }
             redo.getOrPut(path) { mutableListOf() }.clear()
             content = value
             openTabs[path] = value
+            lastEditAt[path] = now
         }
     }
     fun saveCurrent(showMessage: Boolean = true) {
@@ -235,21 +245,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun undo() {
         val path = activeFile ?: return
         val stack = undo[path] ?: return
-        if (stack.size > 1) {
+        if (stack.isNotEmpty()) {
             redo.getOrPut(path) { mutableListOf() }.add(content)
-            stack.removeAt(stack.lastIndex)
-            content = stack.last()
+            content = stack.removeAt(stack.lastIndex)
             openTabs[path] = content
+            lastEditAt[path] = 0L
         }
     }
     fun redo() {
         val path = activeFile ?: return
         val stack = redo[path] ?: return
         if (stack.isNotEmpty()) {
+            undo.getOrPut(path) { mutableListOf() }.add(content)
             val next = stack.removeAt(stack.lastIndex)
-            undo.getOrPut(path) { mutableListOf(content) }.add(next)
             content = next
             openTabs[path] = content
+            lastEditAt[path] = 0L
         }
     }
     fun closeTab(path: String) {
@@ -257,6 +268,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         openTabs.remove(path)
         undo.remove(path)
         redo.remove(path)
+        lastEditAt.remove(path)
         if (activeFile == path) { activeFile = null; content = "" }
     }
     fun createFile(path: String, directory: Boolean) {
@@ -290,6 +302,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 openTabs.remove(tab)
                 undo.remove(tab)
                 redo.remove(tab)
+                lastEditAt.remove(tab)
                 if (activeFile == tab) { activeFile = null; content = "" }
             }
             message = text(R.string.deleted_path, path)
@@ -316,6 +329,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             openTabs.remove(oldTab)?.let { openTabs[newTab] = it }
             undo.remove(oldTab)?.let { undo[newTab] = it }
             redo.remove(oldTab)?.let { redo[newTab] = it }
+            lastEditAt.remove(oldTab)?.let { lastEditAt[newTab] = it }
             if (activeFile == oldTab) activeFile = newTab
         }
     }
