@@ -42,7 +42,7 @@ class ZipUtilTest {
         val root = createTempDir(prefix = "blockline-zip-test")
         try {
             assertThrows(IllegalArgumentException::class.java) {
-                ZipUtil.unzip(ByteArrayInputStream(archive("same.txt" to "one", "same.txt" to "two")), root)
+                ZipUtil.unzip(ByteArrayInputStream(archive("same.txt" to "one", "./same.txt" to "two")), root)
             }
         } finally {
             root.deleteRecursively()
