@@ -41,6 +41,9 @@ jobs:
         with:
           gradle-version: 8.14.6
 
+      - name: Run unit tests
+        run: gradle testDebugUnitTest --stacktrace --no-daemon
+
       - name: Prepare stable signing key
         if: ${{ env.HAS_SIGNING_KEY == 'true' }}
         env:
