@@ -404,3 +404,22 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
   0%,100%{opacity:.72;transform:scale(1)}
   50%{opacity:1;transform:scale(1.035)}
 }
+
+/* Mobile diagonal decoration fix: keep hero/download copy unobstructed. */
+@media (max-width: 820px) {
+  .download-panel::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+.download-panel {
+  isolation: isolate;
+  overflow: hidden;
+}
+.download-panel > * {
+  position: relative;
+  z-index: 1;
+}
+.download-panel::after {
+  z-index: 0;
+}
