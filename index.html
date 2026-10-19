@@ -569,7 +569,7 @@ footer{border-top-color:#ffffff12}
 .hero{min-height:0;display:block}
 .hero .eyebrow,.hero h1,.hero .lead,.hero .actions,.hero .trust{animation:none!important;transition:none!important;will-change:auto}
 .device{animation:none!important;will-change:auto}
-.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{transform:translate3d(0,8px,0);transition:opacity .28s ease,transform .28s ease;transition-delay:0ms;will-change:auto}
+.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{transform:translate3d(0,8px,0);transition:opacity .28s ease,transform .28s ease;transition-delay:var(--reveal-delay,0ms);will-change:auto}
 .reveal.is-visible{transform:translate3d(0,0,0)}
 .feature,.feature:hover,.step,.step:hover{transform:none;box-shadow:none}
 .feature::before,.feature::after{display:none}
@@ -615,7 +615,7 @@ html.reveal-motion-ready .reveal[data-reveal="scale"]:not(.is-visible) {
   opacity: 0;
   transform: translate3d(0, 12px, 0);
   transition: opacity .32s ease, transform .38s ease;
-  transition-delay: 0ms;
+  transition-delay: var(--reveal-delay, 0ms);
 }
 html.reveal-motion-ready .reveal.is-visible,
 html.reveal-motion-ready .reveal[data-reveal="left"].is-visible,
@@ -739,6 +739,49 @@ body {
   .feature:hover, .step:hover { transform: none !important; }
 }
 
+</style>
+<style id="viewport-motion-guard">
+/* Pause decorative motion outside the viewport without changing document flow. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero .eyebrow:not(.in-viewport),
+  .hero h1:not(.in-viewport),
+  .hero .lead:not(.in-viewport),
+  .hero .actions:not(.in-viewport),
+  .hero .trust:not(.in-viewport),
+  .device:not(.in-viewport),
+  .glow:not(.in-viewport) {
+    animation-play-state: paused !important;
+  }
+  .hero .eyebrow.in-viewport,
+  .hero h1.in-viewport,
+  .hero .lead.in-viewport,
+  .hero .actions.in-viewport,
+  .hero .trust.in-viewport,
+  .device.in-viewport,
+  .glow.in-viewport {
+    animation-play-state: running !important;
+  }
+  .story-stage:not(.in-viewport)[data-scene] [data-scene-content] {
+    animation-play-state: paused !important;
+  }
+  .story-stage.in-viewport[data-scene] [data-scene-content] {
+    animation-play-state: running !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .eyebrow,
+  .hero h1,
+  .hero .lead,
+  .hero .actions,
+  .hero .trust,
+  .device,
+  .glow,
+  .story-stage [data-scene-content] {
+    animation: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -925,11 +968,60 @@ body {
     if (footerRight) footerRight.textContent = data.right;
     storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
   };
+  const scrollStoryStepIntoView = index => {
+    if (!storyTrack || !isCompactStory() || !storySteps[index]) return;
+    const step = storySteps[index];
+    const trackRect = storyTrack.getBoundingClientRect();
+    const stepRect = step.getBoundingClientRect();
+    const targetLeft = storyTrack.scrollLeft + stepRect.left - trackRect.left
+      - (storyTrack.clientWidth - stepRect.width) / 2;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    storyTrack.scrollTo({
+      left: Math.max(0, targetLeft),
+      behavior: reduced ? 'auto' : 'smooth'
+    });
+  };
+
+  let storyScrollFrame = 0;
+  const syncStorySceneFromScroll = () => {
+    if (!storyTrack || !isCompactStory() || storyScrollFrame) return;
+    storyScrollFrame = window.requestAnimationFrame(() => {
+      storyScrollFrame = 0;
+      if (!isCompactStory()) return;
+      const trackRect = storyTrack.getBoundingClientRect();
+      const trackCenter = trackRect.left + trackRect.width / 2;
+      let nearestIndex = -1;
+      let nearestDistance = Infinity;
+      storySteps.forEach((step, index) => {
+        const rect = step.getBoundingClientRect();
+        if (rect.right <= trackRect.left || rect.left >= trackRect.right) return;
+        const distance = Math.abs(rect.left + rect.width / 2 - trackCenter);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+      if (nearestIndex >= 0 && nearestIndex !== activeScene) setStoryScene(nearestIndex);
+    });
+  };
+
+  storyTrack?.addEventListener('scroll', syncStorySceneFromScroll, { passive: true });
+  window.addEventListener('resize', syncStorySceneFromScroll, { passive: true });
+
+  storySteps.forEach((step, index) => {
+    step.addEventListener('click', () => {
+      if (!isCompactStory()) return;
+      setStoryScene(index);
+      scrollStoryStepIntoView(index);
+    });
+  });
+
   storyControls.forEach(control => {
     control.addEventListener('click', () => {
       const index = Number(control.dataset.storyGo);
       if (!Number.isInteger(index) || index < 0 || index >= storyCopy[currentLanguage].length) return;
       setStoryScene(index);
+      scrollStoryStepIntoView(index);
     });
   });
   window.addEventListener('blockline:languagechange', event => {
