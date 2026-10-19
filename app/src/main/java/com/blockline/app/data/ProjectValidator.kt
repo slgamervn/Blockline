@@ -150,8 +150,10 @@ object ProjectValidator {
                 if (uuid.isBlank()) {
                     if (moduleName.isBlank()) {
                         issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i] must specify either uuid or module_name.")
-                    } else if (dependency.opt("version") == null) {
+                    } else if (!dependency.has("version") || dependency.isNull("version")) {
                         issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i].version is required when module_name is used.")
+                    } else if (dependency.opt("version") !is String || dependency.optString("version").isBlank()) {
+                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i].version must be a non-empty string when module_name is used.")
                     } else {
                         issues += ValidationIssue(IssueSeverity.INFO, path, message = "Module dependency '$moduleName' is declared; its availability is determined by the Minecraft runtime.")
                     }
