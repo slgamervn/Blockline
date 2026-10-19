@@ -189,7 +189,7 @@ class ProjectRepository(private val ctx: Context) {
                 val savedPath = key.removePrefix(prefix)
                 savedPath == path || savedPath.startsWith("$path/")
             }
-        }.forEach(editor::remove)
+        }.forEach { key -> editor.remove(key) }
         val recentKey = "recentFile:$id"
         val recent = prefs.getString(recentKey, null)
         if (recent == path || recent?.startsWith("$path/") == true) editor.remove(recentKey)
