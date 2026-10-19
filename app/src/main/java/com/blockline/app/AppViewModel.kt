@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.blockline.app.data.ExportMode
 import com.blockline.app.data.Project
 import com.blockline.app.data.ProjectRepository
+import com.blockline.app.data.ProjectValidator
+import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,6 +35,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var isLoading by mutableStateOf(false)
         private set
+    var isValidating by mutableStateOf(false)
+        private set
+    var validationIssues by mutableStateOf<List<ValidationIssue>>(emptyList())
+        private set
     val openTabs = mutableStateMapOf<String, String>()
     private val undo = mutableStateMapOf<String, MutableList<String>>()
     private val redo = mutableStateMapOf<String, MutableList<String>>()
@@ -40,6 +46,46 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     init { refresh() }
 
     fun refresh() { projects = repo.list() }
+
+    fun validateCurrentProject() {
+        val project = current
+        if (project == null) {
+            message = "Select a project before validating."
+            return
+        }
+        if (isValidating) return
+        isValidating = true
+        validationIssues = emptyList()
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) { ProjectValidator.validate(repo.projectDir(project.id)) }
+            }
+            isValidating = false
+            result.onSuccess { issues ->
+                if (current?.id == project.id) validationIssues = issues
+                val errors = issues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
+                val warnings = issues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
+                message = "Validation finished: $errors errors, $warnings warnings, ${issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }} info."
+            }.onFailure { message = it.message ?: "Validation failed." }
+        }
+    }
+
+    fun searchProjectContent(query: String): List<Pair<String, Int>> {
+        val project = current ?: return emptyList()
+        if (query.isBlank()) return emptyList()
+        return runCatching {
+            repo.allFiles(project.id).asSequence()
+                .filter { it.length() <= 1024L * 1024L && it.extension.lowercase() in com.blockline.app.data.TEXT_EXT }
+                .flatMap { file ->
+                    val path = repo.relative(project.id, file)
+                    file.readLines().asSequence().mapIndexedNotNull { index, line ->
+                        if (line.contains(query, ignoreCase = true)) path to (index + 1) else null
+                    }
+                }
+                .take(500)
+                .toList()
+        }.getOrDefault(emptyList())
+    }
     fun selectProject(p: Project) {
         current = p
         repo.touch(p.id)
