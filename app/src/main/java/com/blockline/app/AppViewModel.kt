@@ -222,7 +222,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun closeTab(path: String) {
+        if (activeFile == path) saveCurrent()
         openTabs.remove(path)
+        undo.remove(path)
+        redo.remove(path)
         if (activeFile == path) { activeFile = null; content = "" }
     }
     fun createFile(path: String, directory: Boolean) {
