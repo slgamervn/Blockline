@@ -659,20 +659,20 @@ body {
     transform-origin: center;
   }
   .glow { animation: glow-pulse 7s ease-in-out infinite alternate; }
-  @media (hover: hover) and (pointer: fine) {
-    .feature, .step {
-      transition: transform .28s var(--ease-out), border-color .28s ease, box-shadow .28s ease;
-    }
-    .feature:hover {
-      transform: translateY(-4px);
-      border-color: #45634e;
-      box-shadow: 0 18px 40px #0003;
-    }
-    .feature:hover .featureIcon { transform: translateY(-2px) rotate(-4deg); }
-    .step:hover { transform: translateY(-3px); border-color: #45634e; }
-    .downloadCard { transition: border-color .3s ease, box-shadow .3s ease; }
-    .downloadCard:hover { border-color: #54815f; box-shadow: 0 20px 60px #0003; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .feature, .step {
+    transition: transform .28s var(--ease-out), border-color .28s ease, box-shadow .28s ease;
   }
+  .feature:hover {
+    transform: translateY(-4px);
+    border-color: #45634e;
+    box-shadow: 0 18px 40px #0003;
+  }
+  .feature:hover .featureIcon { transform: translateY(-2px) rotate(-4deg); }
+  .step:hover { transform: translateY(-3px); border-color: #45634e; }
+  .downloadCard { transition: border-color .3s ease, box-shadow .3s ease; }
+  .downloadCard:hover { border-color: #54815f; box-shadow: 0 20px 60px #0003; }
 }
 @media (max-width: 820px) {
   body { background-attachment: scroll; }
