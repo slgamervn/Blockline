@@ -100,15 +100,15 @@ footer{border-top-color:#ffffff12}
 @media(prefers-reduced-motion:reduce){.device{transform:none!important}}
 
 
-/* Viewport-only motion: effects replay in both scroll directions */
-.reveal{opacity:0;transform:translate3d(0,28px,0) scale(.985);filter:blur(3px);transition:opacity .65s var(--ease-out),transform .75s var(--ease-out),filter .65s ease;transition-delay:var(--reveal-delay,0ms);will-change:opacity,transform,filter}
-.reveal[data-reveal="left"]{transform:translate3d(-30px,0,0) scale(.99)}
-.reveal[data-reveal="right"]{transform:translate3d(30px,0,0) scale(.99)}
-.reveal[data-reveal="scale"]{transform:translate3d(0,12px,0) scale(.94)}
-.reveal.is-visible{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0);will-change:auto}
+/* Viewport-only motion: crisp reveals replay in both scroll directions */
+.reveal{opacity:0;transform:translate3d(0,22px,0);transition:opacity .45s var(--ease-out),transform .6s var(--ease-out);transition-delay:var(--reveal-delay,0ms)}
+.reveal[data-reveal="left"]{transform:translate3d(-22px,0,0)}
+.reveal[data-reveal="right"]{transform:translate3d(22px,0,0)}
+.reveal[data-reveal="scale"]{transform:translate3d(0,10px,0)}
+.reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
 .hero .eyebrow,.hero h1,.hero .lead,.hero .actions,.hero .trust{will-change:auto}
-@media(max-width:820px){.reveal[data-reveal="left"],.reveal[data-reveal="right"]{transform:translate3d(0,22px,0) scale(.99)}}
-@media(prefers-reduced-motion:reduce){.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{opacity:1;transform:none;filter:none;transition:none;will-change:auto}}
+@media(max-width:820px){.reveal[data-reveal="left"],.reveal[data-reveal="right"]{transform:translate3d(0,18px,0)}}
+@media(prefers-reduced-motion:reduce){.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{opacity:1;transform:none;transition:none}}
 
 
 /* Cinematic scroll direction: depth and motion tied to actual viewport progress */
