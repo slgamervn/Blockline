@@ -283,6 +283,45 @@ footer{border-top-color:#ffffff12}
  .product-story .story-stage-wrap{transform:none}
 }
 
+
+/* Final workflow layout: desktop stage aligns to viewport; phone swipes between steps */
+@media(min-width:821px){
+ .product-story .story-layout{align-items:stretch}
+ .product-story .story-stage-wrap{position:sticky;top:calc(50vh - 250px);transform:none;align-self:start}
+ .product-story .story-stage{min-height:0}
+ .product-story .story-steps{min-width:0}
+}
+@media(max-width:820px){
+ .product-story .story-layout{display:flex;flex-direction:column;gap:18px}
+ .product-story .story-stage-wrap{position:relative!important;top:auto!important;transform:none!important;width:100%}
+ .product-story .story-steps{
+   display:flex;flex-direction:row;gap:12px;
+   overflow-x:auto;overflow-y:hidden;
+   width:calc(100% + 28px);margin-left:-14px;padding:0 14px 14px;
+   scroll-snap-type:x mandatory;scroll-padding-inline:14px;
+   overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+   scrollbar-width:thin;scrollbar-color:#9be7b5 #ffffff12;
+ }
+ .product-story .story-step{
+   flex:0 0 min(84%,420px);min-width:0;min-height:0;
+   padding:20px 18px 22px;border:1px solid #ffffff18;border-radius:16px;
+   background:linear-gradient(145deg,#111a14,#090d0b);
+   scroll-snap-align:start;opacity:.68;transition:opacity .25s ease,border-color .25s ease;
+ }
+ .product-story .story-step:last-child{border-bottom:1px solid #ffffff18}
+ .product-story .story-step.is-active{opacity:1;border-color:#9be7b555}
+ .product-story .story-step h3{margin:12px 0 10px}
+ .product-story .story-step p{max-width:none}
+ .product-story .story-step .step-note{margin-top:16px}
+}
+@media(max-width:480px){
+ .product-story .story-steps{width:calc(100% + 28px);margin-left:-14px;padding-inline:14px}
+ .product-story .story-step{flex-basis:calc(100% - 42px);padding:18px 16px 20px}
+ .product-story .story-step-number{font-size:.83rem}
+ .product-story .story-step h3{font-size:1.45rem}
+ .product-story .story-step p{font-size:.88rem;line-height:1.7}
+}
+
 </style>
 </head>
 <body>
