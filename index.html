@@ -232,6 +232,57 @@ footer{border-top-color:#ffffff12}
 }
 
 
+
+/* Responsive repair: prevent text collisions and keep the desktop stage centered */
+.product-story,.product-story .wrap,.story-layout,.story-head,.story-stage-wrap,.story-stage,.story-steps,.story-step{min-width:0}
+.story-head h2,.story-head p,.story-step h3,.story-step p,.stage-title,.stage-description{max-width:100%;overflow-wrap:anywhere;word-break:normal}
+.story-head h2{line-height:1.08;text-wrap:balance}
+.stage-top{min-width:0;flex-wrap:wrap}
+.stage-brand{min-width:0;flex-wrap:wrap}
+.stage-live{white-space:nowrap}
+.stage-window{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.stage-files{min-width:440px}
+.stage-windowbar,.stage-footer{min-width:440px}
+.stage-editor{overflow-wrap:normal;white-space:normal}
+.story-step{scroll-margin-top:100px}
+@media(min-width:821px){
+ .product-story .story-stage-wrap{position:sticky;top:50%;align-self:start;transform:translateY(-50%);z-index:1}
+ .product-story .story-stage{min-height:0}
+ .story-layout{grid-template-columns:minmax(0,1.08fr) minmax(320px,.82fr);gap:clamp(34px,5vw,76px)}
+ .story-stage-wrap{width:100%}
+}
+@media(max-width:820px){
+ .product-story .story-stage-wrap{transform:none}
+ .story-head h2{font-size:clamp(1.85rem,7.2vw,2.55rem);letter-spacing:-.055em}
+ .story-head p{font-size:clamp(.9rem,3.8vw,1rem);line-height:1.7}
+ .story-stage{width:100%;max-width:100%}
+ .stage-content{min-width:0}
+ .stage-title{font-size:clamp(1.35rem,5.5vw,1.9rem);letter-spacing:-.045em}
+ .stage-description{font-size:.88rem}
+ .story-step h3{font-size:clamp(1.45rem,5.8vw,1.8rem);overflow-wrap:anywhere}
+ .story-step p{overflow-wrap:anywhere}
+}
+@media(max-width:480px){
+ .product-story .wrap{width:calc(100% - 28px)}
+ .story-head{margin-bottom:22px}
+ .story-head h2{font-size:clamp(1.7rem,7.5vw,2.1rem);line-height:1.12}
+ .stage-top{gap:8px;padding:10px}
+ .stage-brand{font-size:.72rem;gap:6px}
+ .stage-brand-mark{flex:0 0 27px}
+ .stage-live{font-size:.55rem;letter-spacing:.035em}
+ .stage-content{padding:12px}
+ .stage-caption{font-size:.62rem}
+ .stage-title{font-size:1.4rem;line-height:1.12}
+ .stage-description{font-size:.8rem;line-height:1.55}
+ .stage-files{min-width:430px;grid-template-columns:100px minmax(0,1fr)}
+ .stage-tree,.stage-editor{font-size:.62rem}
+ .stage-windowbar,.stage-footer{min-width:430px}
+ .story-step{padding:22px 0}
+}
+@media(prefers-reduced-motion:reduce){
+ .product-story .story-stage-wrap{transform:none}
+}
+
 </style>
 </head>
 <body>
