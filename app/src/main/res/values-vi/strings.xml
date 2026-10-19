@@ -113,7 +113,7 @@
     <string name="about_blockline">Thông tin về Blockline</string>
     <string name="about_blurb">Công cụ Android để tạo add-on Minecraft Bedrock.</string>
     <string name="version">Phiên bản</string>
-    <string name="version_phase">0.1.0 · Bản xem trước Phase 1 và Phase 2</string>
+    <string name="version_phase">%1$s · Bản xem trước Phase 1 và Phase 2</string>
     <string name="privacy">Quyền riêng tư</string>
     <string name="privacy_detail">Tệp dự án được lưu trong vùng dữ liệu riêng của ứng dụng. Bản hiện tại dùng ngoại tuyến, không có phân tích dữ liệu hay theo dõi.</string>
     <string name="early_notice">Blockline vẫn đang được phát triển. Một số công cụ nâng cao sẽ có trong các bản phát hành sau.</string>
