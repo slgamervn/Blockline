@@ -100,26 +100,53 @@ class ProjectRepository(private val ctx: Context) {
     }
 
     fun importPack(uri: Uri, displayName: String): Project {
-        val tmp = File(ctx.cacheDir, "import_${System.currentTimeMillis()}").apply { mkdirs() }
+        val tmp = File(ctx.cacheDir, "import_${UUID.randomUUID()}").apply { check(mkdirs() || isDirectory) }
+        var dest: File? = null
         try {
-            (ctx.contentResolver.openInputStream(uri) ?: error("Cannot open selected file")).use { ZipUtil.unzip(it, tmp) }
+            val input = ctx.contentResolver.openInputStream(uri)
+                ?: error("Cannot open the selected file. Choose the pack archive again.")
+            input.use { ZipUtil.unzip(it, tmp) }
             expandNested(tmp, 0)
             val packs = findPackRoots(tmp)
-            if (packs.isEmpty()) error("No manifest.json or pack_manifest.json found in the selected archive")
+            if (packs.isEmpty()) {
+                error("No supported pack manifest was found. Select a valid .mcpack, .mcaddon, or ZIP containing manifest.json or pack_manifest.json.")
+            }
             val id = UUID.randomUUID().toString()
-            val dest = projectDir(id)
+            dest = projectDir(id)
+            check(dest.mkdirs() || dest.isDirectory) { "Could not create the project folder." }
             var bp = 0
             var rp = 0
             for (pack in packs) {
-                val name = if (isResourcePack(pack)) { rp++; if (rp == 1) "RP" else "RP$rp" }
-                    else { bp++; if (bp == 1) "BP" else "BP$bp" }
-                pack.copyRecursively(File(dest, name), overwrite = true)
+                val name = if (isResourcePack(pack)) {
+                    rp++
+                    if (rp == 1) "RP" else "RP$rp"
+                } else {
+                    bp++
+                    if (bp == 1) "BP" else "BP$bp"
+                }
+                val target = File(dest, name)
+                check(pack.copyRecursively(target, overwrite = false)) { "Could not copy pack files into the project." }
+                check(target.isDirectory && target.listFiles()?.isNotEmpty() == true) { "The selected pack appears to be empty." }
             }
+            check(dest.listFiles()?.isNotEmpty() == true) { "No pack files were imported." }
             val now = System.currentTimeMillis()
-            val project = Project(id, displayName.substringBeforeLast('.').ifBlank { "Project" }, now, now)
+            val safeName = displayName.substringBeforeLast('.').trim().ifBlank { "Project" }
+            val project = Project(id, safeName, now, now)
             save(list() + project)
             return project
-        } finally { tmp.deleteRecursively() }
+        } catch (e: Exception) {
+            dest?.deleteRecursively()
+            throw IllegalArgumentException(
+                when (e) {
+                    is SecurityException -> "The archive contains an unsafe file path and was rejected."
+                    is java.util.zip.ZipException -> "The selected file is not a valid or supported ZIP-based pack archive."
+                    else -> e.message?.takeIf { it.isNotBlank() } ?: "Import failed. Check that the selected file is a valid .mcpack, .mcaddon, or ZIP archive."
+                },
+                e
+            )
+        } finally {
+            tmp.deleteRecursively()
+        }
     }
 
     private fun expandNested(dir: File, depth: Int) {
