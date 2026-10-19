@@ -9,6 +9,9 @@
 <meta property="og:title" content="Blockline — Bedrock Add-on Studio for Android">
 <meta property="og:description" content="Your Bedrock workflow, built for mobile. Local-first pack editing tools for Android.">
 <meta property="og:url" content="https://slgamervn.github.io/Blockline/">
+<meta property="og:site_name" content="Blockline">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://slgamervn.github.io/Blockline/">
 <title>Blockline — Bedrock Add-on Studio for Android</title>
 <style>
 :root{color-scheme:dark;--bg:#101612;--panel:#151d18;--panel2:#1b261f;--line:#2a3930;--text:#edf5ef;--muted:#a8b8ad;--green:#3dba7a;--green2:#8ce0b2;--amber:#e6b35a;--max:1120px}
@@ -233,101 +236,162 @@ footer{border-top-color:#ffffff12}
 
 
 
-/* Responsive repair: prevent text collisions and keep the desktop stage centered */
-.product-story,.product-story .wrap,.story-layout,.story-head,.story-stage-wrap,.story-stage,.story-steps,.story-step{min-width:0}
-.story-head h2,.story-head p,.story-step h3,.story-step p,.stage-title,.stage-description{max-width:100%;overflow-wrap:anywhere;word-break:normal}
+/* Responsive layout, accessible controls, and stable workflow presentation */
+:focus-visible{outline:2px solid var(--green2);outline-offset:4px}
+.nav-toggle{display:none;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid #ffffff25;border-radius:999px;background:#ffffff08;color:var(--text);font:inherit;font-size:.9rem;font-weight:700;cursor:pointer}
+.nav-toggle .menu-icon{font-size:1.1rem;line-height:1}
+.story-head h2,.story-head p,.story-step h3,.story-step p,.stage-title,.stage-description{min-width:0;max-width:100%;overflow-wrap:break-word;word-break:normal}
 .story-head h2{line-height:1.08;text-wrap:balance}
+.story-controls{display:none}
+.story-help{display:none}
+.product-story .story-layout{align-items:stretch}
+.product-story .story-stage-wrap{position:sticky;top:max(76px,calc((100vh - 600px)/2));top:max(76px,calc((100svh - 600px)/2));align-self:start;transform:none;z-index:1}
+.product-story .story-stage{min-height:0}
 .stage-top{min-width:0;flex-wrap:wrap}
 .stage-brand{min-width:0;flex-wrap:wrap}
 .stage-live{white-space:nowrap}
-.stage-window{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
-.stage-files{min-width:440px}
-.stage-windowbar,.stage-footer{min-width:440px}
-.stage-editor{overflow-wrap:normal;white-space:normal}
+.stage-window{width:100%;max-width:100%;min-width:0;overflow:hidden;overscroll-behavior-x:contain}
+.stage-files{width:100%;min-width:0;grid-template-columns:minmax(86px,.72fr) minmax(0,1.28fr)}
+.stage-windowbar,.stage-footer{width:100%;min-width:0}
+.stage-tree,.stage-editor{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.stage-tree span{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.stage-editor{white-space:normal;overflow:hidden}
+.stage-editor .line-no{width:16px}
 .story-step{scroll-margin-top:100px}
-@media(min-width:821px){
- .product-story .story-stage-wrap{position:sticky;top:50%;align-self:start;transform:translateY(-50%);z-index:1}
- .product-story .story-stage{min-height:0}
- .story-layout{grid-template-columns:minmax(0,1.08fr) minmax(320px,.82fr);gap:clamp(34px,5vw,76px)}
- .story-stage-wrap{width:100%}
+.story-controls button{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ min-height:44px;padding:0 14px;border:1px solid #ffffff1b;border-radius:999px;
+ background:#ffffff05;color:var(--muted);font:inherit;font-size:.82rem;font-weight:700;
+ cursor:pointer;transition:background .2s ease,border-color .2s ease,color .2s ease
 }
-@media(max-width:820px){
- .product-story .story-stage-wrap{transform:none}
- .story-head h2{font-size:clamp(1.85rem,7.2vw,2.55rem);letter-spacing:-.055em}
- .story-head p{font-size:clamp(.9rem,3.8vw,1rem);line-height:1.7}
- .story-stage{width:100%;max-width:100%}
- .stage-content{min-width:0}
- .stage-title{font-size:clamp(1.35rem,5.5vw,1.9rem);letter-spacing:-.045em}
- .stage-description{font-size:.88rem}
- .story-step h3{font-size:clamp(1.45rem,5.8vw,1.8rem);overflow-wrap:anywhere}
- .story-step p{overflow-wrap:anywhere}
+.story-controls button span{color:var(--green2);font-family:ui-monospace,monospace}
+.story-controls button[aria-pressed="true"]{border-color:#9be7b566;background:#9be7b512;color:var(--text)}
+.story-controls button:hover{border-color:#9be7b566;color:var(--text)}
+.story-controls button:focus-visible,.nav-toggle:focus-visible{outline:2px solid var(--green2);outline-offset:3px}
+@media(min-width:821px) and (pointer:fine), (min-width:1101px){
+ .product-story .story-layout{grid-template-columns:minmax(0,1.08fr) minmax(320px,.82fr);gap:clamp(34px,5vw,76px)}
+ .product-story .story-stage-wrap{width:100%}
 }
-@media(max-width:480px){
- .product-story .wrap{width:calc(100% - 28px)}
- .story-head{margin-bottom:22px}
- .story-head h2{font-size:clamp(1.7rem,7.5vw,2.1rem);line-height:1.12}
- .stage-top{gap:8px;padding:10px}
- .stage-brand{font-size:.72rem;gap:6px}
- .stage-brand-mark{flex:0 0 27px}
- .stage-live{font-size:.55rem;letter-spacing:.035em}
- .stage-content{padding:12px}
- .stage-caption{font-size:.62rem}
- .stage-title{font-size:1.4rem;line-height:1.12}
- .stage-description{font-size:.8rem;line-height:1.55}
- .stage-files{min-width:430px;grid-template-columns:100px minmax(0,1fr)}
- .stage-tree,.stage-editor{font-size:.62rem}
- .stage-windowbar,.stage-footer{min-width:430px}
- .story-step{padding:22px 0}
-}
-@media(prefers-reduced-motion:reduce){
- .product-story .story-stage-wrap{transform:none}
-}
-
-
-/* Final workflow layout: desktop stage aligns to viewport; phone swipes between steps */
-@media(min-width:821px){
- .product-story .story-layout{align-items:stretch}
- .product-story .story-stage-wrap{position:sticky;top:calc(50vh - 250px);transform:none;align-self:start}
- .product-story .story-stage{min-height:0}
- .product-story .story-steps{min-width:0}
-}
-@media(max-width:820px){
- .product-story .story-layout{display:flex;flex-direction:column;gap:18px}
- .product-story .story-stage-wrap{position:relative!important;top:auto!important;transform:none!important;width:100%}
- .product-story .story-steps{
-   display:flex;flex-direction:row;gap:12px;
-   overflow-x:auto;overflow-y:hidden;
-   width:calc(100% + 28px);margin-left:-14px;padding:0 14px 14px;
-   scroll-snap-type:x mandatory;scroll-padding-inline:14px;
-   overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
-   scrollbar-width:thin;scrollbar-color:#9be7b5 #ffffff12;
+@media(max-width:820px), (max-width:1100px) and (pointer:coarse){
+ .nav{backdrop-filter:none}
+ .navinner{position:relative;min-height:66px;gap:12px}
+ .nav-toggle{display:inline-flex;flex:0 0 auto}
+ .links{display:none}
+ .nav.is-menu-open .links{
+   display:flex;position:absolute;top:calc(100% + 8px);left:0;right:0;
+   flex-direction:column;align-items:stretch;gap:4px;padding:12px;
+   border:1px solid #ffffff20;border-radius:18px;background:#0b100d;
+   box-shadow:0 20px 50px #0008;z-index:20
  }
- .product-story .story-step{
-   flex:0 0 min(84%,420px);min-width:0;min-height:0;
+ .nav.is-menu-open .links a:not(.button){display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:10px}
+ .nav.is-menu-open .links a:not(.button):hover{background:#ffffff0a}
+ .nav.is-menu-open .links .button{width:100%;min-height:46px;margin-top:4px}
+ .hero{min-height:0;display:block;padding:62px 0 56px}
+ .heroGrid{width:auto;grid-template-columns:1fr;gap:38px}
+ .hero h1{font-size:clamp(2.5rem,8vw,4.3rem);line-height:1.02}
+ .hero .lead{font-size:1rem;line-height:1.75}
+ .mockWrap{max-width:440px;width:100%;margin:auto}
+ .device{max-width:355px;transform:none!important}
+ .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .downloadCard{align-items:flex-start;flex-direction:column}
+ .product-story{padding:58px 0 64px}
+ .story-head{margin-bottom:24px}
+ .story-head h2{font-size:clamp(1.85rem,5.8vw,2.55rem);letter-spacing:-.055em}
+ .story-head p{font-size:clamp(.9rem,2.5vw,1rem);line-height:1.7}
+ .story-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+ .story-help{display:block;margin:9px 0 0;color:var(--muted);font-size:.8rem;line-height:1.55}
+ .product-story .story-layout{display:flex;flex-direction:column;gap:20px}
+ .product-story .story-stage-wrap{position:relative!important;top:auto!important;transform:none!important;width:100%}
+ .product-story .story-stage{width:100%;max-width:100%;border-radius:18px;box-shadow:0 14px 38px #0004}
+ .stage-content{min-width:0;padding:clamp(14px,3vw,20px)}
+ .stage-top{gap:8px;padding:12px}
+ .stage-brand{font-size:.78rem;gap:7px}
+ .stage-live{font-size:.58rem;letter-spacing:.04em}
+ .stage-title{font-size:clamp(1.4rem,4.8vw,1.9rem);letter-spacing:-.045em;line-height:1.12}
+ .stage-description{font-size:.86rem;line-height:1.6}
+ .stage-window{margin-top:16px;border-radius:13px}
+ .stage-windowbar{height:auto;min-height:37px;flex-wrap:wrap;padding:9px 10px;font-size:.64rem;overflow-wrap:anywhere}
+ .stage-files{min-height:150px;grid-template-columns:minmax(78px,.72fr) minmax(0,1.28fr)}
+ .stage-tree{padding:11px 7px;font-size:.63rem;line-height:1.9}
+ .stage-tree span{padding-left:4px}
+ .stage-editor{padding:11px 8px;font-size:.63rem;line-height:1.9}
+ .stage-editor .line-no{width:14px}
+ .stage-footer{gap:8px;flex-wrap:wrap;padding:9px 10px;font-size:.62rem}
+ .story-steps{
+   display:flex;flex-direction:row;gap:12px;
+   width:calc(100% + 28px);margin-left:-14px;padding:0 14px 14px;
+   overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+   scroll-snap-type:x mandatory;scroll-padding-inline:14px;
+   -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#9be7b566 #ffffff10
+ }
+ .story-step{
+   flex:0 0 min(86%,440px);min-width:0;min-height:0;
    padding:20px 18px 22px;border:1px solid #ffffff18;border-radius:16px;
    background:linear-gradient(145deg,#111a14,#090d0b);
-   scroll-snap-align:start;opacity:.68;transition:opacity .25s ease,border-color .25s ease;
+   scroll-snap-align:start;opacity:.68;
+   transition:opacity .25s ease,border-color .25s ease
  }
- .product-story .story-step:last-child{border-bottom:1px solid #ffffff18}
- .product-story .story-step.is-active{opacity:1;border-color:#9be7b555}
- .product-story .story-step h3{margin:12px 0 10px}
- .product-story .story-step p{max-width:none}
- .product-story .story-step .step-note{margin-top:16px}
+ .story-step:last-child{border-bottom:1px solid #ffffff18}
+ .story-step.is-active{opacity:1;border-color:#9be7b566}
+ .story-step-number{font-size:.9rem}
+ .story-step h3{font-size:clamp(1.45rem,4.8vw,1.8rem);margin:12px 0 10px;overflow-wrap:break-word}
+ .story-step p{max-width:none;font-size:.92rem;line-height:1.75;overflow-wrap:break-word}
+ .story-step .step-note{margin-top:16px}
 }
-@media(max-width:480px){
- .product-story .story-steps{width:calc(100% + 28px);margin-left:-14px;padding-inline:14px}
- .product-story .story-step{flex-basis:calc(100% - 42px);padding:18px 16px 20px}
- .product-story .story-step-number{font-size:.83rem}
- .product-story .story-step h3{font-size:1.45rem}
- .product-story .story-step p{font-size:.88rem;line-height:1.7}
+@media(max-width:560px){
+ .wrap{width:min(100% - 28px,var(--max))}
+ .navinner{min-height:64px}
+ .brand{gap:9px;font-size:1.05rem}
+ .mark{width:36px;height:36px}
+ .hero{padding:48px 0 48px}
+ .hero h1{font-size:clamp(2.45rem,11.8vw,3.35rem);letter-spacing:-.065em}
+ .hero .actions .button{width:100%;min-height:46px}
+ .grid3,.steps{grid-template-columns:1fr}
+ .feature{min-height:unset;padding:23px}
+ section{padding:62px 0}
+ .product-story{padding:48px 0 52px}
+ .story-head h2{font-size:clamp(1.75rem,7.5vw,2.15rem);line-height:1.12}
+ .story-head p{font-size:.94rem}
+ .story-controls{gap:7px}
+ .story-controls button{flex:1 1 auto;min-width:0;padding:0 10px;font-size:.78rem}
+ .story-help{font-size:.78rem}
+ .stage-content{padding:12px}
+ .stage-top{padding:10px}
+ .stage-brand{font-size:.7rem;gap:6px}
+ .stage-brand-mark{flex:0 0 27px}
+ .stage-live{font-size:.53rem;letter-spacing:.025em}
+ .stage-caption{font-size:.61rem}
+ .stage-title{font-size:1.35rem;line-height:1.12}
+ .stage-description{font-size:.79rem;line-height:1.55}
+ .stage-files{min-height:136px;grid-template-columns:minmax(70px,.7fr) minmax(0,1.3fr)}
+ .stage-tree,.stage-editor{font-size:.58rem;line-height:1.85}
+ .stage-tree{padding:9px 5px}
+ .stage-editor{padding:9px 5px}
+ .stage-editor .line-no{width:12px}
+ .stage-windowbar{padding:8px;font-size:.59rem}
+ .stage-footer{padding:8px;font-size:.58rem}
+ .story-step{flex-basis:88%;padding:18px 16px 20px}
+ .story-step-number{font-size:.8rem}
+ .story-step h3{font-size:1.42rem}
+ .story-step p{font-size:.88rem;line-height:1.7}
+ .downloadCard{padding:24px}
+ .downloadActions{width:100%}
+ .downloadActions .button{width:100%}
+ .footinner{align-items:flex-start;flex-direction:column}
 }
-
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto!important}
+ .product-story .story-stage-wrap{transform:none}
+ .story-step,.story-controls button{transition:none!important}
+ .story-stage [data-scene-content]{animation:none!important}
+}
 </style>
 </head>
 <body>
 <header class="nav"><div class="wrap navinner">
 <a class="brand" href="#" aria-label="Blockline home"><span class="mark">B</span><span>Blockline</span></a>
-<nav class="links" aria-label="Main navigation"><a href="#features">Features</a><a href="#workflow">How it works</a><a href="https://github.com/slgamervn/Blockline">Source</a><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a></nav>
+<button class="nav-toggle" type="button" aria-controls="site-links" aria-expanded="false"><span class="menu-icon" aria-hidden="true">☰</span><span>Menu</span></button>
+<nav class="links" id="site-links" aria-label="Main navigation"><a href="#features">Features</a><a href="#workflow">How it works</a><a href="https://github.com/slgamervn/Blockline">Source</a><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a></nav>
 </div></header>
 <main>
 <section class="hero"><div class="wrap heroGrid">
@@ -353,7 +417,13 @@ footer{border-top-color:#ffffff12}
     <div class="story-head sectionhead">
       <div class="kicker">One workspace. Every step.</div>
       <h2 id="story-title">Your pack, from archive to finished build.</h2>
-      <p>Scroll through the workflow. The product view stays in place while each stage reveals a different part of the work.</p>
+      <p>Explore the three stages of a local pack workflow. On desktop, scroll alongside the preview; on mobile, swipe between steps.</p>
+      <div class="story-controls" role="group" aria-label="Choose a workflow stage">
+        <button type="button" data-story-go="0" aria-label="Show step 1: Import" aria-pressed="true"><span>01</span> Import</button>
+        <button type="button" data-story-go="1" aria-label="Show step 2: Edit" aria-pressed="false"><span>02</span> Edit</button>
+        <button type="button" data-story-go="2" aria-label="Show step 3: Export" aria-pressed="false"><span>03</span> Export</button>
+      </div>
+      <p class="story-help">Swipe the cards below, or tap a step to jump directly.</p>
     </div>
     <div class="story-layout">
       <div class="story-stage-wrap">
@@ -422,6 +492,27 @@ footer{border-top-color:#ffffff12}
 (() => {
   const root = document.documentElement;
   const nav = document.querySelector('.nav');
+  const navToggle = document.querySelector('.nav-toggle');
+  const navLinks = document.querySelector('.links');
+  const closeNav = () => {
+    nav?.classList.remove('is-menu-open');
+    navToggle?.setAttribute('aria-expanded', 'false');
+  };
+  navToggle?.addEventListener('click', () => {
+    const open = !nav?.classList.contains('is-menu-open');
+    nav?.classList.toggle('is-menu-open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+  });
+  navLinks?.querySelectorAll('a').forEach(link => link.addEventListener('click', closeNav));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closeNav();
+      navToggle?.focus();
+    }
+  });
+  document.addEventListener('click', event => {
+    if (nav && !nav.contains(event.target)) closeNav();
+  });
   const hero = document.querySelector('.hero');
   const heroCopy = hero?.querySelector('.heroGrid > div:first-child');
   const device = document.querySelector('.device');
@@ -466,7 +557,10 @@ footer{border-top-color:#ffffff12}
 
   const storySection = document.querySelector('#product-story');
   const storyStage = document.querySelector('#story-stage');
+  const storyTrack = document.querySelector('.story-steps');
   const storySteps = [...document.querySelectorAll('[data-story-step]')];
+  const storyControls = [...document.querySelectorAll('[data-story-go]')];
+  const isCompactStory = () => window.matchMedia('(max-width: 820px), (max-width: 1100px) and (pointer: coarse)').matches;
   const storyCopy = [
     {caption:'01 / Import', title:'Start with your pack.', description:'Bring an existing Bedrock archive into a workspace on your device.', path:'workspace / projects', left:'3 files detected', right:'IMPORT READY'},
     {caption:'02 / Inspect & edit', title:'Work at file level.', description:'Explore the pack structure and make focused changes in supported files.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 lines', right:'EDITOR OPEN'},
@@ -479,6 +573,7 @@ footer{border-top-color:#ffffff12}
     activeScene = index;
     if (storyStage) storyStage.dataset.scene = String(index);
     storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
+    storyControls.forEach((control, i) => control.setAttribute('aria-pressed', String(i === index)));
     const data = storyCopy[index];
     const caption = document.querySelector('#stage-caption');
     const title = document.querySelector('#stage-title');
@@ -494,30 +589,53 @@ footer{border-top-color:#ffffff12}
     if (footerRight) footerRight.textContent = data.right;
     storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
   };
-  if (storySection && storySteps.length && 'IntersectionObserver' in window) {
-    storyObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const rect = entry.target.getBoundingClientRect();
-        const centerDistance = Math.abs((rect.top + rect.height / 2) - window.innerHeight * .5);
-        const active = storySteps.reduce((best, step, i) => {
-          const r = step.getBoundingClientRect();
-          const distance = Math.abs((r.top + r.height / 2) - window.innerHeight * .5);
-          return distance < best.distance ? {index:i, distance} : best;
-        }, {index:0, distance:Infinity});
-        setStoryScene(active.index);
-      });
-    }, {threshold:[0,.15,.35,.6], rootMargin:'-12% 0px -12% 0px'});
-    storySteps.forEach(step => storyObserver.observe(step));
-  } else {
-    storySteps.forEach((step, i) => step.addEventListener('focusin', () => setStoryScene(i)));
-  }
-  storySteps.forEach((step, i) => {
-    step.addEventListener('click', () => setStoryScene(i));
-    step.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') setStoryScene(i);
+  const syncStoryScene = () => {
+    if (!storySection || !storySteps.length) return;
+    const compact = isCompactStory();
+    const trackRect = storyTrack?.getBoundingClientRect();
+    const target = compact && trackRect
+      ? trackRect.left + trackRect.width / 2
+      : window.innerHeight * 0.48;
+    const active = storySteps.reduce((best, step, index) => {
+      const rect = step.getBoundingClientRect();
+      const center = compact ? rect.left + rect.width / 2 : rect.top + rect.height / 2;
+      const distance = Math.abs(center - target);
+      return distance < best.distance ? {index, distance} : best;
+    }, {index: activeScene < 0 ? 0 : activeScene, distance: Infinity});
+    setStoryScene(active.index);
+  };
+  let storySyncPending = false;
+  const scheduleStorySync = () => {
+    if (storySyncPending) return;
+    storySyncPending = true;
+    window.requestAnimationFrame(() => {
+      syncStoryScene();
+      storySyncPending = false;
+    });
+  };
+  window.addEventListener('scroll', scheduleStorySync, {passive: true});
+  window.addEventListener('resize', scheduleStorySync, {passive: true});
+  storyTrack?.addEventListener('scroll', scheduleStorySync, {passive: true});
+  storyControls.forEach(control => {
+    control.addEventListener('click', () => {
+      const index = Number(control.dataset.storyGo);
+      const step = storySteps[index];
+      if (!step) return;
+      if (isCompactStory() && storyTrack) {
+        const trackRect = storyTrack.getBoundingClientRect();
+        const stepRect = step.getBoundingClientRect();
+        const paddingLeft = Number.parseFloat(window.getComputedStyle(storyTrack).paddingLeft) || 0;
+        const visibleStart = trackRect.left + storyTrack.clientLeft + paddingLeft;
+        storyTrack.scrollTo({
+          left: storyTrack.scrollLeft + stepRect.left - visibleStart,
+          behavior: reducedMotion ? 'auto' : 'smooth'
+        });
+      }
+      setStoryScene(index);
     });
   });
+  setStoryScene(0);
+  syncStoryScene();
 
   const targets = document.querySelectorAll(
     '#features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
