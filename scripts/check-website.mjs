@@ -112,6 +112,24 @@ assert(
   unsafeExternalLinks.length ? "New-tab links missing rel=noopener: " + unsafeExternalLinks.length : "External new-tab links include noopener"
 );
 
+
+assert(
+  /id="premium-motion-refresh"/.test(html) &&
+    /@keyframes hero-aurora/.test(html) &&
+    /@keyframes orbit-breathe/.test(html),
+  "Premium hero lighting and ambient depth effects are present"
+);
+assert(
+  /:focus-visible\s*\{/.test(html) &&
+    /prefers-reduced-motion:\s*reduce/.test(html),
+  "Enhanced interactions retain keyboard focus and reduced-motion support"
+);
+assert(
+  /\.mockWrap:hover \.device/.test(html) &&
+    /\.feature:hover/.test(html),
+  "Product mockup and feature cards provide restrained hover feedback"
+);
+
 if (errors.length) {
   console.error("Website validation failed:");
   for (const error of errors) console.error("- " + error);
