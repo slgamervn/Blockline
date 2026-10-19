@@ -236,7 +236,7 @@ class ProjectRepository(private val ctx: Context) {
     }
 
     fun export(id: String, mode: ExportMode, output: OutputStream) {
-        val packs = projectDir(id).listFiles()?.filter { it.isDirectory && File(it, "manifest.json").isFile }.orEmpty()
+        val packs = projectDir(id).listFiles()?.filter { it.isDirectory && (File(it, "manifest.json").isFile || File(it, "pack_manifest.json").isFile) }.orEmpty()
         val chosen = when (mode) {
             ExportMode.BP -> packs.filterNot { isResourcePack(it) }.take(1)
             ExportMode.RP -> packs.filter { isResourcePack(it) }.take(1)
