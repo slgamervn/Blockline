@@ -234,4 +234,18 @@
     <string name="validation_msg_duplicate_uuid">UUID %1$s bị trùng; mục này cũng được dùng tại %2$s.</string>
     <string name="validation_msg_duplicate_json_key">Khóa object JSON bị trùng: %1$s.</string>
     <string name="validation_msg_texture_reference">Đường dẫn texture %1$s không khớp với tệp PNG nào trong pack. Hãy kiểm tra đường dẫn và phần mở rộng.</string>
+    <string name="validation_msg_json_expected_value">Thiếu giá trị JSON.</string>
+    <string name="validation_msg_json_object_key">Tên khóa trong object phải được đặt trong dấu ngoặc kép.</string>
+    <string name="validation_msg_json_trailing_comma">JSON không cho phép dấu phẩy thừa ở cuối.</string>
+    <string name="validation_msg_json_incomplete_escape">Chuỗi escape chưa hoàn chỉnh.</string>
+    <string name="validation_msg_json_unicode_escape">Mã escape Unicode không hợp lệ.</string>
+    <string name="validation_msg_json_escape">Chuỗi escape không hợp lệ.</string>
+    <string name="validation_msg_json_control_character">Chuỗi chứa ký tự điều khiển chưa được escape.</string>
+    <string name="validation_msg_json_unterminated_string">Chuỗi chưa được đóng.</string>
+    <string name="validation_msg_json_incomplete_number">Số chưa hoàn chỉnh.</string>
+    <string name="validation_msg_json_leading_zero">Số trong JSON không được có số 0 đứng đầu.</string>
+    <string name="validation_msg_json_invalid_number">Số không hợp lệ.</string>
+    <string name="validation_msg_json_decimal_digits">Cần có chữ số sau dấu thập phân.</string>
+    <string name="validation_msg_json_exponent_digits">Cần có chữ số sau ký hiệu số mũ.</string>
+    <string name="validation_msg_json_expected_token">Thiếu ký tự %1$s.</string>
 </resources>
