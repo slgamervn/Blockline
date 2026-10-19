@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 
@@ -56,8 +57,8 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(project?.name ?: "Explorer") }, actions = {
-            IconButton(onClick = { dialog = "folder"; name = "" }) { Icon(Icons.Default.CreateNewFolder, "New folder") }
-            IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.Default.InsertDriveFile, "New file") }
+            IconButton(onClick = { dialog = "folder"; name = "" }) { Icon(Icons.Default.CreateNewFolder, stringResource(R.string.new_folder_cd)) }
+            IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.Default.InsertDriveFile, stringResource(R.string.new_file_cd)) }
         })
     }) { pad ->
         if (project == null) {
@@ -92,17 +93,17 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                                     trailingContent = {
                                         Row {
                                             if (vm.isFavorite(path)) Icon(Icons.Default.Favorite, "Favorite")
-                                            IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Actions") }
+                                            IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.file_actions_cd)) }
                                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                                 if (file.isFile) DropdownMenuItem(text = { Text(if (vm.isFavorite(path)) "Remove favorite" else "Add favorite") }, onClick = { vm.toggleFavorite(path); menu = false })
-                                                DropdownMenuItem(text = { Text("Rename") }, onClick = { targetPath = path; name = file.name; dialog = "rename"; menu = false })
-                                                DropdownMenuItem(text = { Text("Move") }, onClick = {
+                                                DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { targetPath = path; name = file.name; dialog = "rename"; menu = false })
+                                                DropdownMenuItem(text = { Text(stringResource(R.string.move)) }, onClick = {
                                                     targetPath = path
                                                     name = file.parentFile?.let { vm.repo.relative(project.id, it) }?.takeUnless { it == "." } ?: ""
                                                     dialog = "move"
                                                     menu = false
                                                 })
-                                                DropdownMenuItem(text = { Text("Delete") }, onClick = { targetPath = path; dialog = "delete"; menu = false })
+                                                DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { targetPath = path; dialog = "delete"; menu = false })
                                             }
                                         }
                                     },
@@ -122,12 +123,12 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     if (dialog == "file" || dialog == "folder" || dialog == "rename" || dialog == "move") {
         AlertDialog(
             onDismissRequest = { dialog = null },
-            title = { Text(when (dialog) { "rename" -> "Rename item"; "folder" -> "Create folder"; "move" -> "Move item"; else -> "Create file" }) },
+            title = { Text(stringResource(when (dialog) { "rename" -> R.string.rename_item; "folder" -> R.string.create_folder; "move" -> R.string.move_item; else -> R.string.new_file })) },
             text = {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(if (dialog == "move") "Destination folder path (blank for project root)" else "Name or relative path") },
+                    label = { Text(stringResource(if (dialog == "move") R.string.destination_folder_hint else R.string.name_or_path)) },
                     singleLine = true
                 )
             },
@@ -139,18 +140,18 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                         else -> vm.createFile(name.trim('/'), dialog == "folder")
                     }
                     dialog = null
-                }) { Text(if (dialog == "move") "Move" else "Save") }
+                }) { Text(stringResource(if (dialog == "move") R.string.move else R.string.save)) }
             },
-            dismissButton = { TextButton(onClick = { dialog = null }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.cancel)) } }
         )
     }
     if (dialog == "delete") {
         AlertDialog(
             onDismissRequest = { dialog = null },
-            title = { Text("Delete item?") },
-            text = { Text("This permanently deletes $targetPath from this project copy.") },
-            confirmButton = { TextButton(onClick = { vm.deleteFile(targetPath); dialog = null }) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { dialog = null }) { Text("Cancel") } }
+            title = { Text(stringResource(R.string.delete_item_title)) },
+            text = { Text(stringResource(R.string.delete_item_confirm, targetPath)) },
+            confirmButton = { TextButton(onClick = { vm.deleteFile(targetPath); dialog = null }) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }
