@@ -48,7 +48,7 @@ body.menu-open{overflow:hidden;touch-action:none}\n.site-header{position:fixed;i
 .menu-toggle[aria-expanded="true"] span:first-child,.menu-close span:first-child,.dialog-close span:first-child{transform:translateY(3.25px) rotate(45deg)}
 .menu-toggle[aria-expanded="true"] span:last-child,.menu-close span:last-child,.dialog-close span:last-child{transform:translateY(-3.25px) rotate(-45deg)}
 .mobile-menu{display:none}
-.hero{min-height:100svh;padding-top:calc(118px + env(safe-area-inset-top));padding-bottom:80px;display:grid;grid-template-columns:minmax(0,1.02fr) minmax(360px,.82fr);align-items:center;gap:clamp(38px,7vw,110px);position:relative}
+.hero{min-height:100vh;min-height:100dvh;min-height:100svh;padding-top:calc(118px + env(safe-area-inset-top));padding-bottom:80px;display:grid;grid-template-columns:minmax(0,1.02fr) minmax(360px,.82fr);align-items:center;gap:clamp(38px,7vw,110px);position:relative}
 .hero::after{content:"";position:absolute;z-index:-1;right:-12%;top:16%;width:52%;height:64%;background:radial-gradient(ellipse,color-mix(in srgb,var(--green) 11%,transparent),transparent 68%);pointer-events:none}
 .hero-copy{padding-block:34px}
 .release-note{display:inline-flex;align-items:center;gap:10px;padding:7px 11px;border:1px solid var(--line);font-size:.75rem;color:var(--muted);transition:border-color .2s,color .2s}
