@@ -105,7 +105,7 @@ class ProjectRepository(private val ctx: Context) {
             (ctx.contentResolver.openInputStream(uri) ?: error("Cannot open selected file")).use { ZipUtil.unzip(it, tmp) }
             expandNested(tmp, 0)
             val packs = findPackRoots(tmp)
-            if (packs.isEmpty()) error("No manifest.json or pack_manifest.nx found in the selected archive")
+            if (packs.isEmpty()) error("No manifest.json or pack_manifest.json found in the selected archive")
             val id = UUID.randomUUID().toString()
             val dest = projectDir(id)
             var bp = 0
@@ -133,12 +133,12 @@ class ProjectRepository(private val ctx: Context) {
     }
 
     private fun findPackRoots(dir: File): List<File> {
-        if (File(dir, "manifest.json").isFile || File(dir, "pack_manifest.nx").isFile) return listOf(dir)
+        if (File(dir, "manifest.json").isFile || File(dir, "pack_manifest.json").isFile) return listOf(dir)
         return dir.listFiles()?.filter { it.isDirectory && it.name != "__MACOSX" }?.flatMap { findPackRoots(it) } ?: emptyList()
     }
 
     private fun isResourcePack(packDir: File): Boolean = try {
-        val manifestFile = listOf(File(packDir, "manifest.json"), File(packDir, "pack_manifest.nx")).firstOrNull { it.isFile }
+        val manifestFile = listOf(File(packDir, "manifest.json"), File(packDir, "pack_manifest.json")).firstOrNull { it.isFile }
             ?: return false
         val manifest = JSONObject(JsonTools.stripComments(manifestFile.readText()))
         val modules = manifest.optJSONArray("modules") ?: JSONArray()
