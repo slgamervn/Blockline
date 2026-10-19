@@ -78,7 +78,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 composable("overview") { OverviewScreen(vm, onBack = { nav.popBackStack() }, onExplorer = { goTab(nav, "explorer") }) }
                 composable("explorer") { ExplorerScreen(vm) { nav.navigate("editor") } }
                 composable("search") { SearchScreen(vm) { nav.navigate("editor") } }
-                composable("tools") { ToolsScreen(vm) }
+                composable("tools") { ToolsScreen(vm) { nav.navigate("editor") } }
                 composable("more") { MoreScreen(vm) }
                 composable("editor") { EditorScreen(vm) { nav.popBackStack() } }
             }
