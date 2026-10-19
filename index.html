@@ -497,6 +497,13 @@ footer{border-top-color:#ffffff12}
   .hero .device { transform: scale(.92); transform-origin: center right; }
 }
 
+
+/* Blockline identity: a stepped path mark, not a letter badge */
+.mark{background:var(--green);color:#07130b;display:grid;place-items:center}
+.mark svg,.stage-brand-mark svg{width:72%;height:72%;display:block;fill:#07130b}
+.mark svg .mark-accent,.stage-brand-mark svg .mark-accent{fill:#e6b35a}
+.stage-brand-mark{display:grid;place-items:center}
+.featureIcon svg{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 </style>
 <style>
 /* Keep interaction calm and predictable; content should lead the page. */
@@ -519,7 +526,7 @@ footer{border-top-color:#ffffff12}
 </head>
 <body>
 <header class="nav"><div class="wrap navinner">
-<a class="brand" href="#" aria-label="Blockline home"><span class="mark">B</span><span>Blockline</span></a>
+<a class="brand" href="#" aria-label="Blockline home"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span><span>Blockline</span></a>
 <button class="nav-toggle" type="button" aria-controls="site-links" aria-expanded="false"><span class="menu-icon" aria-hidden="true">☰</span><span class="menu-label">Menu</span></button>
 <button class="language-toggle" type="button" data-language-toggle aria-label="Switch language">Tiếng Việt</button>
 <nav class="links" id="site-links" aria-label="Main navigation"><a href="#features">Features</a><a href="#workflow">How it works</a><a href="https://github.com/slgamervn/Blockline">Source</a><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a></nav>
@@ -559,7 +566,7 @@ footer{border-top-color:#ffffff12}
     <div class="story-layout">
       <div class="story-stage-wrap">
         <div class="story-stage" id="story-stage" data-scene="0" aria-live="polite">
-          <div class="stage-top"><div class="stage-brand"><span class="stage-brand-mark">B</span> Blockline <span style="color:#6f8274;font-weight:500">/ Studio</span></div><span class="stage-live">LOCAL WORKSPACE</span></div>
+          <div class="stage-top"><div class="stage-brand"><span class="stage-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span> Blockline <span style="color:#6f8274;font-weight:500">/ Studio</span></div><span class="stage-live">LOCAL WORKSPACE</span></div>
           <div class="stage-content">
             <div class="stage-caption" id="stage-caption">01 / Import</div>
             <div class="stage-title" id="stage-title">Start with your pack.</div>
@@ -617,7 +624,7 @@ footer{border-top-color:#ffffff12}
 </div></section>
 <section><div class="wrap"><div class="downloadCard"><div><div class="kicker">Start building</div><h2>Take your workspace with you.</h2><p>Download the latest Android build or explore the source and current roadmap.</p><div class="fineprint">Early access · Android 8.0+ (API 26) · Debug APK</div></div><div class="downloadActions"><a class="button primary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">↓ Download APK</a><a class="button secondary" href="https://github.com/slgamervn/Blockline/releases/latest" target="_blank" rel="noopener">Open release page ↗</a></div><p class="fineprint">If the APK reaches 100% but does not appear in Downloads, open the release page and tap <strong>Blockline.apk</strong> there. Some in-app browsers do not save APK downloads correctly.</p></div></div></section>
 </main>
-<footer><div class="wrap footinner"><a class="brand" href="#"><span class="mark">B</span><span>Blockline</span></a><span>Built for Minecraft Bedrock creators. Early access; features are still evolving.</span><div class="footlinks"><a href="https://github.com/slgamervn/Blockline">GitHub</a><a href="https://github.com/slgamervn/Blockline/issues">Issues</a><a href="https://github.com/slgamervn/Blockline/releases">Releases</a></div></div></footer>
+<footer><div class="wrap footinner"><a class="brand" href="#"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span><span>Blockline</span></a><span>Built for Minecraft Bedrock creators. Early access; features are still evolving.</span><div class="footlinks"><a href="https://github.com/slgamervn/Blockline">GitHub</a><a href="https://github.com/slgamervn/Blockline/issues">Issues</a><a href="https://github.com/slgamervn/Blockline/releases">Releases</a></div></div></footer>
 
 <script>
 (() => {
