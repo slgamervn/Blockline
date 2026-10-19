@@ -134,6 +134,75 @@ footer{border-top-color:#ffffff12}
 @media(max-width:820px){.hero{min-height:0;display:block}.heroGrid{width:auto}#features .feature:nth-child(3n + 2),#features .feature:nth-child(3n + 2).is-visible{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.device{will-change:auto}.feature::before,.feature::after{transition:none}}
 
+
+/* Pinned product story: one persistent stage, three meaningful states */
+.product-story{padding:90px 0 110px;background:linear-gradient(180deg,#080b0a,#0d1510 48%,#080b0a);border-block:1px solid #ffffff10}
+.story-head{max-width:760px;margin-bottom:46px}
+.story-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.75fr);gap:clamp(36px,7vw,100px);align-items:start}
+.story-stage-wrap{position:sticky;top:104px;align-self:start}
+.story-stage{position:relative;min-height:510px;overflow:hidden;border:1px solid #ffffff1a;border-radius:26px;background:radial-gradient(ellipse at 50% 0%,#24463180,transparent 58%),linear-gradient(145deg,#121a15,#080b09);box-shadow:0 30px 90px #0007}
+.story-stage:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,black,transparent 90%);pointer-events:none}
+.stage-top{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid #ffffff12;color:#a1ada4;font-size:.78rem}
+.stage-brand{display:flex;align-items:center;gap:9px;color:#f3f6f2;font-weight:800}
+.stage-brand-mark{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#9be7b5;color:#07130b;font-weight:950}
+.stage-live{display:flex;align-items:center;gap:7px;color:#b8f3cb;font-size:.7rem;letter-spacing:.1em}
+.stage-live:before{content:"";width:6px;height:6px;background:#9be7b5;border-radius:50%}
+.stage-content{position:relative;padding:clamp(18px,3vw,32px)}
+.stage-caption{color:#9be7b5;font-size:.7rem;letter-spacing:.16em;font-weight:800;text-transform:uppercase}
+.stage-title{font-size:clamp(1.65rem,3vw,2.5rem);line-height:1.08;letter-spacing:-.06em;margin:10px 0 8px}
+.stage-description{color:#a1ada4;font-size:.9rem;max-width:460px}
+.stage-window{margin-top:24px;border:1px solid #ffffff17;border-radius:16px;overflow:hidden;background:#080d0a;box-shadow:0 20px 45px #0005}
+.stage-windowbar{height:37px;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid #ffffff10;color:#87968b;font-size:.68rem}
+.stage-windowbar i{width:6px;height:6px;background:#415348;border-radius:50%}
+.stage-path{margin-left:7px}
+.stage-files{display:grid;grid-template-columns: minmax(105px,.65fr) minmax(0,1.35fr);min-height:210px}
+.stage-tree{padding:14px 10px;border-right:1px solid #ffffff10;color:#9aa89e;font: .69rem/2 ui-monospace,monospace}
+.stage-tree span{display:block;padding-left:9px;white-space:nowrap}
+.stage-tree .selected{color:#b8f3cb;background:#9be7b510;border-radius:5px}
+.stage-editor{padding:16px 12px;color:#bfcac2;font: .69rem/1.95 ui-monospace,monospace;overflow:hidden}
+.stage-editor .line-no{display:inline-block;width:19px;color:#59695e;user-select:none}
+.stage-editor .syntax{color:#9be7b5}
+.stage-editor .string{color:#e7c58a}
+.stage-editor .comment{color:#728579}
+.stage-footer{display:flex;justify-content:space-between;gap:12px;padding:10px 13px;border-top:1px solid #ffffff10;color:#7f9185;font-size:.65rem}
+.stage-footer b{color:#9be7b5;font-weight:600}
+.story-steps{display:flex;flex-direction:column}
+.story-step{min-height:390px;display:flex;flex-direction:column;justify-content:center;padding:35px 0;border-top:1px solid #ffffff20;opacity:.46;transition:opacity .35s ease}
+.story-step:last-child{border-bottom:1px solid #ffffff20}
+.story-step.is-active{opacity:1}
+.story-step-number{font:800 1rem ui-monospace,monospace;color:#9be7b5;letter-spacing:.08em}
+.story-step h3{font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.08;letter-spacing:-.055em;margin:17px 0 12px}
+.story-step p{color:#a1ada4;line-height:1.85;margin:0;max-width:380px}
+.story-step .step-note{display:flex;align-items:center;gap:9px;margin-top:22px;color:#b8f3cb;font-size:.8rem;font-weight:700}
+.story-step .step-note:before{content:"";width:22px;height:1px;background:#9be7b5}
+.story-progress{display:flex;gap:6px;margin-top:22px}
+.story-progress span{height:3px;flex:1;background:#ffffff18;border-radius:4px;transition:background .25s ease}
+.story-progress span.is-active{background:#9be7b5}
+.stage-window [data-scene-content]{display:none}
+.story-stage[data-scene="0"] [data-scene-content="0"],.story-stage[data-scene="1"] [data-scene-content="1"],.story-stage[data-scene="2"] [data-scene-content="2"]{display:block;animation:scene-enter .35s var(--ease-out) both}
+@keyframes scene-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:820px){
+ .product-story{padding:66px 0 72px}
+ .story-layout{grid-template-columns:1fr;gap:26px}
+ .story-stage-wrap{position:relative;top:auto}
+ .story-stage{min-height:0}
+ .stage-files{min-height:190px}
+ .story-steps{gap:0}
+ .story-step{min-height:0;padding:28px 0 32px;opacity:.55}
+ .story-step.is-active{opacity:1}
+ .story-step h3{font-size:1.8rem}
+ .story-stage{border-radius:20px}
+}
+@media(max-width:480px){
+ .stage-content{padding:17px}
+ .stage-files{grid-template-columns:94px minmax(0,1fr);min-height:180px}
+ .stage-tree,.stage-editor{font-size:.61rem}
+ .stage-editor{padding:12px 8px}
+ .story-stage-wrap{margin-inline:-2px}
+ .stage-top{padding:14px}
+}
+@media(prefers-reduced-motion:reduce){.story-step,.story-progress span{transition:none}.story-stage [data-scene-content]{animation:none}}
+
 </style>
 </head>
 <body>
@@ -160,6 +229,60 @@ footer{border-top-color:#ffffff12}
 </div><div class="tabbar"><span>▦ Projects</span><b>▤ Explorer</b><span>⌕ Search</span><span>⚒ Tools</span><span>⋯ More</span></div>
 </div></div></div>
 </div></section>
+<section class="product-story" id="product-story" aria-labelledby="story-title">
+  <div class="wrap">
+    <div class="story-head sectionhead">
+      <div class="kicker">One workspace. Every step.</div>
+      <h2 id="story-title">Your pack, from archive to finished build.</h2>
+      <p>Scroll through the workflow. The product view stays in place while each stage reveals a different part of the work.</p>
+    </div>
+    <div class="story-layout">
+      <div class="story-stage-wrap">
+        <div class="story-stage" id="story-stage" data-scene="0" aria-live="polite">
+          <div class="stage-top"><div class="stage-brand"><span class="stage-brand-mark">B</span> Blockline <span style="color:#6f8274;font-weight:500">/ Studio</span></div><span class="stage-live">LOCAL WORKSPACE</span></div>
+          <div class="stage-content">
+            <div class="stage-caption" id="stage-caption">01 / Import</div>
+            <div class="stage-title" id="stage-title">Start with your pack.</div>
+            <p class="stage-description" id="stage-description">Bring an existing Bedrock archive into a workspace on your device.</p>
+            <div class="stage-window">
+              <div class="stage-windowbar"><i></i><i></i><i></i><span class="stage-path" id="stage-path">workspace / projects</span></div>
+              <div class="stage-files">
+                <div class="stage-tree" data-scene-content="0"><span>▾ projects</span><span class="selected">↳ survival.mcaddon</span><span>↳ textures.mcpack</span><span>↳ backups</span></div>
+                <div class="stage-editor" data-scene-content="0"><span class="line-no">✓</span><span class="syntax">Archive detected</span><br><span class="line-no">✓</span>Behavior pack<br><span class="line-no">✓</span>Resource pack<br><span class="line-no">✓</span><span class="string">Manifest found</span><br><br><span class="comment">Ready to inspect →</span></div>
+                <div class="stage-tree" data-scene-content="1"><span>▾ behavior_pack</span><span>▾ scripts</span><span class="selected">↳ main.js</span><span>↳ manifest.json</span><span>▸ entities</span></div>
+                <div class="stage-editor" data-scene-content="1"><span class="line-no">1</span><span class="syntax">import</span> { world }<br><span class="line-no">2</span><span class="syntax">from</span> <span class="string">"@minecraft/server"</span>;<br><span class="line-no">3</span><br><span class="line-no">4</span><span class="syntax">world</span>.afterEvents<br><span class="line-no">5</span> .worldLoad.subscribe(() =&gt; {<br><span class="line-no">6</span> &nbsp;<span class="comment">// your logic</span><br><span class="line-no">7</span>});</div>
+                <div class="stage-tree" data-scene-content="2"><span>▾ export</span><span class="selected">✓ manifest.json</span><span>✓ scripts/</span><span>✓ textures/</span><span>✓ pack_icon.png</span></div>
+                <div class="stage-editor" data-scene-content="2"><span class="line-no">✓</span><span class="syntax">Pack validation</span><br><span class="line-no">✓</span>Files collected<br><span class="line-no">✓</span>Structure preserved<br><span class="line-no">✓</span><span class="string">Ready to export</span><br><br><span class="comment">Output / MyAddon.mcaddon</span></div>
+              </div>
+              <div class="stage-footer"><span id="stage-footer-left">3 files detected</span><b id="stage-footer-right">IMPORT READY</b></div>
+            </div>
+            <div class="story-progress" aria-hidden="true"><span class="is-active"></span><span></span><span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="story-steps" aria-label="Blockline workflow stages">
+        <article class="story-step is-active" data-story-step="0">
+          <div class="story-step-number">01 — BRING IT IN</div>
+          <h3>One place for your packs.</h3>
+          <p>Choose a .mcpack or .mcaddon and bring its files into a local project. Keep your work organized without switching devices.</p>
+          <div class="step-note">Import to a local workspace</div>
+        </article>
+        <article class="story-step" data-story-step="1">
+          <div class="story-step-number">02 — GET INTO THE DETAILS</div>
+          <h3>Find the file. Make the change.</h3>
+          <p>Move through the pack structure and work directly with supported text files, including JSON and JavaScript.</p>
+          <div class="step-note">Explore and edit your project</div>
+        </article>
+        <article class="story-step" data-story-step="2">
+          <div class="story-step-number">03 — TAKE IT FURTHER</div>
+          <h3>Package it for the next test.</h3>
+          <p>Keep the folder structure intact, create a backup when needed, and export the pack to continue your Bedrock workflow.</p>
+          <div class="step-note">Back up and export</div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
 <section id="features"><div class="wrap"><div class="sectionhead"><div class="kicker">Made for the way you build</div><h2>Useful tools. No desktop-sized clutter.</h2><p>Blockline is designed around small screens and real pack files — with a simple workflow that keeps the project in your hands.</p></div>
 <div class="grid3">
 <article class="feature"><div class="featureIcon">▣</div><h3>Bring your packs</h3><p>Import .mcpack and .mcaddon files through Android’s system picker. Work on a private local copy.</p></article>
@@ -221,6 +344,61 @@ footer{border-top-color:#ffffff12}
   window.addEventListener('scroll', requestUpdate, { passive: true });
   window.addEventListener('resize', requestUpdate, { passive: true });
   updateScroll();
+
+  const storySection = document.querySelector('#product-story');
+  const storyStage = document.querySelector('#story-stage');
+  const storySteps = [...document.querySelectorAll('[data-story-step]')];
+  const storyCopy = [
+    {caption:'01 / Import', title:'Start with your pack.', description:'Bring an existing Bedrock archive into a workspace on your device.', path:'workspace / projects', left:'3 files detected', right:'IMPORT READY'},
+    {caption:'02 / Inspect & edit', title:'Work at file level.', description:'Explore the pack structure and make focused changes in supported files.', path:'behavior_pack / scripts / main.js', left:'main.js · 7 lines', right:'EDITOR OPEN'},
+    {caption:'03 / Export', title:'Ready for the next test.', description:'Check the project contents and prepare a pack to continue in Minecraft Bedrock.', path:'workspace / export', left:'Pack structure preserved', right:'EXPORT READY'}
+  ];
+  let activeScene = -1;
+  let storyObserver = null;
+  const setStoryScene = index => {
+    if (index === activeScene || index < 0 || index > 2) return;
+    activeScene = index;
+    if (storyStage) storyStage.dataset.scene = String(index);
+    storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
+    const data = storyCopy[index];
+    const caption = document.querySelector('#stage-caption');
+    const title = document.querySelector('#stage-title');
+    const description = document.querySelector('#stage-description');
+    const path = document.querySelector('#stage-path');
+    const footerLeft = document.querySelector('#stage-footer-left');
+    const footerRight = document.querySelector('#stage-footer-right');
+    if (caption) caption.textContent = data.caption;
+    if (title) title.textContent = data.title;
+    if (description) description.textContent = data.description;
+    if (path) path.textContent = data.path;
+    if (footerLeft) footerLeft.textContent = data.left;
+    if (footerRight) footerRight.textContent = data.right;
+    storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
+  };
+  if (storySection && storySteps.length && 'IntersectionObserver' in window) {
+    storyObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const rect = entry.target.getBoundingClientRect();
+        const centerDistance = Math.abs((rect.top + rect.height / 2) - window.innerHeight * .5);
+        const active = storySteps.reduce((best, step, i) => {
+          const r = step.getBoundingClientRect();
+          const distance = Math.abs((r.top + r.height / 2) - window.innerHeight * .5);
+          return distance < best.distance ? {index:i, distance} : best;
+        }, {index:0, distance:Infinity});
+        setStoryScene(active.index);
+      });
+    }, {threshold:[0,.15,.35,.6], rootMargin:'-12% 0px -12% 0px'});
+    storySteps.forEach(step => storyObserver.observe(step));
+  } else {
+    storySteps.forEach((step, i) => step.addEventListener('focusin', () => setStoryScene(i)));
+  }
+  storySteps.forEach((step, i) => {
+    step.addEventListener('click', () => setStoryScene(i));
+    step.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') setStoryScene(i);
+    });
+  });
 
   const targets = document.querySelectorAll(
     '#features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
