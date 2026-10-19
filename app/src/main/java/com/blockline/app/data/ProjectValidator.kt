@@ -39,6 +39,7 @@ object ProjectValidator {
             }
             val clean = JsonTools.stripComments(source).removePrefix("\uFEFF")
             try {
+                StrictJsonParser(clean).parse()
                 val tokener = JSONTokener(clean)
                 val value = tokener.nextValue()
                 if (value !is JSONObject && value !is JSONArray) {
@@ -48,6 +49,8 @@ object ProjectValidator {
                 } else {
                     parsed[file] = value
                 }
+            } catch (e: StrictJsonException) {
+                issues += locationIssue(IssueSeverity.ERROR, path, source, "Invalid JSON: ${e.message}", e.position)
             } catch (e: JSONException) {
                 val message = e.message ?: "Invalid JSON syntax."
                 val index = Regex("(?i)(?:character|index|position)\\s*(?:at)?\\s*(\\d+)").find(message)?.groupValues?.getOrNull(1)?.toIntOrNull()
@@ -153,6 +156,133 @@ object ProjectValidator {
 
         return issues.distinctBy { listOf(it.severity, it.path, it.line, it.column, it.message) }
             .sortedWith(compareBy<ValidationIssue> { it.severity.ordinal }.thenBy { it.path }.thenBy { it.line ?: 0 })
+    }
+
+    private class StrictJsonException(val position: Int, message: String) : Exception(message)
+
+    private class StrictJsonParser(private val source: String) {
+        private var index = 0
+
+        fun parse() {
+            whitespace()
+            value()
+            whitespace()
+            if (index != source.length) fail("Unexpected content after the JSON value.")
+        }
+
+        private fun value() {
+            whitespace()
+            if (index >= source.length) fail("Expected a JSON value.")
+            when (source[index]) {
+                '{' -> objectValue()
+                '[' -> arrayValue()
+                '"' -> stringValue()
+                't' -> literal("true")
+                'f' -> literal("false")
+                'n' -> literal("null")
+                '-', in '0'..'9' -> numberValue()
+                else -> fail("Expected a JSON value.")
+            }
+        }
+
+        private fun objectValue() {
+            expect('{')
+            whitespace()
+            if (take('}')) return
+            while (true) {
+                whitespace()
+                if (index >= source.length || source[index] != '"') fail("Object keys must be double-quoted strings.")
+                stringValue()
+                whitespace()
+                expect(':')
+                value()
+                whitespace()
+                if (take('}')) return
+                expect(',')
+                whitespace()
+                if (index < source.length && source[index] == '}') fail("Trailing commas are not valid JSON.")
+            }
+        }
+
+        private fun arrayValue() {
+            expect('[')
+            whitespace()
+            if (take(']')) return
+            while (true) {
+                value()
+                whitespace()
+                if (take(']')) return
+                expect(',')
+                whitespace()
+                if (index < source.length && source[index] == ']') fail("Trailing commas are not valid JSON.")
+            }
+        }
+
+        private fun stringValue() {
+            expect('"')
+            while (index < source.length) {
+                val ch = source[index++]
+                when {
+                    ch == '"' -> return
+                    ch == '\\' -> {
+                        if (index >= source.length) fail("Incomplete escape sequence.")
+                        when (source[index++]) {
+                            '"', '\\', '/', 'b', 'f', 'n', 'r', 't' -> Unit
+                            'u' -> repeat(4) {
+                                if (index >= source.length || source[index].digitToIntOrNull(16) == null) fail("Invalid Unicode escape.")
+                                index++
+                            }
+                            else -> fail("Invalid escape sequence.")
+                        }
+                    }
+                    ch.code < 0x20 -> fail("Unescaped control character in string.")
+                }
+            }
+            fail("Unterminated string.")
+        }
+
+        private fun numberValue() {
+            if (take('-') && index >= source.length) fail("Incomplete number.")
+            if (take('0')) {
+                if (index < source.length && source[index] in '0'..'9') fail("Leading zeros are not valid JSON numbers.")
+            } else {
+                if (index >= source.length || source[index] !in '1'..'9') fail("Invalid number.")
+                while (index < source.length && source[index] in '0'..'9') index++
+            }
+            if (take('.')) {
+                if (index >= source.length || source[index] !in '0'..'9') fail("Expected digits after decimal point.")
+                while (index < source.length && source[index] in '0'..'9') index++
+            }
+            if (index < source.length && source[index] in 'e'..'e' || index < source.length && source[index] in 'E'..'E') {
+                index++
+                if (index < source.length && source[index] in "+-") index++
+                if (index >= source.length || source[index] !in '0'..'9') fail("Expected exponent digits.")
+                while (index < source.length && source[index] in '0'..'9') index++
+            }
+        }
+
+        private fun literal(expected: String) {
+            if (!source.startsWith(expected, index)) fail("Expected '$expected'.")
+            index += expected.length
+        }
+
+        private fun whitespace() {
+            while (index < source.length && source[index] in charArrayOf(' ', '\\t', '\\r', '\\n')) index++
+        }
+
+        private fun take(ch: Char): Boolean {
+            if (index < source.length && source[index] == ch) {
+                index++
+                return true
+            }
+            return false
+        }
+
+        private fun expect(ch: Char) {
+            if (!take(ch)) fail("Expected '$ch'.")
+        }
+
+        private fun fail(message: String): Nothing = throw StrictJsonException(index, message)
     }
 
     private fun registerUuid(
