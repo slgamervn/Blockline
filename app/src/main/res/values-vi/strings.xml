@@ -192,4 +192,8 @@
     <string name="export_pack">Xuất pack</string>
     <string name="renamed">Đã đổi tên</string>
     <string name="deleted_path">Đã xóa %1$s</string>
+    <string name="project_label">Dự án</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_favorites">Yêu thích</string>
+    <string name="filter_recent">Gần đây</string>
 </resources>
