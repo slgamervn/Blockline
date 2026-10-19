@@ -106,8 +106,20 @@ object ProjectValidator {
                     if (type == "script" && module.optString("language") != "javascript") {
                         issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Script module should declare language: javascript.")
                     }
-                    if (type == "script" && module.optString("entry").isBlank()) {
-                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Script module is missing entry.")
+                    if (type == "script") {
+                        val entry = module.optString("entry")
+                        if (entry.isBlank()) {
+                            issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Script module is missing entry.")
+                        } else {
+                            val packRoot = file.parentFile?.canonicalFile
+                            val entryFile = runCatching { File(packRoot, entry).canonicalFile }.getOrNull()
+                            if (packRoot == null || entryFile == null ||
+                                !(entryFile.path.startsWith(packRoot.path + File.separator)) ||
+                                !entryFile.isFile
+                            ) {
+                                issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Script entry '$entry' does not resolve to a file inside this pack.")
+                            }
+                        }
                     }
                 }
             }
