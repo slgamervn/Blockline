@@ -8,25 +8,31 @@ const assert = (condition, message) => {
   else errors.push(message);
 };
 
-const ids = [...html.matchAll(/\\bid=["']([^"']+)["']/g)].map(match => match[1]);
+const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
 const idSet = new Set(ids);
 const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
-assert(duplicateIds.length === 0, duplicateIds.length ? `Duplicate IDs: ${duplicateIds.join(", ")}` : "HTML IDs are unique");
+assert(
+  duplicateIds.length === 0,
+  duplicateIds.length ? "Duplicate IDs: " + duplicateIds.join(", ") : "HTML IDs are unique"
+);
 
-const hashLinks = [...html.matchAll(/\\bhref=["']#([^"']*)["']/g)]
+const hashLinks = [...html.matchAll(/\bhref=["']#([^"']*)["']/g)]
   .map(match => match[1])
   .filter(Boolean);
 const missingLinks = [...new Set(hashLinks.filter(id => !idSet.has(id)))];
-assert(missingLinks.length === 0, missingLinks.length ? `Broken in-page links: ${missingLinks.join(", ")}` : "In-page links resolve to existing IDs");
+assert(
+  missingLinks.length === 0,
+  missingLinks.length ? "Broken in-page links: " + missingLinks.join(", ") : "In-page links resolve to existing IDs"
+);
 
-const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)];
+const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
 assert(scripts.length >= 2, "Expected inline interaction and language scripts are present");
 for (const [index, match] of scripts.entries()) {
   try {
     new Function(match[1]);
-    passed.push(`Inline script ${index + 1} parses`);
+    passed.push("Inline script " + (index + 1) + " parses");
   } catch (error) {
-    errors.push(`Inline script ${index + 1} failed to parse: ${error.message}`);
+    errors.push("Inline script " + (index + 1) + " failed to parse: " + error.message);
   }
 }
 
@@ -47,7 +53,7 @@ function cssBracesAreBalanced(css) {
     }
     if (quote) {
       if (escaped) escaped = false;
-      else if (char === "\\\\") escaped = true;
+      else if (char === "\\") escaped = true;
       else if (char === quote) quote = "";
       continue;
     }
@@ -64,10 +70,11 @@ function cssBracesAreBalanced(css) {
   }
   return depth === 0 && !quote && !comment;
 }
-const styleBlocks = [...html.matchAll(/<style\\b[^>]*>([\\s\\S]*?)<\\/style>/gi)];
+
+const styleBlocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)];
 assert(styleBlocks.length >= 2, "Stylesheets are present");
 for (const [index, match] of styleBlocks.entries()) {
-  assert(cssBracesAreBalanced(match[1]), `CSS block ${index + 1} has balanced braces and strings`);
+  assert(cssBracesAreBalanced(match[1]), "CSS block " + (index + 1) + " has balanced braces and strings");
 }
 
 const requiredSections = [
@@ -79,18 +86,37 @@ const requiredSections = [
 ];
 for (const [needle, label] of requiredSections) assert(html.includes(needle), label);
 
-assert(/content-visibility:\\s*auto/.test(html) && /contain-intrinsic-size/.test(html), "Off-screen sections use native content-visibility with intrinsic sizing");
-assert(/IntersectionObserver/.test(html) && /!\\('IntersectionObserver' in window\\)/.test(html), "Viewport observer has a safe unsupported-browser fallback");
-assert(/prefers-reduced-motion:\\s*reduce/.test(html), "Reduced-motion accessibility rules are present");
-assert(/storyTrack\\?\\.addEventListener\\('scroll',\\s*syncStorySceneFromScroll/.test(html), "Mobile story swipe updates the preview");
-assert(/\\.hero \\.eyebrow\\.in-viewport[\\s\\S]*?animation-play-state:\\s*running\\s*!important/.test(html), "Viewport-aware motion has an explicit visible state");
-assert(/target=["']_blank["'][^>]*rel=["'][^"']*noopener/.test(html) || !/target=["']_blank["']/.test(html), "External new-tab links include noopener");
+assert(
+  /content-visibility:\s*auto/.test(html) && /contain-intrinsic-size/.test(html),
+  "Off-screen sections use native content-visibility with intrinsic sizing"
+);
+assert(
+  /IntersectionObserver/.test(html) && /!\('IntersectionObserver' in window\)/.test(html),
+  "Viewport observer has a safe unsupported-browser fallback"
+);
+assert(/prefers-reduced-motion:\s*reduce/.test(html), "Reduced-motion accessibility rules are present");
+assert(
+  /storyTrack\?\.addEventListener\('scroll',\s*syncStorySceneFromScroll/.test(html),
+  "Mobile story swipe updates the preview"
+);
+assert(
+  /\.hero \.eyebrow\.in-viewport[\s\S]*?animation-play-state:\s*running\s*!important/.test(html),
+  "Viewport-aware motion has an explicit visible state"
+);
+
+const externalLinks = [...html.matchAll(/<a\b[^>]*>/gi)].map(match => match[0])
+  .filter(tag => /\btarget=["']_blank["']/i.test(tag));
+const unsafeExternalLinks = externalLinks.filter(tag => !/\brel=["'][^"']*\bnoopener\b[^"']*["']/i.test(tag));
+assert(
+  unsafeExternalLinks.length === 0,
+  unsafeExternalLinks.length ? "New-tab links missing rel=noopener: " + unsafeExternalLinks.length : "External new-tab links include noopener"
+);
 
 if (errors.length) {
   console.error("Website validation failed:");
-  for (const error of errors) console.error(`- ${error}`);
+  for (const error of errors) console.error("- " + error);
   process.exitCode = 1;
 } else {
-  console.log(`Website validation passed (${passed.length} checks):`);
-  for (const item of passed) console.log(`✓ ${item}`);
+  console.log("Website validation passed (" + passed.length + " checks):");
+  for (const item of passed) console.log("✓ " + item);
 }
