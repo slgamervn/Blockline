@@ -86,9 +86,9 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                         )
                     }
                 }
-                if (vm.isIndexingProjectFiles) {
+                if (vm.isIndexingProjectFiles || vm.isFileOperationRunning) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
-                    Text(stringResource(R.string.scanning_files), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    Text(stringResource(if (vm.isFileOperationRunning) R.string.file_operation_running else R.string.scanning_files), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }
                 if (!vm.isIndexingProjectFiles && entries.isEmpty()) {
                     EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())

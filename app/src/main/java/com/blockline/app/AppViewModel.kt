@@ -49,6 +49,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var isExporting by mutableStateOf(false)
         private set
+    var isFileOperationRunning by mutableStateOf(false)
+        private set
     var isValidating by mutableStateOf(false)
         private set
     var validationIssues by mutableStateOf<List<ValidationIssue>>(emptyList())
@@ -81,12 +83,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun refresh() { projects = repo.list() }
 
     private fun refreshProjectEntries(projectId: String) {
-        val requestId = ++fileIndexRequestId
-        if (current?.id == projectId) isIndexingProjectFiles = true
-        viewModelScope.launch {
-            val result = runCatching {
-                withContext(Dispatchers.IO) { repo.allEntries(projectId) }
+        if (current?.id != projectId) {
+            viewModelScope.launch {
+                runCatching { withContext(Dispatchers.IO) { repo.allEntries(projectId) } }
+                    .onSuccess { projectEntries[projectId] = it }
             }
+            return
+        }
+        val requestId = ++fileIndexRequestId
+        isIndexingProjectFiles = true
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { repo.allEntries(projectId) } }
             if (requestId != fileIndexRequestId) return@launch
             if (current?.id == projectId) isIndexingProjectFiles = false
             result.onSuccess { projectEntries[projectId] = it }
@@ -238,24 +245,45 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun renameProject(p: Project, name: String) = runCatching { repo.rename(p.id, name); refresh(); if (current?.id == p.id) current = repo.list().firstOrNull { it.id == p.id } }.onFailure { message = it.message }
-    fun duplicateProject(p: Project) = runCatching { repo.duplicate(p.id) }.onSuccess { refresh(); message = text(R.string.project_duplicated) }.onFailure { message = it.message }
-    fun deleteProject(p: Project) {
-        repo.delete(p.id)
-        if (current?.id == p.id) {
-            clearResourcePreview()
-            current = null
-            activeFile = null
-            content = ""
-            openTabs.clear()
-            undo.clear()
-            redo.clear()
-            lastEditAt.clear()
-            validationIssues = emptyList()
-            validationCompleted = false
-            contentSearchResults = emptyList()
+    fun duplicateProject(p: Project) {
+        if (isFileOperationRunning) return
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { repo.duplicate(p.id) } }
+            isFileOperationRunning = false
+            result.onSuccess { refresh(); message = text(R.string.project_duplicated) }
+                .onFailure { message = it.message ?: text(R.string.project_duplicated) }
         }
-        projectEntries.remove(p.id)
-        refresh(); message = text(R.string.project_deleted)
+    }
+    fun deleteProject(p: Project) {
+        if (isFileOperationRunning) return
+        if (current?.id == p.id) saveCurrent(showMessage = false)
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { repo.delete(p.id) } }
+            isFileOperationRunning = false
+            result.onSuccess {
+                if (current?.id == p.id) {
+                    autoSaveJob?.cancel()
+                    clearResourcePreview()
+                    current = null
+                    activeFile = null
+                    content = ""
+                    openTabs.clear()
+                    undo.clear()
+                    redo.clear()
+                    lastEditAt.clear()
+                    validationIssues = emptyList()
+                    validationCompleted = false
+                    contentSearchResults = emptyList()
+                    isIndexingProjectFiles = false
+                    fileIndexRequestId++
+                }
+                projectEntries.remove(p.id)
+                refresh()
+                message = text(R.string.project_deleted)
+            }.onFailure { message = it.message ?: text(R.string.project_deleted) }
+        }
     }
     fun openFile(path: String) = openFile(path, null)
 
@@ -372,56 +400,103 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun createFile(path: String, directory: Boolean) {
         val p = current ?: return
-        runCatching {
-            val f = repo.resolve(p.id, path)
-            if (directory) check(f.mkdirs()) else { f.parentFile?.mkdirs(); check(f.createNewFile()) }
-            message = if (directory) text(R.string.folder_created) else text(R.string.file_created)
-            refreshProjectEntries(p.id)
-        }.onFailure { message = it.message ?: text(R.string.create_failed) }
+        if (isFileOperationRunning) return
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val f = repo.resolve(p.id, path)
+                    if (directory) check(f.mkdirs()) { "Folder already exists or could not be created." }
+                    else {
+                        check(!f.exists()) { "File already exists." }
+                        check(f.parentFile?.mkdirs() != false) { "Could not create parent folder." }
+                        check(f.createNewFile()) { "Could not create file." }
+                    }
+                }
+            }
+            isFileOperationRunning = false
+            result.onSuccess {
+                refreshProjectEntries(p.id)
+                message = if (directory) text(R.string.folder_created) else text(R.string.file_created)
+            }.onFailure { message = it.message ?: text(R.string.create_failed) }
+        }
     }
     fun renameFile(path: String, name: String) {
         val p = current ?: return
-        runCatching {
-            val f = repo.resolve(p.id, path)
-            val new = com.blockline.app.data.FileOps.rename(f, name) ?: error(text(R.string.invalid_name_target))
-            val newPath = repo.relative(p.id, new)
-            repo.remapPathMetadata(p.id, path, newPath)
-            remapOpenPaths(path, newPath)
-            refreshProjectEntries(p.id)
-            message = text(R.string.renamed)
-        }.onFailure { message = it.message ?: text(R.string.rename_failed) }
+        if (isFileOperationRunning) return
+        if (activeFile == path || activeFile?.startsWith("$path/") == true) saveCurrent(showMessage = false)
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val file = repo.resolve(p.id, path)
+                    val renamed = com.blockline.app.data.FileOps.rename(file, name)
+                        ?: error(text(R.string.invalid_name_target))
+                    val newPath = repo.relative(p.id, renamed)
+                    repo.remapPathMetadata(p.id, path, newPath)
+                    newPath
+                }
+            }
+            isFileOperationRunning = false
+            result.onSuccess { newPath ->
+                remapOpenPaths(path, newPath)
+                refreshProjectEntries(p.id)
+                message = text(R.string.renamed)
+            }.onFailure { message = it.message ?: text(R.string.rename_failed) }
+        }
     }
     fun deleteFile(path: String) {
         val p = current ?: return
-        runCatching {
-            val f = repo.resolve(p.id, path)
-            check(f.deleteRecursively()) { text(R.string.delete_failed) }
-            repo.removePathMetadata(p.id, path)
-            val affectedTabs = openTabs.keys.filter { it == path || it.startsWith("$path/") }
-            affectedTabs.forEach { tab ->
-                openTabs.remove(tab)
-                undo.remove(tab)
-                redo.remove(tab)
-                lastEditAt.remove(tab)
-                if (activeFile == tab) { activeFile = null; content = "" }
+        if (isFileOperationRunning) return
+        if (activeFile == path || activeFile?.startsWith("$path/") == true) saveCurrent(showMessage = false)
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val file = repo.resolve(p.id, path)
+                    check(file.deleteRecursively()) { text(R.string.delete_failed) }
+                    repo.removePathMetadata(p.id, path)
+                }
             }
-            refreshProjectEntries(p.id)
-            message = text(R.string.deleted_path, path)
-        }.onFailure { message = it.message ?: text(R.string.delete_failed) }
+            isFileOperationRunning = false
+            result.onSuccess {
+                val affectedTabs = openTabs.keys.filter { it == path || it.startsWith("$path/") }
+                affectedTabs.forEach { tab ->
+                    openTabs.remove(tab)
+                    undo.remove(tab)
+                    redo.remove(tab)
+                    lastEditAt.remove(tab)
+                    if (activeFile == tab) { activeFile = null; content = ""; autoSaveJob?.cancel() }
+                }
+                refreshProjectEntries(p.id)
+                message = text(R.string.deleted_path, path)
+            }.onFailure { message = it.message ?: text(R.string.delete_failed) }
+        }
     }
     fun moveFile(path: String, destination: String) {
         val p = current ?: return
-        runCatching {
-            val source = repo.resolve(p.id, path)
-            val destDir = if (destination.isBlank() || destination == ".") repo.projectDir(p.id) else repo.resolve(p.id, destination)
-            require(destDir.isDirectory) { text(R.string.destination_must_exist) }
-            val moved = com.blockline.app.data.FileOps.move(source, destDir) ?: error(text(R.string.move_unsafe))
-            val newPath = repo.relative(p.id, moved)
-            repo.remapPathMetadata(p.id, path, newPath)
-            remapOpenPaths(path, newPath)
-            refreshProjectEntries(p.id)
-            message = text(R.string.moved_to, newPath)
-        }.onFailure { message = it.message ?: text(R.string.move_unsafe) }
+        if (isFileOperationRunning) return
+        if (activeFile == path || activeFile?.startsWith("$path/") == true) saveCurrent(showMessage = false)
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val source = repo.resolve(p.id, path)
+                    val destDir = if (destination.isBlank() || destination == ".") repo.projectDir(p.id) else repo.resolve(p.id, destination)
+                    require(destDir.isDirectory) { text(R.string.destination_must_exist) }
+                    val moved = com.blockline.app.data.FileOps.move(source, destDir) ?: error(text(R.string.move_unsafe))
+                    val newPath = repo.relative(p.id, moved)
+                    repo.remapPathMetadata(p.id, path, newPath)
+                    newPath
+                }
+            }
+            isFileOperationRunning = false
+            result.onSuccess { newPath ->
+                remapOpenPaths(path, newPath)
+                refreshProjectEntries(p.id)
+                message = text(R.string.moved_to, newPath)
+            }.onFailure { message = it.message ?: text(R.string.move_unsafe) }
+        }
     }
     private fun remapOpenPaths(oldPath: String, newPath: String) {
         val affected = openTabs.keys.filter { it == oldPath || it.startsWith("$oldPath/") }
