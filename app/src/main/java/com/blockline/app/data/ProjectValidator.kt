@@ -19,7 +19,7 @@ data class ValidationIssue(
 
 object ProjectValidator {
     private val uuidPattern = Regex("(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-    private val jsonExtensions = setOf("json", "mcmeta", "nx")
+    private val jsonExtensions = setOf("json", "mcmeta")
 
     fun validate(projectRoot: File): List<ValidationIssue> {
         val issues = mutableListOf<ValidationIssue>()
@@ -28,10 +28,7 @@ object ProjectValidator {
         }
 
         val files = projectRoot.walkTopDown().filter { it.isFile }.toList()
-        val jsonFiles = files.filter { file ->
-            val extension = file.extension.lowercase(Locale.ROOT)
-            extension in jsonExtensions && (extension != "nx" || file.name.equals("pack_manifest.nx", true))
-        }
+        val jsonFiles = files.filter { it.extension.lowercase(Locale.ROOT) in jsonExtensions }
         val parsed = linkedMapOf<File, Any>()
 
         jsonFiles.forEach { file ->
@@ -63,9 +60,9 @@ object ProjectValidator {
             }
         }
 
-        val manifests = files.filter { it.name.equals("manifest.json", true) || it.name.equals("pack_manifest.nx", true) }
+        val manifests = files.filter { it.name.equals("manifest.json", true) || it.name.equals("pack_manifest.json", true) }
         if (manifests.isEmpty()) {
-            issues += ValidationIssue(IssueSeverity.WARNING, "", message = "No manifest.json or pack_manifest.nx was found. This project may not contain a supported Bedrock pack manifest.")
+            issues += ValidationIssue(IssueSeverity.WARNING, "", message = "No manifest.json or pack_manifest.json was found. This project may not contain a supported Bedrock pack manifest.")
         }
 
         val uuidOwners = linkedMapOf<String, String>()
