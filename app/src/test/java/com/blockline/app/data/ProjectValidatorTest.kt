@@ -98,7 +98,7 @@ class ProjectValidatorTest {
     fun preservesLineAndColumnForBomPrefixedJsonDiagnostics() {
         val root = Files.createTempDirectory("blockline-bom-").toFile()
         try {
-            val source = "\uFEFF{\\n  \"value\": 1,\\n  \"value\": 2\\n}"
+            val source = "\uFEFF{\n  \"value\": 1,\n  \"value\": 2\n}"
             File(root, "settings.json").writeText(source)
             val issue = ProjectValidator.validate(root).single { it.message.contains("Duplicate object key") }
             assertEquals(3, issue.line)
@@ -112,7 +112,7 @@ class ProjectValidatorTest {
     fun rejectsTrailingCommasAndReportsTheAffectedLine() {
         val root = Files.createTempDirectory("blockline-trailing-comma-").toFile()
         try {
-            File(root, "settings.json").writeText("{\\n  \"value\": 1,\\n}")
+            File(root, "settings.json").writeText("{\n  \"value\": 1,\n}")
             val issue = ProjectValidator.validate(root).single { it.message.contains("Trailing commas") }
             assertEquals(3, issue.line)
             assertTrue((issue.column ?: 0) > 0)
