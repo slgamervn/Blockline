@@ -39,6 +39,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var validationIssues by mutableStateOf<List<ValidationIssue>>(emptyList())
         private set
+    var validationCompleted by mutableStateOf(false)
+        private set
     var isSearchingContent by mutableStateOf(false)
         private set
     var contentSearchResults by mutableStateOf<List<Pair<String, Int>>>(emptyList())
@@ -60,13 +62,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (isValidating) return
         isValidating = true
         validationIssues = emptyList()
+        validationCompleted = false
         viewModelScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) { ProjectValidator.validate(repo.projectDir(project.id)) }
             }
             isValidating = false
             result.onSuccess { issues ->
-                if (current?.id == project.id) validationIssues = issues
+                if (current?.id == project.id) {
+                    validationIssues = issues
+                    validationCompleted = true
+                }
                 val errors = issues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
                 val warnings = issues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
                 message = "Validation finished: $errors errors, $warnings warnings, ${issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }} info."
@@ -112,6 +118,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         activeFile = null
         content = ""
         validationIssues = emptyList()
+        validationCompleted = false
         contentSearchResults = emptyList()
     }
     fun createSample() = runCatching { repo.createSample() }.onSuccess {
