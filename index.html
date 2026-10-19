@@ -702,89 +702,36 @@ footer{border-top-color:#ffffff12}
     if (footerRight) footerRight.textContent = data.right;
     storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
   };
-  const syncStoryScene = () => {
-    if (!storySection || !storySteps.length || requestedStoryScene !== null) return;
-    const compact = isCompactStory();
-    // Desktop preview is controlled explicitly by the 01/02/03 buttons.
-    // Scroll-based scene detection is only needed for the compact horizontal track.
-    if (!compact) return;
-    const trackRect = storyTrack?.getBoundingClientRect();
-    const target = compact && trackRect
-      ? trackRect.left + trackRect.width / 2
-      : window.innerHeight * 0.48;
-    const active = storySteps.reduce((best, step, index) => {
-      const rect = step.getBoundingClientRect();
-      const center = compact ? rect.left + rect.width / 2 : rect.top + rect.height / 2;
-      const distance = Math.abs(center - target);
-      return distance < best.distance ? {index, distance} : best;
-    }, {index: activeScene < 0 ? 0 : activeScene, distance: Infinity});
-    setStoryScene(active.index);
+  const setStoryScene = index => {
+    if (!Number.isInteger(index) || index < 0 || index >= storyCopy.length) return;
+    activeScene = index;
+    if (storyStage) storyStage.dataset.scene = String(index);
+    storySteps.forEach((step, i) => step.classList.toggle('is-active', i === index));
+    storyControls.forEach((control, i) => control.setAttribute('aria-pressed', String(i === index)));
+    const data = storyCopy[index];
+    const caption = document.querySelector('#stage-caption');
+    const title = document.querySelector('#stage-title');
+    const description = document.querySelector('#stage-description');
+    const path = document.querySelector('#stage-path');
+    const footerLeft = document.querySelector('#stage-footer-left');
+    const footerRight = document.querySelector('#stage-footer-right');
+    if (caption) caption.textContent = data.caption;
+    if (title) title.textContent = data.title;
+    if (description) description.textContent = data.description;
+    if (path) path.textContent = data.path;
+    if (footerLeft) footerLeft.textContent = data.left;
+    if (footerRight) footerRight.textContent = data.right;
+    storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
   };
-  let storySyncPending = false;
-  const scheduleStorySync = () => {
-    if (storySyncPending) return;
-    storySyncPending = true;
-    window.requestAnimationFrame(() => {
-      syncStoryScene();
-      storySyncPending = false;
-    });
-  };
-  const finishRequestedStoryScroll = () => {
-    if (requestedStoryScene === null) return;
-    if (storyScrollTimer) window.clearTimeout(storyScrollTimer);
-    storyScrollTimer = 0;
-    requestedStoryScene = null;
-    scheduleStorySync();
-  };
-  const armStoryScrollFallback = (delay = 220) => {
-    if (storyScrollTimer) window.clearTimeout(storyScrollTimer);
-    storyScrollTimer = window.setTimeout(finishRequestedStoryScroll, delay);
-  };
-  const handleStoryTrackScroll = () => {
-    scheduleStorySync();
-    if (requestedStoryScene !== null) armStoryScrollFallback(900);
-  };
-  window.addEventListener('scroll', () => {
-    if (isCompactStory()) scheduleStorySync();
-  }, {passive: true});
-  window.addEventListener('scrollend', finishRequestedStoryScroll);
-  window.addEventListener('resize', () => {
-    if (isCompactStory()) scheduleStorySync();
-  }, {passive: true});
-  storyTrack?.addEventListener('scroll', handleStoryTrackScroll, {passive: true});
-  storyTrack?.addEventListener('scrollend', finishRequestedStoryScroll);
   storyControls.forEach(control => {
     control.addEventListener('click', () => {
       const index = Number(control.dataset.storyGo);
-      const step = storySteps[index];
-      if (!step) return;
-      requestedStoryScene = index;
+      if (!Number.isInteger(index) || index < 0 || index >= storyCopy.length) return;
       setStoryScene(index);
-      armStoryScrollFallback(900);
-      window.requestAnimationFrame(() => {
-        if (requestedStoryScene !== index || !step.isConnected) return;
-        if (isCompactStory() && storyTrack) {
-          const trackRect = storyTrack.getBoundingClientRect();
-          const stepRect = step.getBoundingClientRect();
-          const paddingLeft = Number.parseFloat(window.getComputedStyle(storyTrack).paddingLeft) || 0;
-          const visibleStart = trackRect.left + storyTrack.clientLeft + paddingLeft;
-          storyTrack.scrollTo({
-            left: storyTrack.scrollLeft + stepRect.left - visibleStart,
-            behavior: reducedMotion ? 'auto' : 'smooth'
-          });
-        } else {
-          step.scrollIntoView({
-            behavior: reducedMotion ? 'auto' : 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-        }
-        armStoryScrollFallback(900);
-      });
     });
   });
+  // Initialize the preview once. Scrolling the page must never override a button choice.
   setStoryScene(0);
-  syncStoryScene();
 
   const targets = document.querySelectorAll(
     '#features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
