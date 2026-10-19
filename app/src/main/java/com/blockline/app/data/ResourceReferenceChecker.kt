@@ -10,10 +10,10 @@ internal object ResourceReferenceChecker {
 
     fun check(projectRoot: File, files: List<File>): List<ValidationIssue> {
         val issues = mutableListOf<ValidationIssue>()
-        val textureFiles = files.asSequence()
+        val canonicalRoot = runCatching { projectRoot.canonicalFile }.getOrNull() ?: return issues
+        val pngFiles = files.asSequence()
             .filter { it.isFile && it.extension.equals("png", true) }
-            .map { runCatching { it.canonicalFile }.getOrNull() }
-            .filterNotNull()
+            .mapNotNull { runCatching { it.canonicalFile }.getOrNull() }
             .toSet()
 
         files.asSequence()
@@ -26,23 +26,36 @@ internal object ResourceReferenceChecker {
             .forEach { file ->
                 val root = runCatching { JSONObject(JsonTools.stripComments(file.readText(Charsets.UTF_8))) }.getOrNull()
                     ?: return@forEach
+                val packRoot = findPackRoot(canonicalRoot, file) ?: canonicalRoot
+                val packPath = packRoot.path + File.separator
+                val packTextures = pngFiles.filter { it.path.startsWith(packPath) }.toSet()
                 inspectTextures(root, false) { reference ->
-                    val normalized = reference.trim().replace('\\', '/').removePrefix("/")
+                    val normalized = reference.trim().replace('\\\\', '/').removePrefix("/")
                     if (!normalized.startsWith("textures/", true) || normalized.contains("..")) return@inspectTextures
                     val candidate = if (normalized.substringAfterLast('/').contains('.')) normalized
                         else "$normalized.png"
-                    val target = runCatching { File(projectRoot, candidate).canonicalFile }.getOrNull()
-                    if (target == null || !target.path.startsWith(projectRoot.canonicalPath + File.separator)) return@inspectTextures
-                    if (target !in textureFiles) {
+                    val target = runCatching { File(packRoot, candidate).canonicalFile }.getOrNull()
+                    if (target == null || !target.path.startsWith(packPath)) return@inspectTextures
+                    if (target !in packTextures) {
                         issues += ValidationIssue(
                             IssueSeverity.WARNING,
                             relative(projectRoot, file),
-                            message = "Texture reference '$reference' does not match a PNG file in this project. Verify the path and extension."
+                            message = "Texture reference '$reference' does not match a PNG file in this pack. Verify the path and extension."
                         )
                     }
                 }
             }
         return issues
+    }
+
+    private fun findPackRoot(projectRoot: File, file: File): File? {
+        var current = file.parentFile ?: return null
+        while (current.path.startsWith(projectRoot.path)) {
+            if (File(current, "manifest.json").isFile || File(current, "pack_manifest.json").isFile) return current
+            if (current == projectRoot) break
+            current = current.parentFile ?: break
+        }
+        return null
     }
 
     private fun inspectTextures(value: Any?, insideTextureMap: Boolean, onReference: (String) -> Unit) {
