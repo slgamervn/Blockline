@@ -35,25 +35,46 @@ jobs:
         with:
           gradle-version: 8.10.2
 
-      - name: Build debug APK
-        run: gradle assembleDebug --stacktrace --no-daemon
-
-      - name: Rename APK
+      - name: Prepare stable signing key
+        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 }}
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Blockline.apk
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/blockline-upload.jks"
+          echo "BLOCKLINE_KEYSTORE_PATH=$RUNNER_TEMP/blockline-upload.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 != '' }}
+        env:
+          BLOCKLINE_KEYSTORE_PASSWORD: ${{ secrets.BLOCKLINE_KEYSTORE_PASSWORD }}
+          BLOCKLINE_KEY_ALIAS: ${{ secrets.BLOCKLINE_KEY_ALIAS }}
+          BLOCKLINE_KEY_PASSWORD: ${{ secrets.BLOCKLINE_KEY_PASSWORD }}
+        run: gradle assembleRelease -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=0.1.${{ github.run_number }} --stacktrace --no-daemon
+
+      - name: Build debug APK (signing setup required for upgrade installs)
+        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 == '' }}
+        run: gradle assembleDebug -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=0.1.${{ github.run_number }} --stacktrace --no-daemon
+
+      - name: Prepare release APK
+        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 != '' }}
+        run: cp app/build/outputs/apk/release/app-release.apk Blockline.apk
+
+      - name: Prepare fallback debug APK
+        if: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 == '' }}
+        run: cp app/build/outputs/apk/debug/app-debug.apk Blockline.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: blockline-debug-apk
+          name: blockline-apk
           path: Blockline.apk
           if-no-files-found: error
 
       - name: Create Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.0-${{ github.run_number }}
-          name: Blockline v0.1.0 (build ${{ github.run_number }})
+          tag_name: v0.1.${{ github.run_number }}
+          name: Blockline v0.1.${{ github.run_number }}
           files: Blockline.apk
           generate_release_notes: true
           make_latest: true

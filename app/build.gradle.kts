@@ -12,12 +12,25 @@ android {
         applicationId = "com.blockline.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = providers.gradleProperty("VERSION_CODE").orElse("1").get().toInt()
+        versionName = providers.gradleProperty("VERSION_NAME").orElse("0.1.0").get()
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("BLOCKLINE_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("BLOCKLINE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("BLOCKLINE_KEY_ALIAS")
+                keyPassword = System.getenv("BLOCKLINE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
