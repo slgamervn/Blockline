@@ -145,7 +145,7 @@
     const rect = readingCopy.getBoundingClientRect();
     const vh = window.innerHeight || 1;
     const progress = Math.min(1, Math.max(0, (vh * 0.82 - rect.top) / (rect.height + vh * 0.42)));
-    readingCopy.style.setProperty('--reading-progress', String(progress));
+    readingCopy.style.setProperty('--reading-progress', (progress * 100).toFixed(2) + '%');
   };
   const queueReadingHighlight = () => {
     if (readingFrame) return;
@@ -154,7 +154,7 @@
   window.addEventListener('scroll', queueReadingHighlight, { passive: true });
   window.addEventListener('resize', queueReadingHighlight, { passive: true });
   updateReadingHighlight();
-  if (reducedMotion.matches && readingCopy) readingCopy.style.setProperty('--reading-progress', '1');
+  if (reducedMotion.matches && readingCopy) readingCopy.style.setProperty('--reading-progress', '100%');
 
   document.querySelectorAll('.tree-toggle').forEach((button) => {
     button.addEventListener('click', () => {
