@@ -1110,6 +1110,9 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     if (footerRight) footerRight.textContent = data.right;
     storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
   };
+  let storyScrollFrame = 0;
+  let storyProgrammaticScroll = false;
+  let storyScrollReleaseTimer = 0;
   const scrollStoryStepIntoView = index => {
     if (!storyTrack || !isCompactStory() || !storySteps[index]) return;
     const step = storySteps[index];
@@ -1118,15 +1121,24 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     const targetLeft = storyTrack.scrollLeft + stepRect.left - trackRect.left
       - (storyTrack.clientWidth - stepRect.width) / 2;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    storyProgrammaticScroll = true;
+    window.clearTimeout(storyScrollReleaseTimer);
     storyTrack.scrollTo({
       left: Math.max(0, targetLeft),
       behavior: reduced ? 'auto' : 'smooth'
     });
+    if (reduced) {
+      storyProgrammaticScroll = false;
+      return;
+    }
+    storyScrollReleaseTimer = window.setTimeout(() => {
+      storyProgrammaticScroll = false;
+      syncStorySceneFromScroll();
+    }, 700);
   };
 
-  let storyScrollFrame = 0;
   const syncStorySceneFromScroll = () => {
-    if (!storyTrack || !isCompactStory() || storyScrollFrame) return;
+    if (!storyTrack || !isCompactStory() || storyProgrammaticScroll || storyScrollFrame) return;
     storyScrollFrame = window.requestAnimationFrame(() => {
       storyScrollFrame = 0;
       if (!isCompactStory()) return;
@@ -1170,7 +1182,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     currentLanguage = event.detail?.language === 'vi' ? 'vi' : 'en';
     setStoryScene(activeScene < 0 ? 0 : activeScene);
   });
-  // Keep the preview under the reader's control; scroll position never changes the selected step.
+  // Keep the preview under the reader's control; programmatic smooth scrolling must not undo a button selection.
   setStoryScene(0);
 
   const motionTargets = [...document.querySelectorAll(
