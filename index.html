@@ -476,6 +476,27 @@ footer{border-top-color:#ffffff12}
  .product-story .story-stage-wrap{top:100px}
  .product-story .story-step{padding:22px}
 }
+
+/* Final desktop layout pass: keep the hero artwork beside the headline. */
+@media (min-width: 821px) {
+  .hero .heroGrid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+    align-items: center;
+    gap: clamp(36px, 5vw, 72px);
+  }
+  .hero .heroGrid > :first-child { min-width: 0; }
+  .hero .mockWrap {
+    width: 100%;
+    max-width: 520px;
+    justify-self: end;
+    margin: 0;
+  }
+}
+@media (min-width: 821px) and (max-width: 1050px) {
+  .hero .heroGrid { grid-template-columns: minmax(0, 1fr) minmax(300px, .88fr); gap: 30px; }
+  .hero .device { transform: scale(.92); transform-origin: center right; }
+}
+
 </style>
 </head>
 <body>
@@ -684,6 +705,9 @@ footer{border-top-color:#ffffff12}
   const syncStoryScene = () => {
     if (!storySection || !storySteps.length || requestedStoryScene !== null) return;
     const compact = isCompactStory();
+    // Desktop preview is controlled explicitly by the 01/02/03 buttons.
+    // Scroll-based scene detection is only needed for the compact horizontal track.
+    if (!compact) return;
     const trackRect = storyTrack?.getBoundingClientRect();
     const target = compact && trackRect
       ? trackRect.left + trackRect.width / 2
@@ -718,11 +742,15 @@ footer{border-top-color:#ffffff12}
   };
   const handleStoryTrackScroll = () => {
     scheduleStorySync();
-    if (requestedStoryScene !== null) armStoryScrollFallback(220);
+    if (requestedStoryScene !== null) armStoryScrollFallback(900);
   };
-  window.addEventListener('scroll', scheduleStorySync, {passive: true});
+  window.addEventListener('scroll', () => {
+    if (isCompactStory()) scheduleStorySync();
+  }, {passive: true});
   window.addEventListener('scrollend', finishRequestedStoryScroll);
-  window.addEventListener('resize', scheduleStorySync, {passive: true});
+  window.addEventListener('resize', () => {
+    if (isCompactStory()) scheduleStorySync();
+  }, {passive: true});
   storyTrack?.addEventListener('scroll', handleStoryTrackScroll, {passive: true});
   storyTrack?.addEventListener('scrollend', finishRequestedStoryScroll);
   storyControls.forEach(control => {
