@@ -47,6 +47,58 @@ body{overflow-x:hidden}
 @media(max-width:820px){.feature:hover{transform:none;box-shadow:none}.device{animation:device-enter .8s .1s var(--ease-out) both}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none;will-change:auto}.device,.glow{animation:none}}
 
+
+
+/* Refined visual direction: editorial, spacious, and intentionally restrained */
+:root{--bg:#080b0a;--panel:#101512;--panel2:#151d18;--line:#28332c;--text:#f3f6f2;--muted:#a1ada4;--green:#9be7b5;--green2:#b8f3cb;--max:1180px}
+body{background:#080b0a;background-image:radial-gradient(ellipse at 74% 10%,#1b3928 0,transparent 33%),radial-gradient(ellipse at 0 45%,#122219 0,transparent 28%);background-attachment:fixed}
+.nav{background:#080b0ad9;border-bottom-color:#ffffff12}
+.navinner{min-height:78px}
+.mark{border-radius:11px;background:var(--green);box-shadow:none}
+.links{gap:30px}
+.links a:not(.button){transition:color .2s ease}
+.primary{background:var(--green);color:#07130b;box-shadow:none}
+.primary:hover{background:#b8f3cb;box-shadow:0 8px 28px #9be7b51c}
+.secondary{border-color:#ffffff27;background:#ffffff05}
+.hero{padding:112px 0 100px;position:relative}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(#ffffff09 1px,transparent 1px),linear-gradient(90deg,#ffffff09 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(to bottom,black,transparent 78%)}
+.heroGrid{position:relative;grid-template-columns:1.1fr .9fr;gap:64px}
+.eyebrow{background:#9be7b50c;border-color:#9be7b52a;color:var(--green2);letter-spacing:.035em}
+h1{font-size:clamp(3.4rem,7vw,6.2rem);letter-spacing:-.078em;line-height:.98;margin:28px 0 24px}
+h1 em{color:var(--green);background:linear-gradient(100deg,#9be7b5 5%,#d7ffe3 48%,#72c994 90%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lead{font-size:1.13rem;line-height:1.8;max-width:520px}
+.actions{margin-top:32px}
+.button{border-radius:999px;padding-inline:23px}
+.trust{gap:18px 22px}
+.mockWrap{perspective:1200px}
+.glow{inset:10% 0;background:#58c98217;filter:blur(95px)}
+.device{max-width:355px;border-color:#ffffff28;border-radius:30px;padding:8px;box-shadow:0 45px 120px #000b,0 0 0 1px #ffffff08;transform:rotateY(-7deg) rotateX(2deg)}
+.screen{border-radius:23px;background:#0b100d;border-color:#ffffff0e}
+.apphead{border-bottom-color:#ffffff10}
+.miniCard{background:linear-gradient(120deg,#151e18,#0e1410);border-color:#ffffff13}
+.code{border-color:#ffffff12;background:#070a08}
+.tabbar{border-top-color:#ffffff10}
+section{padding:100px 0}
+.sectionhead{max-width:720px;margin-bottom:42px}
+.kicker{color:var(--green);letter-spacing:.17em;font-size:.73rem}
+.sectionhead h2{font-size:clamp(2.3rem,4.8vw,3.7rem);letter-spacing:-.065em;line-height:1.04;margin:16px 0}
+.sectionhead p{line-height:1.8;max-width:620px}
+.grid3{gap:14px}
+.feature{min-height:220px;border-radius:17px;background:linear-gradient(145deg,#121915,#0d120f);border-color:#ffffff12;padding:27px}
+.featureIcon{border-radius:12px;background:#9be7b511;color:var(--green);border:1px solid #9be7b51a}
+.feature h3{font-size:1.08rem;letter-spacing:-.025em}
+.feature p,.step p{line-height:1.8}
+.band{background:linear-gradient(110deg,#101812,#0a0e0b);border-block-color:#ffffff10}
+.steps{gap:28px}
+.step{border-top-color:#ffffff24;padding-top:20px}
+.stepnum{color:var(--green);font-size:1.6rem}
+.downloadCard{border-color:#ffffff1b;border-radius:22px;background:radial-gradient(ellipse at 0 0,#1b3c27 0,transparent 58%),linear-gradient(120deg,#111914,#0b100d);padding:clamp(26px,5vw,48px)}
+.downloadCard h2{letter-spacing:-.065em;line-height:1.05}
+footer{border-top-color:#ffffff12}
+@media(max-width:820px){.hero{padding:78px 0 65px}.heroGrid{grid-template-columns:1fr;gap:48px}.device{transform:none}.grid3{grid-template-columns:repeat(2,1fr)}section{padding:78px 0}}
+@media(max-width:560px){.navinner{min-height:66px}.hero{padding:60px 0 54px}h1{font-size:clamp(3.1rem,15vw,4.3rem)}.lead{font-size:1rem;line-height:1.75}.actions{gap:10px}.actions .button{width:100%}.grid3,.steps{grid-template-columns:1fr}.feature{min-height:unset;padding:23px}section{padding:66px 0}.downloadCard{padding:25px}.footinner{gap:16px}}
+@media(prefers-reduced-motion:reduce){.device{transform:none!important}}
+
 </style>
 </head>
 <body>
