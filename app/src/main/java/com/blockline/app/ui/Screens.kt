@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.data.ExportMode
@@ -57,15 +58,15 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
     var renameProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameValue by remember { mutableStateOf("") }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let(vm::importPack) }
-    Scaffold(topBar = { TopAppBar(title = { Text("Blockline") }, actions = {
-        IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, "Import pack") }
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }, actions = {
+        IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, stringResource(R.string.import_pack_cd)) }
     }) }, floatingActionButton = {
-        FloatingActionButton(onClick = { vm.createSample(); onOpen() }) { Icon(Icons.Default.Add, "Create sample project") }
+        FloatingActionButton(onClick = { vm.createSample(); onOpen() }) { Icon(Icons.Default.Add, stringResource(R.string.create_sample_cd)) }
     }) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().padding(horizontal = 16.dp)) {
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column { Text("Projects", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall); Text("Offline Bedrock pack workspace") }
-                Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text("Import") }
+                Column { Text(stringResource(R.string.nav_projects), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall); Text(stringResource(R.string.projects_subtitle)) }
+                Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text(stringResource(R.string.import_pack)) }
             }
             if (vm.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, "No projects yet", "Import .zip, .mcpack, .mcaddon or create a sample pack", Modifier.weight(1f))
@@ -78,12 +79,12 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                             supportingContent = { Text(if (p.id == vm.current?.id) "Currently open" else "Last opened ${java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened))}") },
                             leadingContent = { Icon(Icons.Default.Archive, null) },
                             trailingContent = {
-                                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Project actions") }
+                                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
                                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text("Open") }, onClick = { vm.selectProject(p); menu = false; onOpen() })
-                                    DropdownMenuItem(text = { Text("Rename") }, onClick = { renameProject = p; renameValue = p.name; menu = false })
-                                    DropdownMenuItem(text = { Text("Duplicate") }, onClick = { vm.duplicateProject(p); menu = false })
-                                    DropdownMenuItem(text = { Text("Delete") }, onClick = { actionProject = p; menu = false })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
                                 }
                             },
                             modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
@@ -94,16 +95,16 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
         }
     }
     renameProject?.let { p ->
-        AlertDialog(onDismissRequest = { renameProject = null }, title = { Text("Rename project") },
-            text = { OutlinedTextField(value = renameValue, onValueChange = { renameValue = it }, label = { Text("Project name") }) },
-            confirmButton = { TextButton(onClick = { vm.renameProject(p, renameValue); renameProject = null }) { Text("Save") } },
-            dismissButton = { TextButton(onClick = { renameProject = null }) { Text("Cancel") } })
+        AlertDialog(onDismissRequest = { renameProject = null }, title = { Text(stringResource(R.string.rename_project_title)) },
+            text = { OutlinedTextField(value = renameValue, onValueChange = { renameValue = it }, label = { Text(stringResource(R.string.project_name)) }) },
+            confirmButton = { TextButton(onClick = { vm.renameProject(p, renameValue); renameProject = null }) { Text(stringResource(R.string.save)) } },
+            dismissButton = { TextButton(onClick = { renameProject = null }) { Text(stringResource(R.string.cancel)) } })
     }
     actionProject?.let { p ->
-        AlertDialog(onDismissRequest = { actionProject = null }, title = { Text("Delete project?") },
-            text = { Text("Delete ${p.name} and its local copy? This cannot be undone.") },
-            confirmButton = { TextButton(onClick = { vm.deleteProject(p); actionProject = null }) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { actionProject = null }) { Text("Cancel") } })
+        AlertDialog(onDismissRequest = { actionProject = null }, title = { Text(stringResource(R.string.delete_project_title)) },
+            text = { Text(stringResource(R.string.delete_project_confirm, p.name)) },
+            confirmButton = { TextButton(onClick = { vm.deleteProject(p); actionProject = null }) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { actionProject = null }) { Text(stringResource(R.string.cancel)) } })
     }
 }
 
@@ -124,18 +125,18 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
         }
     }
     val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name.equals("manifest.json", true) || f.name.equals("pack_manifest.json", true) } }.orEmpty()
-    Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, "Back") } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, "Switch project") } }) }) { pad ->
+    Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, "No project selected", "Choose a project from Projects", Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("PROJECT OVERVIEW", color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.project_overview), color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                         Text(p.name, style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
-                        Text("A local copy on this device. Your pack contents are not uploaded by Blockline.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.project_local_notice), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
-                                Text("${vm.repo.allFiles(p.id).size} files", Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                                Text(stringResource(R.string.files_count, vm.repo.allFiles(p.id).size), Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                             }
                             androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
                                 Text("ID · ${p.id.take(8)}", Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
@@ -147,25 +148,25 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
             items(manifestFiles) { file ->
                 val json = runCatching { org.json.JSONObject(com.blockline.app.data.JsonTools.stripComments(file.readText())) }.getOrNull()
                 Card { Column(Modifier.padding(16.dp)) {
-                    Text("${file.parentFile?.name ?: "Pack"} manifest", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                    Text(json?.optJSONObject("header")?.optString("name", "Unknown pack") ?: "Manifest could not be parsed")
-                    Text(json?.optJSONObject("header")?.optString("description", "No description") ?: "Check pack manifest JSON syntax")
-                    Text("UUID: ${json?.optJSONObject("header")?.optString("uuid", "Missing") ?: "Invalid"}")
-                    Text("Version: ${json?.optJSONObject("header")?.optJSONArray("version")?.let { a -> (0 until a.length()).joinToString(".") { a.optString(it) } } ?: "Unknown"}")
-                    Text("Modules: ${json?.optJSONArray("modules")?.length() ?: 0}")
-                    TextButton(onClick = { vm.openFile(vm.repo.relative(p.id, file)); onExplorer() }) { Text("Open manifest") }
+                    Text(stringResource(R.string.manifest_title, file.parentFile?.name ?: stringResource(R.string.pack)), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                    Text(json?.optJSONObject("header")?.optString("name", stringResource(R.string.unknown_pack)) ?: stringResource(R.string.manifest_parse_failed))
+                    Text(json?.optJSONObject("header")?.optString("description", stringResource(R.string.no_description)) ?: stringResource(R.string.check_manifest_json))
+                    Text(stringResource(R.string.uuid_value, json?.optJSONObject("header")?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)))
+                    Text(stringResource(R.string.version_value, json?.optJSONObject("header")?.optJSONArray("version")?.let { a -> (0 until a.length()).joinToString(".") { a.optString(it) } } ?: stringResource(R.string.unknown_value)))
+                    Text(stringResource(R.string.modules_count, json?.optJSONArray("modules")?.length() ?: 0))
+                    TextButton(onClick = { vm.openFile(vm.repo.relative(p.id, file)); onExplorer() }) { Text(stringResource(R.string.open_manifest)) }
                 } }
             }
-            item { Text("Quick actions", style = androidx.compose.material3.MaterialTheme.typography.titleLarge) }
-            item { Button(onClick = onExplorer, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.FolderOpen, null); Text("  Open Explorer") } }
-            item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text("  Create backup") } }
-            item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text("  Restore latest backup") } }
-            item { Button(onClick = { chooseExport = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text("  Export pack") } }
+            item { Text(stringResource(R.string.quick_actions), style = androidx.compose.material3.MaterialTheme.typography.titleLarge) }
+            item { Button(onClick = onExplorer, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.FolderOpen, null); Text(stringResource(R.string.open_explorer)) } }
+            item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text(stringResource(R.string.create_backup)) } }
+            item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text(stringResource(R.string.restore_latest_backup)) } }
+            item { Button(onClick = { chooseExport = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text(stringResource(R.string.export_pack)) } }
         }
     }
     if (showSwitcher) ModalBottomSheet(onDismissRequest = { showSwitcher = false }) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Switch project", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.switch_project_cd), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
             vm.projects.forEach { item ->
                 ListItem(
                     headlineContent = { Text(item.name) },
@@ -178,13 +179,13 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     }
     if (chooseExport) AlertDialog(
         onDismissRequest = { chooseExport = false },
-        title = { Text("Export pack") },
+        title = { Text(stringResource(R.string.export_pack)) },
         text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = { exportMode = ExportMode.BP; chooseExport = false; exporter.launch("${p?.name ?: "pack"}.mcpack") }) { Text("Behavior pack (.mcpack)") }
-            TextButton(onClick = { exportMode = ExportMode.RP; chooseExport = false; exporter.launch("${p?.name ?: "pack"}.mcpack") }) { Text("Resource pack (.mcpack)") }
-            TextButton(onClick = { exportMode = ExportMode.BOTH; chooseExport = false; exporter.launch("${p?.name ?: "pack"}.mcaddon") }) { Text("Both packs (.mcaddon)") }
+            TextButton(onClick = { exportMode = ExportMode.BP; chooseExport = false; exporter.launch("${p?.name ?: "pack"}.mcpack") }) { Text(stringResource(R.string.export_bp)) }
+            TextButton(onClick = { exportMode = ExportMode.RP; chooseExport = false; exporter.launch("${p?.name ?: "pack"}.mcpack") }) { Text(stringResource(R.string.export_rp)) }
+            TextButton(onClick = { exportMode = ExportMode.BOTH; chooseExport = false; exporter.launch("${p?.name ?: "pack"}.mcaddon") }) { Text(stringResource(R.string.export_both)) }
         } },
-        confirmButton = { TextButton(onClick = { chooseExport = false }) { Text("Cancel") } }
+        confirmButton = { TextButton(onClick = { chooseExport = false }) { Text(stringResource(R.string.cancel)) } }
     )
 }
 
@@ -197,7 +198,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         vm.repo.allFiles(project.id).filter { vm.repo.relative(project.id, it).contains(query, true) }
     }.orEmpty()
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Search project", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.search_project), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
             value = query,
             onValueChange = { query = it; vm.clearContentSearch() },
@@ -206,12 +207,12 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
             singleLine = true
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            androidx.compose.material3.FilterChip(selected = !contentMode, onClick = { contentMode = false }, label = { Text("File paths") })
-            androidx.compose.material3.FilterChip(selected = contentMode, onClick = { contentMode = true }, label = { Text("File contents") })
+            androidx.compose.material3.FilterChip(selected = !contentMode, onClick = { contentMode = false }, label = { Text(stringResource(R.string.file_paths)) })
+            androidx.compose.material3.FilterChip(selected = contentMode, onClick = { contentMode = true }, label = { Text(stringResource(R.string.file_contents)) })
             if (contentMode) Button(onClick = { vm.searchProjectContentAsync(query) }, enabled = query.isNotBlank() && !vm.isSearchingContent) { Text(if (vm.isSearchingContent) "Searching…" else "Search") }
         }
         if (p == null) {
-            Text("Select a project first.")
+            Text(stringResource(R.string.select_project_first))
         } else if (!contentMode) {
             if (pathMatches.isEmpty()) Text(if (query.isBlank()) "Enter a file name or path." else "No matching files")
             else LazyColumn(Modifier.weight(1f)) {
@@ -226,7 +227,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                 items(vm.contentSearchResults, key = { "${it.first}:${it.second}" }) { result ->
                     ListItem(
                         headlineContent = { Text(result.first.substringAfterLast('/')) },
-                        supportingContent = { Text("${result.first} · line ${result.second}") },
+                        supportingContent = { Text(stringResource(R.string.line_result, result.first, result.second)) },
                         modifier = Modifier.clickable { vm.openFile(result.first); onOpenEditor() }
                     )
                 }
@@ -238,11 +239,11 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 @Composable
 fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Project tools", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
-        item { Text("Tools operate on the selected local project only.") }
+        item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
+        item { Text(stringResource(R.string.local_project_tools_hint)) }
         item {
             Button(onClick = { vm.validateCurrentProject() }, enabled = vm.current != null && !vm.isValidating, modifier = Modifier.fillMaxWidth()) {
-                Text(if (vm.isValidating) "Validating project…" else "Validate Bedrock pack")
+                Text(stringResource(if (vm.isValidating) R.string.validating_project else R.string.validate_pack))
             }
         }
         if (vm.validationIssues.isNotEmpty()) {
@@ -251,9 +252,9 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                 val warnings = vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Validation report", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
-                        Text("$errors errors · $warnings warnings · ${vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }} info")
-                        Text("External dependencies are informational when their UUID is not present in this project.")
+                        Text(stringResource(R.string.validation_report), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.validation_counts, errors, warnings, vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }))
+                        Text(stringResource(R.string.external_deps_note))
                     }
                 }
             }
@@ -269,18 +270,18 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                             com.blockline.app.data.IssueSeverity.INFO -> androidx.compose.material3.MaterialTheme.colorScheme.primary
                         }, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                         Text(issue.path.ifBlank { "Project" }, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
-                        Text(if (issue.line != null) "Line ${issue.line}${issue.column?.let { ":$it" } ?: ""} · ${issue.message}" else issue.message)
+                        Text(if (issue.line != null) stringResource(R.string.issue_line_column, issue.line, issue.column?.let { ":$it" } ?: "", issue.message) else issue.message)
                     }
                 }
             }
         } else if (vm.validationCompleted) {
-            item { Text("No issues found. The checks included JSON syntax, manifest fields, UUID uniqueness, script entry paths, and dependency metadata.") }
+            item { Text(stringResource(R.string.no_issues_found)) }
         } else {
-            item { Text(if (vm.isValidating) "Scanning JSON files and manifests…" else "Run validation to see JSON, manifest, UUID, script entry, and dependency findings.") }
+            item { Text(stringResource(if (vm.isValidating) R.string.scanning_files else R.string.validation_hint)) }
         }
-        item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text("  Create backup") } }
-        item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text("  Restore latest backup") } }
-        item { Button(onClick = { vm.current?.let { vm.message = "Project contains ${vm.repo.allFiles(it.id).size} files" } ?: run { vm.message = "Select a project first" } }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text("  Count project files") } }
+        item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text(stringResource(R.string.create_backup)) } }
+        item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text(stringResource(R.string.restore_latest_backup)) } }
+        item { Button(onClick = { vm.current?.let { vm.message = context.getString(R.string.project_contains_files, vm.repo.allFiles(it.id).size) } ?: run { vm.message = context.getString(R.string.select_project_first) } }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text(stringResource(R.string.count_project_files)) } }
     }
 }
 
@@ -288,8 +289,8 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 fun MoreScreen(vm: AppViewModel) {
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text("More", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
-            Text("Tune your workspace to fit the way you code.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.nav_more), style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.more_subtitle), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -298,14 +299,14 @@ fun MoreScreen(vm: AppViewModel) {
                         Text("◐", Modifier.padding(12.dp), color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
                     }
                     Column {
-                        Text("Appearance", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                        Text("Choose the theme used throughout Blockline.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.appearance), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.appearance_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text("Dark") })
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text("Light") })
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.SYSTEM, onClick = { vm.themeMode = ThemeMode.SYSTEM }, label = { Text("System") })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text(stringResource(R.string.dark)) })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text(stringResource(R.string.light)) })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.SYSTEM, onClick = { vm.themeMode = ThemeMode.SYSTEM }, label = { Text(stringResource(R.string.system)) })
                 }
             }
         }
@@ -316,30 +317,30 @@ fun MoreScreen(vm: AppViewModel) {
                         Text("Aa", Modifier.padding(10.dp), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
                     }
                     Column {
-                        Text("Editor typography", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                        Text("Monospace editor text · ${vm.fontSize} sp", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.editor_typography), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.editor_font_size, vm.fontSize), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.OutlinedButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }, enabled = vm.fontSize > 10) { Text("A− Smaller") }
-                    Button(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }, enabled = vm.fontSize < 24) { Text("A+ Larger") }
+                    androidx.compose.material3.OutlinedButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }, enabled = vm.fontSize > 10) { Text(stringResource(R.string.smaller_text)) }
+                    Button(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }, enabled = vm.fontSize < 24) { Text(stringResource(R.string.larger_text)) }
                 }
             }
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("About Blockline", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                Text("Mobile-first tools for Minecraft Bedrock add-on creators.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.about_blockline), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.about_blurb), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text("Version", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.version), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                     androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-                    Text("0.1.0 · Phase 1 + Phase 2 preview")
+                    Text(stringResource(R.string.version_phase))
                 }
                 androidx.compose.material3.HorizontalDivider()
-                Text("Privacy", style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.privacy), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
                 Text("Project files stay in app-private storage. Phase 1 does not require an internet connection and includes no analytics or tracking.", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Text("Blockline is in early development. Some advanced features are planned for later phases.", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.early_notice), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
