@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
+import com.blockline.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
