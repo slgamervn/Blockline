@@ -84,7 +84,7 @@ const messageEnd = messageScript.indexOf("\n  };", viStart);
 assert.ok(messageEnd > viStart, "The message table must close correctly.");
 
 function messageKeys(source) {
-  return [...source.matchAll(/^\s{6}([A-Za-z][A-Za-z0-9_]*):/gm)].map((match) => match[1]);
+  return [...source.matchAll(/\b([A-Za-z][A-Za-z0-9_]*):(?=\s*['"])/g)].map((match) => match[1]);
 }
 const enKeys = messageKeys(messageScript.slice(enStart, viStart));
 const viKeys = messageKeys(messageScript.slice(viStart, messageEnd));
