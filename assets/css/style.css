@@ -20,7 +20,7 @@ svg{display:block}
 .wrap{width:min(var(--wrap),calc(100% - var(--gutter)*2));margin-inline:auto}
 .skip-link{position:fixed;top:10px;left:10px;z-index:1000;padding:12px 16px;background:var(--green);color:#071b10;transform:translateY(-150%);transition:transform .2s}
 .skip-link:focus{transform:translateY(0)}
-.site-header{position:fixed;inset:0 0 auto;z-index:50;border-bottom:1px solid transparent;transition:background .3s,border-color .3s,box-shadow .3s; padding-top:env(safe-area-inset-top)}
+body.menu-open{overflow:hidden;touch-action:none}\n.site-header{position:fixed;inset:0 0 auto;z-index:50;border-bottom:1px solid transparent;transition:background .3s,border-color .3s,box-shadow .3s; padding-top:env(safe-area-inset-top)}
 .site-header.is-scrolled{background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:var(--line);box-shadow:0 8px 30px #00000008}
 .header-inner{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:inline-flex;align-items:center;gap:10px;font:700 1.22rem/1 var(--display);letter-spacing:-.055em;white-space:nowrap}
@@ -107,7 +107,7 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 .manifesto{border-block:1px solid var(--line);background:var(--bg-raised)}
 .manifesto-inner{max-width:var(--wrap)}
 .manifesto-copy{max-width:1100px;margin:35px 0 40px;font:500 clamp(2rem,4.7vw,4.6rem)/1.19 var(--display);letter-spacing:-.065em;color:color-mix(in srgb,var(--muted) 33%,var(--bg));}
-.manifesto-copy span{color:var(--muted);transition:color .15s linear}
+.manifesto-copy span{color:color-mix(in srgb,var(--green-bright) var(--reading-progress,0%),var(--muted));transition:color .15s linear}
 .manifesto-foot{display:flex;justify-content:space-between;gap:20px;padding-top:16px;border-top:1px solid var(--line);font:500 .66rem var(--mono);color:var(--subtle);letter-spacing:.04em}
 .section-intro{max-width:760px;margin-bottom:clamp(35px,5vw,68px)}
 .section-intro h2{font-size:clamp(2.8rem,5.6vw,5.8rem);line-height:1.02;letter-spacing:-.075em;margin:17px 0 20px}
