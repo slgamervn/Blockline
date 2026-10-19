@@ -30,7 +30,7 @@ object ZipUtil {
                     throw IllegalArgumentException("Archive contains too many entries (limit: $MAX_ENTRIES).")
                 }
 
-                val name = entry.name.replace('\\\\', '/')
+                val name = entry.name.replace('\\', '/')
                 if (name.isBlank() || name.indexOf('\u0000') >= 0 || name.startsWith("/") ||
                     Regex("^[A-Za-z]:").containsMatchIn(name)
                 ) {
