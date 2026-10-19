@@ -182,6 +182,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             repo.addRecentFile(p.id, path)
         }.onFailure { message = it.message ?: "Cannot open file" }
     }
+    fun consumePendingEditorLine() {
+        pendingEditorLine = null
+    }
+
     fun updateContent(value: String) {
         val path = activeFile ?: return
         if (readOnly) return
