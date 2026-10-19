@@ -234,4 +234,18 @@
     <string name="validation_msg_duplicate_uuid">Duplicate UUID %1$s; also used by %2$s.</string>
     <string name="validation_msg_duplicate_json_key">Duplicate object key: %1$s.</string>
     <string name="validation_msg_texture_reference">Texture reference %1$s does not match a PNG file in this pack. Check the path and extension.</string>
+    <string name="validation_msg_json_expected_value">Expected a JSON value.</string>
+    <string name="validation_msg_json_object_key">Object keys must be double-quoted strings.</string>
+    <string name="validation_msg_json_trailing_comma">Trailing commas are not valid JSON.</string>
+    <string name="validation_msg_json_incomplete_escape">Incomplete escape sequence.</string>
+    <string name="validation_msg_json_unicode_escape">Invalid Unicode escape.</string>
+    <string name="validation_msg_json_escape">Invalid escape sequence.</string>
+    <string name="validation_msg_json_control_character">Unescaped control character in string.</string>
+    <string name="validation_msg_json_unterminated_string">Unterminated string.</string>
+    <string name="validation_msg_json_incomplete_number">Incomplete number.</string>
+    <string name="validation_msg_json_leading_zero">Leading zeros are not valid JSON numbers.</string>
+    <string name="validation_msg_json_invalid_number">Invalid number.</string>
+    <string name="validation_msg_json_decimal_digits">Expected digits after decimal point.</string>
+    <string name="validation_msg_json_exponent_digits">Expected exponent digits.</string>
+    <string name="validation_msg_json_expected_token">Expected %1$s.</string>
 </resources>
