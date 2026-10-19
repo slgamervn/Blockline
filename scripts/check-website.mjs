@@ -149,14 +149,7 @@ assert(
   "New motion effects respect reduced-motion preferences"
 );
 
-if (errors.length) {
-  console.error("Website validation failed:");
-  for (const error of errors) console.error("- " + error);
-  process.exitCode = 1;
-} else {
-  console.log("Website validation passed (" + passed.length + " checks):");
-  for (const item of passed) console.log("✓ " + item);
-}
+
 
 
 assert(
@@ -179,3 +172,12 @@ assert(
   /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{\s*#blockline-scroll-progress\s*\{\s*display:\s*none/.test(html),
   "Decorative scroll progress is disabled for reduced-motion preferences"
 );
+
+if (errors.length) {
+  console.error("Website validation failed:");
+  for (const error of errors) console.error("- " + error);
+  process.exitCode = 1;
+} else {
+  console.log("Website validation passed (" + passed.length + " checks):");
+  for (const item of passed) console.log("✓ " + item);
+}
