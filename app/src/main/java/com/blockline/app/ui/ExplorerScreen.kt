@@ -56,13 +56,13 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(project?.name ?: "Explorer") }, actions = {
+        TopAppBar(title = { Text(project?.name ?: stringResource(R.string.nav_explorer)) }, actions = {
             IconButton(onClick = { dialog = "folder"; name = "" }) { Icon(Icons.Default.CreateNewFolder, stringResource(R.string.new_folder_cd)) }
             IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.Default.InsertDriveFile, stringResource(R.string.new_file_cd)) }
         })
     }) { pad ->
         if (project == null) {
-            EmptyState(Icons.Default.Folder, "No project selected", "Open a project from Projects first", Modifier.padding(pad))
+            EmptyState(Icons.Default.Folder, stringResource(R.string.no_project_selected), stringResource(R.string.explorer_empty_hint), Modifier.padding(pad))
         } else {
             Column(Modifier.padding(pad).fillMaxSize()) {
                 Row {
@@ -70,13 +70,13 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                         FilterChip(
                             selected = filter == choice,
                             onClick = { filter = choice },
-                            label = { Text(choice) },
+                            label = { Text(stringResource(when (choice) { "Favorites" -> R.string.filter_favorites; "Recent" -> R.string.filter_recent; else -> R.string.filter_all })) },
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
                         )
                     }
                 }
                 if (entries.isEmpty()) {
-                    EmptyState(Icons.Default.Folder, "No matching files", "Create files or change the filter", Modifier.fillMaxSize())
+                    EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(entries, key = { vm.repo.relative(project.id, it) }) { file ->
@@ -95,7 +95,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                                             if (vm.isFavorite(path)) Icon(Icons.Default.Favorite, "Favorite")
                                             IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.file_actions_cd)) }
                                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                                if (file.isFile) DropdownMenuItem(text = { Text(if (vm.isFavorite(path)) "Remove favorite" else "Add favorite") }, onClick = { vm.toggleFavorite(path); menu = false })
+                                                if (file.isFile) DropdownMenuItem(text = { Text(stringResource(if (vm.isFavorite(path)) R.string.remove_favorite else R.string.add_favorite)) }, onClick = { vm.toggleFavorite(path); menu = false })
                                                 DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { targetPath = path; name = file.name; dialog = "rename"; menu = false })
                                                 DropdownMenuItem(text = { Text(stringResource(R.string.move)) }, onClick = {
                                                     targetPath = path
