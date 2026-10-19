@@ -252,9 +252,20 @@ class ProjectRepository(private val ctx: Context) {
     fun backup(id: String): File {
         val src = projectDir(id)
         require(src.isDirectory) { "Project not found" }
-        val target = File(backupDir(id), System.currentTimeMillis().toString())
-        check(src.copyRecursively(target, overwrite = false)) { "Backup failed" }
-        return target
+        val directory = backupDir(id)
+        check(directory.mkdirs() || directory.isDirectory) { "Could not create backup storage." }
+        val target = File(directory, System.currentTimeMillis().toString())
+        try {
+            check(src.copyRecursively(target, overwrite = false)) { "Backup failed" }
+            directory.listFiles()?.filter { it.isDirectory }
+                ?.sortedByDescending { it.name.toLongOrNull() ?: 0L }
+                ?.drop(5)
+                ?.forEach { it.deleteRecursively() }
+            return target
+        } catch (error: Exception) {
+            target.deleteRecursively()
+            throw error
+        }
     }
 
     fun restoreLatest(id: String): Boolean {

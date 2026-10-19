@@ -15,6 +15,7 @@ import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -42,6 +43,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var readOnly by mutableStateOf(false)
         private set
     var isLoading by mutableStateOf(false)
+        private set
+    var isExporting by mutableStateOf(false)
         private set
     var isValidating by mutableStateOf(false)
         private set
@@ -411,6 +414,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun toggleFavorite(path: String) { current?.let { repo.toggleFavorite(it.id, path) } }
     fun isFavorite(path: String) = current?.let { repo.isFavorite(it.id, path) } ?: false
+    fun exportProject(uri: android.net.Uri, mode: ExportMode) {
+        val project = current ?: return
+        if (isExporting) return
+        val projectId = project.id
+        isExporting = true
+        viewModelScope.launch {
+            val result = try {
+                withContext(Dispatchers.IO) {
+                    repo.backup(projectId)
+                    val output = getApplication<Application>().contentResolver.openOutputStream(uri)
+                        ?: error(text(R.string.export_destination_failed))
+                    output.use { repo.export(projectId, mode, it) }
+                }
+                Result.success(Unit)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Result.failure(error)
+            } finally {
+                isExporting = false
+            }
+            message = result.fold(
+                { text(R.string.pack_exported) },
+                { it.message ?: text(R.string.export_failed) }
+            )
+        }
+    }
+
     fun backup() {
         val p = current ?: return
         saveCurrent(showMessage = false)

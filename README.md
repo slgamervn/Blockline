@@ -32,7 +32,7 @@ The project is in active development. The current build focuses on a reliable lo
 - **File explorer** — browse folders, create, rename, move, and delete files; mark favorites, browse up to 30 recent files, and open a read-only resource preview for JSON, scripts, functions, and language files.
 - **Editor foundation** — multi-tab editing, basic syntax coloring, undo/redo, JSON formatting that preserves line and block comments, find, and autosave.
 - **Safer archive handling** — archive extraction checks paths against the extraction root to guard against ZIP-slip.
-- **Backup and restore** — create a local project backup and restore the latest backup.
+- **Backup and restore** — create a local project backup, restore the latest backup, and automatically back up before export (retaining the five newest backups).
 - **Export choices** — export a behavior pack, resource pack, or combined add-on when the project contains the corresponding packs.
 - **Mobile-friendly themes** — dark, light, and system theme options with adjustable editor text size.
 - **Bundled sample pack** — a small BP/RP template under `app/src/main/assets/sample-pack/`; the app generates fresh UUIDs for new sample projects.

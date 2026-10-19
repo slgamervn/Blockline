@@ -271,4 +271,11 @@
     <string name="resource_kind_script">Mã nguồn script</string>
     <string name="resource_kind_language">Tệp ngôn ngữ</string>
     <string name="resource_kind_json">Tài nguyên JSON</string>
+    <string name="manifest_format_value">Định dạng manifest: %1$s</string>
+    <string name="manifest_engine_value">Phiên bản engine tối thiểu: %1$s</string>
+    <string name="manifest_module_line">Module %1$d · %2$s · UUID: %3$s · Phiên bản: %4$s</string>
+    <string name="manifest_dependencies">Dependencies</string>
+    <string name="manifest_no_dependencies">Không khai báo dependency.</string>
+    <string name="manifest_dependency_line">%1$s · Phiên bản: %2$s</string>
+    <string name="manifest_capabilities">Capabilities: %1$s</string>
 </resources>

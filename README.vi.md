@@ -29,7 +29,7 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 - **File Explorer:** duyệt thư mục; tạo, đổi tên, di chuyển và xóa tệp/thư mục; đánh dấu yêu thích, xem tối đa 30 tệp gần đây và mở preview chỉ đọc cho JSON, script, function và file ngôn ngữ.
 - **Trình chỉnh sửa:** nhiều tab, tô màu cú pháp cơ bản, Undo/Redo, định dạng JSON, tìm kiếm và tự lưu.
 - **Giải nén an toàn hơn:** kiểm tra đường dẫn trong archive để hạn chế lỗi ZIP-slip.
-- **Sao lưu và khôi phục:** tạo backup cục bộ và khôi phục bản gần nhất.
+- **Sao lưu và khôi phục:** tạo backup cục bộ, khôi phục bản gần nhất và tự sao lưu trước khi export (giữ tối đa 5 bản mới nhất).
 - **Xuất pack:** xuất Behavior Pack, Resource Pack hoặc gói kết hợp nếu project có đủ pack tương ứng.
 - **Giao diện di động:** Material 3, theme tối/sáng/theo hệ thống và tùy chỉnh cỡ chữ editor.
 

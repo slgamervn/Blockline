@@ -271,4 +271,11 @@
     <string name="resource_kind_script">Script source</string>
     <string name="resource_kind_language">Language file</string>
     <string name="resource_kind_json">JSON resource</string>
+    <string name="manifest_format_value">Manifest format: %1$s</string>
+    <string name="manifest_engine_value">Minimum engine: %1$s</string>
+    <string name="manifest_module_line">Module %1$d · %2$s · UUID: %3$s · Version: %4$s</string>
+    <string name="manifest_dependencies">Dependencies</string>
+    <string name="manifest_no_dependencies">No declared dependencies.</string>
+    <string name="manifest_dependency_line">%1$s · Version: %2$s</string>
+    <string name="manifest_capabilities">Capabilities: %1$s</string>
 </resources>

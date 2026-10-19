@@ -114,17 +114,11 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
 @Composable
 fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit) {
     val p = vm.current
-    val context = LocalContext.current
     var showSwitcher by remember { mutableStateOf(false) }
     var exportMode by remember { mutableStateOf(ExportMode.BOTH) }
     var chooseExport by remember { mutableStateOf(false) }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
-        if (uri != null && p != null) {
-            try {
-                context.contentResolver.openOutputStream(uri)?.use { vm.repo.export(p.id, exportMode, it) } ?: error(context.getString(R.string.export_destination_failed))
-                vm.message = context.getString(R.string.pack_exported)
-            } catch (e: Exception) { vm.message = e.message ?: context.getString(R.string.export_failed) }
-        }
+        if (uri != null && p != null) vm.exportProject(uri, exportMode)
     }
     val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name.equals("manifest.json", true) || f.name.equals("pack_manifest.json", true) } }.orEmpty()
     Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: stringResource(R.string.overview)) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
@@ -147,15 +141,42 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                     }
                 }
             }
-            items(manifestFiles) { file ->
+            items(manifestFiles, key = { it.absolutePath }) { file ->
                 val json = runCatching { org.json.JSONObject(com.blockline.app.data.JsonTools.stripComments(file.readText())) }.getOrNull()
-                Card { Column(Modifier.padding(16.dp)) {
+                val header = json?.optJSONObject("header")
+                val modules = json?.optJSONArray("modules")
+                val dependencies = json?.optJSONArray("dependencies")
+                val capabilities = json?.optJSONArray("capabilities")
+                Card { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(stringResource(R.string.manifest_title, file.parentFile?.name ?: stringResource(R.string.pack)), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                    Text(json?.optJSONObject("header")?.optString("name", stringResource(R.string.unknown_pack)) ?: stringResource(R.string.manifest_parse_failed))
-                    Text(json?.optJSONObject("header")?.optString("description", stringResource(R.string.no_description)) ?: stringResource(R.string.check_manifest_json))
-                    Text(stringResource(R.string.uuid_value, json?.optJSONObject("header")?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)))
-                    Text(stringResource(R.string.version_value, json?.optJSONObject("header")?.optJSONArray("version")?.let { a -> (0 until a.length()).joinToString(".") { a.optString(it) } } ?: stringResource(R.string.unknown_value)))
-                    Text(stringResource(R.string.modules_count, json?.optJSONArray("modules")?.length() ?: 0))
+                    Text(header?.optString("name", stringResource(R.string.unknown_pack)) ?: stringResource(R.string.manifest_parse_failed), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                    Text(header?.optString("description", stringResource(R.string.no_description)) ?: stringResource(R.string.check_manifest_json))
+                    Text(stringResource(R.string.uuid_value, header?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)))
+                    Text(stringResource(R.string.version_value, json?.optJSONArray("header")?.let { a -> (0 until a.length()).joinToString(".") { a.optString(it) } } ?: header?.opt("version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value))
+                    Text(stringResource(R.string.manifest_format_value, json?.opt("format_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
+                    Text(stringResource(R.string.manifest_engine_value, json?.opt("min_engine_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
+                    Text(stringResource(R.string.modules_count, modules?.length() ?: 0), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                    if (modules != null) for (index in 0 until modules.length()) {
+                        val module = modules.optJSONObject(index) ?: continue
+                        Text(stringResource(
+                            R.string.manifest_module_line, index + 1,
+                            module.optString("type", stringResource(R.string.unknown_value)),
+                            module.optString("uuid", stringResource(R.string.missing_value)),
+                            module.opt("version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)
+                        ), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    Text(stringResource(R.string.manifest_dependencies), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                    if (dependencies == null || dependencies.length() == 0) {
+                        Text(stringResource(R.string.manifest_no_dependencies), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    } else for (index in 0 until dependencies.length()) {
+                        val dependency = dependencies.optJSONObject(index) ?: continue
+                        val name = dependency.optString("uuid", dependency.optString("module_name", stringResource(R.string.unknown_value)))
+                        val version = dependency.opt("version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)
+                        Text(stringResource(R.string.manifest_dependency_line, name, version), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    if (capabilities != null && capabilities.length() > 0) {
+                        Text(stringResource(R.string.manifest_capabilities, (0 until capabilities.length()).joinToString(", ") { capabilities.optString(it) }), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
                     TextButton(onClick = { vm.openFile(vm.repo.relative(p.id, file)); onExplorer() }) { Text(stringResource(R.string.open_manifest)) }
                 } }
             }
@@ -348,4 +369,10 @@ fun MoreScreen(vm: AppViewModel) {
         }
         Text(stringResource(R.string.early_notice), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+private fun manifestValueText(value: Any): String = when (value) {
+    is org.json.JSONArray -> (0 until value.length()).joinToString(".") { value.optString(it) }
+    is org.json.JSONObject -> "Object (${value.length()} fields)"
+    else -> value.toString()
 }
