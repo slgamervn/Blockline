@@ -391,6 +391,49 @@ footer{border-top-color:#ffffff12}
  .story-step,.story-controls button{transition:none!important}
  .story-stage [data-scene-content]{animation:none!important}
 }
+
+/* Mobile polish: keep all hero copy inside the viewport and make steps feel deliberate */
+@media(max-width:820px){
+ .wrap.heroGrid{width:min(100% - 32px,var(--max));margin-inline:auto}
+ .hero{padding:clamp(42px,7vw,58px) 0 48px}
+ .heroGrid{gap:30px;min-width:0}
+ .heroGrid>div:first-child{min-width:0;width:100%}
+ .hero h1{max-width:100%;font-size:clamp(2.55rem,8.5vw,3.7rem);line-height:1.03;letter-spacing:-.06em;overflow-wrap:normal}
+ .hero .eyebrow{max-width:100%;font-size:.76rem}
+ .hero .lead{max-width:36rem;font-size:.98rem;line-height:1.75}
+ .hero .actions{gap:10px;margin:22px 0 18px}
+ .hero .trust{gap:10px 14px;font-size:.81rem}
+ .story-head.sectionhead{margin-bottom:22px}
+ .story-head .kicker{font-size:.75rem}
+ .story-head h2{max-width:19ch;font-size:clamp(1.8rem,6.4vw,2.35rem);line-height:1.12;letter-spacing:-.05em;text-wrap:balance}
+ .story-head>p:not(.story-help){font-size:.96rem;line-height:1.72}
+ .story-controls{gap:8px;margin-top:18px}
+ .story-controls button{min-height:46px;padding:0 15px;border-radius:999px;font-size:.85rem;white-space:nowrap}
+ .story-controls button[aria-pressed="true"]{box-shadow:inset 0 0 0 1px #9be7b51c,0 6px 18px #3dba7a12}
+ .story-help{margin-top:10px;font-size:.82rem;line-height:1.6}
+ .product-story .story-layout{gap:18px}
+ .product-story .story-stage{overflow:hidden}
+ .stage-content{padding:clamp(14px,3.6vw,20px)}
+ .stage-title{font-size:clamp(1.45rem,4.7vw,1.8rem);line-height:1.16}
+ .stage-description{font-size:.89rem;line-height:1.7}
+ .story-step{flex-basis:min(88%,460px);padding:22px 20px 24px}
+}
+@media(max-width:560px){
+ .wrap.heroGrid{width:calc(100% - 32px)}
+ .hero{padding-top:40px;padding-bottom:42px}
+ .hero h1{font-size:clamp(2.55rem,10.5vw,3.35rem);letter-spacing:-.065em}
+ .hero .eyebrow{padding:6px 10px;font-size:.72rem}
+ .hero .lead{font-size:.94rem}
+ .hero .actions .button{min-height:48px}
+ .hero .trust{font-size:.78rem}
+ .story-head h2{font-size:clamp(1.75rem,7vw,2.15rem)}
+ .story-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .story-controls button{justify-content:center;gap:6px;min-width:0;padding:0 8px;font-size:.78rem}
+ .stage-top{gap:7px}
+ .stage-live{white-space:normal;text-align:right}
+ .stage-files{grid-template-columns:minmax(66px,.7fr) minmax(0,1.3fr)}
+ .story-step{flex-basis:88%;padding:20px 17px 22px}
+}
 </style>
 </head>
 <body>
@@ -573,7 +616,8 @@ footer{border-top-color:#ffffff12}
     {caption:'03 / Export', title:'Ready for the next test.', description:'Check the project contents and prepare a pack to continue in Minecraft Bedrock.', path:'workspace / export', left:'Pack structure preserved', right:'EXPORT READY'}
   ];
   let activeScene = -1;
-  let storyObserver = null;
+  let requestedStoryScene = null;
+  let storyScrollTimer = 0;
   const setStoryScene = index => {
     if (index === activeScene || index < 0 || index > 2) return;
     activeScene = index;
@@ -596,7 +640,7 @@ footer{border-top-color:#ffffff12}
     storyStage?.querySelectorAll('.story-progress span').forEach((bar, i) => bar.classList.toggle('is-active', i === index));
   };
   const syncStoryScene = () => {
-    if (!storySection || !storySteps.length) return;
+    if (!storySection || !storySteps.length || requestedStoryScene !== null) return;
     const compact = isCompactStory();
     const trackRect = storyTrack?.getBoundingClientRect();
     const target = compact && trackRect
@@ -619,25 +663,47 @@ footer{border-top-color:#ffffff12}
       storySyncPending = false;
     });
   };
+  const finishRequestedStoryScroll = () => {
+    if (requestedStoryScene === null) return;
+    if (storyScrollTimer) window.clearTimeout(storyScrollTimer);
+    storyScrollTimer = 0;
+    requestedStoryScene = null;
+    scheduleStorySync();
+  };
+  const armStoryScrollFallback = (delay = 220) => {
+    if (storyScrollTimer) window.clearTimeout(storyScrollTimer);
+    storyScrollTimer = window.setTimeout(finishRequestedStoryScroll, delay);
+  };
+  const handleStoryTrackScroll = () => {
+    scheduleStorySync();
+    if (requestedStoryScene !== null) armStoryScrollFallback(220);
+  };
   window.addEventListener('scroll', scheduleStorySync, {passive: true});
   window.addEventListener('resize', scheduleStorySync, {passive: true});
-  storyTrack?.addEventListener('scroll', scheduleStorySync, {passive: true});
+  storyTrack?.addEventListener('scroll', handleStoryTrackScroll, {passive: true});
+  storyTrack?.addEventListener('scrollend', finishRequestedStoryScroll);
   storyControls.forEach(control => {
     control.addEventListener('click', () => {
       const index = Number(control.dataset.storyGo);
       const step = storySteps[index];
       if (!step) return;
+      setStoryScene(index);
       if (isCompactStory() && storyTrack) {
-        const trackRect = storyTrack.getBoundingClientRect();
-        const stepRect = step.getBoundingClientRect();
-        const paddingLeft = Number.parseFloat(window.getComputedStyle(storyTrack).paddingLeft) || 0;
-        const visibleStart = trackRect.left + storyTrack.clientLeft + paddingLeft;
-        storyTrack.scrollTo({
-          left: storyTrack.scrollLeft + stepRect.left - visibleStart,
-          behavior: reducedMotion ? 'auto' : 'smooth'
+        requestedStoryScene = index;
+        armStoryScrollFallback(900);
+        window.requestAnimationFrame(() => {
+          if (requestedStoryScene !== index || !storyTrack.isConnected || !step.isConnected) return;
+          const trackRect = storyTrack.getBoundingClientRect();
+          const stepRect = step.getBoundingClientRect();
+          const paddingLeft = Number.parseFloat(window.getComputedStyle(storyTrack).paddingLeft) || 0;
+          const visibleStart = trackRect.left + storyTrack.clientLeft + paddingLeft;
+          storyTrack.scrollTo({
+            left: storyTrack.scrollLeft + stepRect.left - visibleStart,
+            behavior: reducedMotion ? 'auto' : 'smooth'
+          });
+          armStoryScrollFallback(900);
         });
       }
-      setStoryScene(index);
     });
   });
   setStoryScene(0);
