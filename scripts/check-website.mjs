@@ -157,3 +157,25 @@ if (errors.length) {
   console.log("Website validation passed (" + passed.length + " checks):");
   for (const item of passed) console.log("✓ " + item);
 }
+
+
+assert(
+  /@media\s*\(min-width:\s*1101px\)/.test(html) &&
+    /@media\s*\(min-width:\s*821px\)\s*and\s*\(max-width:\s*1100px\)/.test(html) &&
+    /@media\s*\(max-width:\s*820px\)/.test(html),
+  "Desktop, compact laptop/tablet, and phone layouts have dedicated breakpoints"
+);
+assert(
+  /\.links \.button\s*\{\s*display:\s*none;\s*\}/.test(html) &&
+    /\.nav\.is-menu-open \.links \.button\s*\{[\s\S]*?display:\s*inline-flex/.test(html),
+  "Mobile navigation keeps the header uncluttered and reveals the download action in the menu"
+);
+assert(
+  /@media\s*\(max-width:\s*380px\)/.test(html) &&
+    /\.stage-files\s*\{\s*grid-template-columns:\s*minmax\(64px,\s*\.7fr\)\s*minmax\(0,\s*1\.3fr\)/.test(html),
+  "Narrow phones receive additional layout safeguards"
+);
+assert(
+  /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{\s*#blockline-scroll-progress\s*\{\s*display:\s*none/.test(html),
+  "Decorative scroll progress is disabled for reduced-motion preferences"
+);
