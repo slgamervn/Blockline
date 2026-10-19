@@ -27,14 +27,13 @@ object JsonTools {
             } else if (c == '/' && i + 1 < s.length && s[i + 1] == '*') {
                 val start = i
                 i += 2
-                while (i < s.length && !(s[i] == '*' && i + 1 < s.length && s[i + 1] == '/')) {
-                    if (s[i] == '\n') sb.append('\n')
-                    i++
-                }
+                while (i < s.length && !(s[i] == '*' && i + 1 < s.length && s[i + 1] == '/')) i++
                 if (i >= s.length) {
                     sb.append(s.substring(start))
                     break
                 }
+                val comment = s.substring(start, i + 2)
+                comment.forEach { if (it == '\n') sb.append('\n') }
                 i += 2
             } else {
                 sb.append(c)
