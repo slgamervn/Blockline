@@ -505,6 +505,58 @@ footer{border-top-color:#ffffff12}
 .mark svg .mark-accent,.stage-brand-mark svg .mark-accent{fill:#e6b35a}
 .stage-brand-mark{display:grid;place-items:center}
 .featureIcon svg{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* Viewport-aware rendering and motion: keep off-screen sections cheap. */
+@supports (content-visibility: auto) {
+  main > section:not(.hero):not(.product-story) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
+  footer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 120px;
+  }
+}
+.hero .eyebrow,
+.hero h1,
+.hero .lead,
+.hero .actions,
+.hero .trust,
+.device,
+.glow {
+  animation-play-state: paused !important;
+}
+.hero .eyebrow.in-viewport,
+.hero h1.in-viewport,
+.hero .lead.in-viewport,
+.hero .actions.in-viewport,
+.hero .trust.in-viewport,
+.device.in-viewport,
+.glow.in-viewport {
+  animation-play-state: running !important;
+}
+.glow { will-change: auto; }
+.glow.in-viewport { will-change: opacity, transform; }
+.story-stage:not(.in-viewport) [data-scene-content] {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  main > section:not(.hero):not(.product-story),
+  footer {
+    content-visibility: visible;
+  }
+  .hero .eyebrow,
+  .hero h1,
+  .hero .lead,
+  .hero .actions,
+  .hero .trust,
+  .device,
+  .glow {
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
+
 </style>
 <style>
 /* Keep interaction calm and predictable; content should lead the page. */
@@ -887,10 +939,14 @@ body {
   // Keep the preview under the reader's control; scroll position never changes the selected step.
   setStoryScene(0);
 
-  const targets = document.querySelectorAll(
+  const motionTargets = [...document.querySelectorAll(
+    '.hero .eyebrow, .hero h1, .hero .lead, .hero .actions, .hero .trust, .mockWrap, .device, .glow, #product-story .story-stage, #features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
+  )];
+  const revealTargets = [...document.querySelectorAll(
     '#features .sectionhead, #features .feature, #workflow .sectionhead, #workflow .step, .downloadCard, footer .footinner'
-  );
-  targets.forEach((el, i) => {
+  )];
+
+  revealTargets.forEach((el, i) => {
     el.classList.add('reveal');
     if (el.matches('.feature, .step')) {
       el.dataset.reveal = i % 5 === 0 ? 'scale' : (i % 2 ? 'right' : 'left');
@@ -900,25 +956,26 @@ body {
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reducedMotion || !('IntersectionObserver' in window)) {
-    targets.forEach(el => el.classList.add('is-visible'));
-    return;
-  }
+    motionTargets.forEach(el => el.classList.add('in-viewport'));
+    revealTargets.forEach(el => el.classList.add('is-visible'));
+  } else {
+    try {
+      root.classList.add('reveal-motion-ready');
+      const viewportObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const el = entry.target;
+          const visible = entry.isIntersecting && entry.intersectionRatio > 0;
+          el.classList.toggle('in-viewport', visible);
+          if (el.matches('.reveal')) el.classList.toggle('is-visible', visible);
+        });
+      }, { threshold: 0.01, rootMargin: '0px 0px 8% 0px' });
 
-  let observer;
-  try {
-    observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      });
-    }, { threshold: 0.01, rootMargin: '0px 0px 12% 0px' });
-
-    root.classList.add('reveal-motion-ready');
-    targets.forEach(el => observer.observe(el));
-  } catch (_) {
-    root.classList.remove('reveal-motion-ready');
-    targets.forEach(el => el.classList.add('is-visible'));
+      motionTargets.forEach(el => viewportObserver.observe(el));
+    } catch (_) {
+      root.classList.remove('reveal-motion-ready');
+      motionTargets.forEach(el => el.classList.add('in-viewport'));
+      revealTargets.forEach(el => el.classList.add('is-visible'));
+    }
   }
 })();
 </script>
