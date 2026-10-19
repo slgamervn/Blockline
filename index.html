@@ -783,6 +783,76 @@ body {
   }
 }
 </style>
+
+<style id="premium-motion-refresh">
+/* Premium motion pass: layered light, restrained depth, and clear interaction feedback. */
+:root{
+  --motion-spring:cubic-bezier(.16,1,.3,1);
+  --motion-smooth:cubic-bezier(.2,.75,.25,1);
+}
+::selection{background:#9be7b54a;color:#f7fff9}
+:focus-visible{outline:2px solid var(--green2);outline-offset:4px}
+.nav{isolation:isolate}
+.nav::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,#9be7b508,transparent 38%,#9be7b505)}
+.brand{transition:opacity .25s ease,transform .35s var(--motion-spring)}
+.brand:hover{opacity:.92;transform:translateY(-1px)}
+.mark{position:relative;isolation:isolate;overflow:hidden}
+.mark::after{content:"";position:absolute;inset:-70% -35%;background:linear-gradient(110deg,transparent 38%,#ffffff7a 50%,transparent 62%);transform:translateX(-100%) rotate(14deg);transition:transform .8s var(--motion-spring);pointer-events:none}
+.brand:hover .mark::after{transform:translateX(100%) rotate(14deg)}
+.hero{isolation:isolate}
+.hero::after{content:"";position:absolute;z-index:-1;pointer-events:none;width:min(58vw,760px);aspect-ratio:1;right:-15%;top:3%;border-radius:50%;background:radial-gradient(circle,#6de49a12 0%,#4cae7910 30%,transparent 68%);filter:blur(14px);animation:hero-aurora 13s ease-in-out infinite alternate}
+.hero::before{opacity:.28;background-size:64px 64px;mask-image:radial-gradient(ellipse at 55% 28%,#000 0%,transparent 72%)}
+.hero .eyebrow{backdrop-filter:blur(10px);box-shadow:inset 0 1px #ffffff0c,0 8px 35px #0002}
+.hero .dot{box-shadow:0 0 0 4px #9be7b514,0 0 18px #9be7b56b;animation:status-pulse 3s ease-in-out infinite}
+h1{text-wrap:balance}
+.lead{ text-wrap:pretty}
+.actions .button{transition:transform .35s var(--motion-spring),background .25s ease,border-color .25s ease,box-shadow .35s ease}
+.actions .primary:hover{transform:translateY(-3px);box-shadow:0 12px 36px #9be7b526}
+.actions .secondary:hover{transform:translateY(-3px);border-color:#9be7b55e;background:#9be7b50a}
+.trust span{transition:color .25s ease}
+.trust span:hover{color:var(--text)}
+.mockWrap::before,.mockWrap::after{content:"";position:absolute;pointer-events:none;border:1px solid #9be7b512;border-radius:50%;aspect-ratio:1;z-index:0}
+.mockWrap::before{width:112%;left:-6%;top:7%;transform:rotate(-22deg) scaleY(.34);animation:orbit-breathe 9s ease-in-out infinite}
+.mockWrap::after{width:100%;left:0;top:14%;transform:rotate(32deg) scaleY(.28);border-color:#9be7b50b;animation:orbit-breathe 11s 1s ease-in-out infinite reverse}
+.device{z-index:1;transition:transform .65s var(--motion-spring),box-shadow .5s ease}
+.mockWrap:hover .device{transform:rotateY(-2deg) rotateX(1deg) translateY(-5px);box-shadow:0 52px 130px #000c,0 0 50px #9be7b50b}
+.glow{pointer-events:none}
+.sectionhead h2{ text-wrap:balance}
+.sectionhead p{ text-wrap:pretty}
+.feature{transform:translateZ(0);isolation:isolate}
+.feature::before{background:radial-gradient(ellipse at 0 0,#9be7b512,transparent 66%),linear-gradient(135deg,#ffffff06,transparent 55%)}
+.feature:hover{border-color:#9be7b548;box-shadow:0 24px 60px #0005,0 0 0 1px #9be7b508;transform:translateY(-6px)}
+.featureIcon{transition:transform .45s var(--motion-spring),background .3s ease,border-color .3s ease}
+.feature:hover .featureIcon{transform:translateY(-3px) scale(1.04);border-color:#9be7b536}
+.step{position:relative}
+.step::after{content:"";display:block;height:1px;width:0;margin-top:18px;background:linear-gradient(90deg,var(--green),transparent);transition:width .55s var(--motion-spring)}
+.step:hover::after{width:100%}
+.downloadCard{position:relative;isolation:isolate;overflow:hidden}
+.downloadCard::after{content:"";position:absolute;z-index:-1;right:-12%;top:-80%;width:52%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#9be7b512,transparent 68%);transition:transform .8s var(--motion-spring)}
+.downloadCard:hover::after{transform:translate(-10%,18%) scale(1.18)}
+.story-stage{transition:border-color .4s ease,box-shadow .4s ease}
+.story-stage:hover{border-color:#9be7b532;box-shadow:0 35px 100px #0008,0 0 55px #9be7b507}
+.story-controls button{transition:transform .35s var(--motion-spring),border-color .25s ease,background .25s ease,color .25s ease}
+.story-controls button:hover{transform:translateX(4px)}
+a,button{-webkit-tap-highlight-color:transparent}
+@keyframes hero-aurora{0%{transform:translate3d(0,0,0) scale(.94);opacity:.65}100%{transform:translate3d(-5%,5%,0) scale(1.08);opacity:1}}
+@keyframes status-pulse{0%,100%{box-shadow:0 0 0 4px #9be7b514,0 0 12px #9be7b52b}50%{box-shadow:0 0 0 6px #9be7b508,0 0 22px #9be7b56b}}
+@keyframes orbit-breathe{0%,100%{opacity:.42}50%{opacity:.9}}
+@media(max-width:820px){
+ .hero::after{width:100vw;right:-35%;top:0;opacity:.65}
+ .mockWrap::before{width:112%;left:-6%;top:10%}
+ .mockWrap::after{width:100%;left:0;top:16%}
+ .mockWrap:hover .device{transform:none}
+ .feature:hover{transform:none;box-shadow:none}
+ .story-controls button:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero::after,.hero .dot,.mockWrap::before,.mockWrap::after{animation:none!important}
+ .brand,.mark::after,.actions .button,.device,.feature,.featureIcon,.step::after,.downloadCard::after,.story-stage,.story-controls button{transition:none!important}
+ .mockWrap:hover .device,.brand:hover,.feature:hover,.story-controls button:hover{transform:none!important}
+}
+</style>
+
 </head>
 <body>
 <header class="nav"><div class="wrap navinner">
