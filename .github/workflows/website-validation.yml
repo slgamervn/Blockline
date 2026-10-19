@@ -30,4 +30,4 @@ jobs:
         with:
           node-version: 22
       - name: Check HTML links, scripts, CSS, and motion safeguards
-        run: node scripts/check-website.mjs
+        run: node --check scripts/check-website.mjs && node scripts/check-website.mjs
