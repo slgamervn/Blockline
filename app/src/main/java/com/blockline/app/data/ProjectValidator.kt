@@ -98,7 +98,7 @@ object ProjectValidator {
                         continue
                     }
                     val type = module.optString("type")
-                    if (type !in setOf("data", "resources", "script", "client_data", "interface", "world_template", "script")) {
+                    if (type !in setOf("data", "resources", "script", "client_data", "interface", "world_template")) {
                         issues += ValidationIssue(IssueSeverity.WARNING, path, message = "modules[$i].type '$type' is not a commonly supported Bedrock module type.")
                     }
                     val uuid = module.optString("uuid")
