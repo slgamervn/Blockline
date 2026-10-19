@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -29,6 +30,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -110,6 +112,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
 fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit) {
     val p = vm.current
     val context = LocalContext.current
+    var showSwitcher by remember { mutableStateOf(false) }
     var exportMode by remember { mutableStateOf(ExportMode.BOTH) }
     var chooseExport by remember { mutableStateOf(false) }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
@@ -121,7 +124,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
         }
     }
     val manifestFiles = p?.let { vm.repo.allFiles(it.id).filter { f -> f.name == "manifest.json" } }.orEmpty()
-    Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, "Back") } }) }) { pad ->
+    Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: "Overview") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, "Back") } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, "Switch project") } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, "No project selected", "Choose a project from Projects", Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { Text("Project overview", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
@@ -147,6 +150,19 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
             item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text("  Create backup") } }
             item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text("  Restore latest backup") } }
             item { Button(onClick = { chooseExport = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text("  Export pack") } }
+        }
+    }
+    if (showSwitcher) ModalBottomSheet(onDismissRequest = { showSwitcher = false }) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Switch project", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            vm.projects.forEach { item ->
+                ListItem(
+                    headlineContent = { Text(item.name) },
+                    supportingContent = { Text(if (item.id == vm.current?.id) "Current project" else "Local project") },
+                    leadingContent = { Icon(Icons.Default.FolderOpen, null) },
+                    modifier = Modifier.clickable { vm.selectProject(item); showSwitcher = false }
+                )
+            }
         }
     }
     if (chooseExport) AlertDialog(

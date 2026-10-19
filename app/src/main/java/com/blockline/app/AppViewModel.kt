@@ -69,6 +69,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         refresh(); message = "Project deleted"
     }
     fun openFile(path: String) {
+        if (activeFile != null && activeFile != path) saveCurrent()
         val p = current ?: return
         runCatching {
             val file = repo.resolve(p.id, path)
@@ -156,6 +157,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (activeFile == path) { activeFile = null; content = "" }
             message = "Deleted $path"
         }.onFailure { message = it.message ?: "Delete failed" }
+    }
+    fun moveFile(path: String, destination: String) {
+        val p = current ?: return
+        runCatching {
+            val source = repo.resolve(p.id, path)
+            val destDir = if (destination.isBlank() || destination == ".") repo.projectDir(p.id) else repo.resolve(p.id, destination)
+            require(destDir.isDirectory) { "Destination must be an existing folder" }
+            val moved = com.blockline.app.data.FileOps.move(source, destDir) ?: error("Cannot move: target exists or move is unsafe")
+            if (activeFile == path) activeFile = repo.relative(p.id, moved)
+            refresh()
+            message = "Moved to ${repo.relative(p.id, moved)}"
+        }.onFailure { message = it.message ?: "Move failed" }
     }
     fun toggleFavorite(path: String) { current?.let { repo.toggleFavorite(it.id, path) } }
     fun isFavorite(path: String) = current?.let { repo.isFavorite(it.id, path) } ?: false

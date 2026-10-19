@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FindInPage
 import androidx.compose.material.icons.filled.FormatAlignLeft
 import androidx.compose.material.icons.filled.Redo
@@ -88,12 +89,20 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             if (path == null) {
                 EmptyState(Icons.Default.ContentCopy, "No file open", "Choose a file in Explorer to start editing")
             } else {
+                if (vm.openTabs.isNotEmpty()) {
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Start) {
+                        vm.openTabs.keys.toList().forEach { tab ->
+                            TextButton(onClick = { vm.openFile(tab) }) { Text(tab.substringAfterLast('/'), maxLines = 1) }
+                            IconButton(onClick = { vm.closeTab(tab) }) { Icon(Icons.Default.Close, "Close tab") }
+                        }
+                    }
+                }
                 if (vm.readOnly) Text("Large file: read-only mode (over 1 MB)", color = androidx.compose.material3.MaterialTheme.colorScheme.error)
                 BasicTextField(
                     value = vm.content,
                     onValueChange = { vm.updateContent(it) },
                     readOnly = vm.readOnly,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
                     visualTransformation = if (lang != null && vm.content.length < 200_000) HighlightTransformation(lang, Palette(
                         androidx.compose.ui.graphics.Color(0xFF8FC9FF),
