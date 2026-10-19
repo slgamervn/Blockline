@@ -14,6 +14,8 @@ import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -55,6 +57,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val lastEditAt = mutableMapOf<String, Long>()
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
+    private var autoSaveJob: Job? = null
 
     init { refresh() }
 
@@ -227,6 +230,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             content = value
             openTabs[path] = value
             lastEditAt[path] = now
+            scheduleAutoSave(current?.id, path, value)
+        }
+    }
+    private fun scheduleAutoSave(projectId: String?, path: String, value: String) {
+        if (projectId == null || value.length > 1_000_000) return
+        autoSaveJob?.cancel()
+        autoSaveJob = viewModelScope.launch {
+            delay(850)
+            val projectRoot = repo.projectDir(projectId).canonicalFile
+            val target = repo.resolve(projectId, path).canonicalFile
+            if (current?.id != projectId || activeFile != path || readOnly || openTabs[path] != value) return@launch
+            withContext(Dispatchers.IO) {
+                require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
+                check(target.isFile) { "File no longer exists." }
+                val temp = File(target.parentFile, target.name + ".autosaving")
+                temp.writeText(value, Charsets.UTF_8)
+                if (!temp.renameTo(target)) {
+                    target.writeText(value, Charsets.UTF_8)
+                    temp.delete()
+                }
+            }
         }
     }
     fun saveCurrent(showMessage: Boolean = true) {
@@ -250,6 +274,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             content = stack.removeAt(stack.lastIndex)
             openTabs[path] = content
             lastEditAt[path] = 0L
+            scheduleAutoSave(current?.id, path, content)
         }
     }
     fun redo() {
@@ -261,6 +286,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             content = next
             openTabs[path] = content
             lastEditAt[path] = 0L
+            scheduleAutoSave(current?.id, path, content)
         }
     }
     fun closeTab(path: String) {
