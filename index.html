@@ -530,7 +530,7 @@ body{background:#080b0a;background-image:none;background-attachment:scroll}
 .hero::before{display:none}
 .glow{background:#9be7b509;filter:blur(54px);animation:none}
 .button::after{display:none}
-.device{transform:none!important;animation:none!important;box-shadow:0 24px 60px #0007;border-color:#ffffff20}
+.device{transform:none;animation:none;box-shadow:0 24px 60px #0007;border-color:#ffffff20}
 .feature{background:#101512;border-color:#ffffff14;border-radius:14px;min-height:205px}
 .feature:hover,.step:hover{transform:none;box-shadow:none}
 .featureIcon{background:#9be7b509;border:1px solid #9be7b51a;color:var(--green)}
@@ -609,6 +609,84 @@ html.reveal-motion-ready .reveal[data-reveal="scale"].is-visible {
     background-color: #101712;
   }
 }
+
+/* Restore Blockline's signature ambient glow and subtle motion. */
+body {
+  background-color: #080b0a;
+  background-image:
+    radial-gradient(ellipse at 76% 12%, rgba(35, 82, 51, .52) 0, transparent 36%),
+    radial-gradient(ellipse at 0% 46%, rgba(18, 44, 29, .34) 0, transparent 30%);
+  background-attachment: fixed;
+}
+.glow {
+  background: #58c98217;
+  filter: blur(88px);
+}
+.nav::after { display: block; }
+.button::after { display: block; }
+.story-stage {
+  background:
+    radial-gradient(ellipse at 50% 0%, #24463166, transparent 60%),
+    linear-gradient(145deg, #111a14, #080b09);
+  border-color: #ffffff20;
+  box-shadow: 0 22px 58px #0006;
+}
+.story-stage[data-scene="0"] [data-scene-content="0"],
+.story-stage[data-scene="1"] [data-scene-content="1"],
+.story-stage[data-scene="2"] [data-scene-content="2"] {
+  animation: scene-enter .35s var(--ease-out) both !important;
+}
+.feature::before {
+  display: block;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, #b8f3cb0c, transparent 48%);
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.feature:hover::before { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero .eyebrow { animation: fade-up .7s var(--ease-out) both !important; }
+  .hero h1 { animation: fade-up .85s .08s var(--ease-out) both !important; }
+  .hero .lead { animation: fade-up .85s .16s var(--ease-out) both !important; }
+  .hero .actions { animation: fade-up .85s .23s var(--ease-out) both !important; }
+  .hero .trust { animation: fade-up .85s .3s var(--ease-out) both !important; }
+  .device {
+    animation: device-enter .9s .1s var(--ease-out) both !important;
+    transform-origin: center;
+  }
+  .glow { animation: glow-pulse 7s ease-in-out infinite alternate; }
+  @media (hover: hover) and (pointer: fine) {
+    .feature, .step {
+      transition: transform .28s var(--ease-out), border-color .28s ease, box-shadow .28s ease;
+    }
+    .feature:hover {
+      transform: translateY(-4px);
+      border-color: #45634e;
+      box-shadow: 0 18px 40px #0003;
+    }
+    .feature:hover .featureIcon { transform: translateY(-2px) rotate(-4deg); }
+    .step:hover { transform: translateY(-3px); border-color: #45634e; }
+    .downloadCard { transition: border-color .3s ease, box-shadow .3s ease; }
+    .downloadCard:hover { border-color: #54815f; box-shadow: 0 20px 60px #0003; }
+  }
+}
+@media (max-width: 820px) {
+  body { background-attachment: scroll; }
+  .glow { filter: blur(62px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body { background-attachment: scroll; }
+  .hero .eyebrow, .hero h1, .hero .lead, .hero .actions, .hero .trust, .device, .glow {
+    animation: none !important;
+    transition: none !important;
+  }
+  .feature:hover, .step:hover { transform: none !important; }
+}
+
 </style>
 </head>
 <body>
