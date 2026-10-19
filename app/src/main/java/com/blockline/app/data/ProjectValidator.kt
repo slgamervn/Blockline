@@ -133,11 +133,30 @@ object ProjectValidator {
         manifests.forEach { file ->
             val path = relative(projectRoot, file)
             val json = parsed[file] as? JSONObject ?: return@forEach
-            val dependencies = json.optJSONArray("dependencies") ?: return@forEach
+            if (!json.has("dependencies")) return@forEach
+            val dependencies = json.optJSONArray("dependencies")
+            if (dependencies == null) {
+                issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies must be an array.")
+                return@forEach
+            }
             for (i in 0 until dependencies.length()) {
-                val dependency = dependencies.optJSONObject(i) ?: continue
-                val uuid = dependency.optString("uuid")
-                if (uuid.isBlank()) continue
+                val dependency = dependencies.optJSONObject(i)
+                if (dependency == null) {
+                    issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i] must be an object.")
+                    continue
+                }
+                val uuid = dependency.optString("uuid").trim()
+                val moduleName = dependency.optString("module_name").trim()
+                if (uuid.isBlank()) {
+                    if (moduleName.isBlank()) {
+                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i] must specify either uuid or module_name.")
+                    } else if (dependency.opt("version") == null) {
+                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i].version is required when module_name is used.")
+                    } else {
+                        issues += ValidationIssue(IssueSeverity.INFO, path, message = "Module dependency '$moduleName' is declared; its availability is determined by the Minecraft runtime.")
+                    }
+                    continue
+                }
                 if (!uuidPattern.matches(uuid)) {
                     issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i].uuid is not a valid UUID.")
                     continue
@@ -145,7 +164,9 @@ object ProjectValidator {
                 val localVersion = internalVersions[uuid.lowercase(Locale.ROOT)]
                 if (localVersion != null) {
                     val required = intVersion(dependency.opt("version"))
-                    if (required != null && localVersion != required) {
+                    if (required == null) {
+                        issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid has a missing or invalid three-part version.")
+                    } else if (localVersion != required) {
                         issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid requests version ${required.joinToString(".")}, but this project contains ${localVersion.joinToString(".")}.")
                     }
                 } else {
