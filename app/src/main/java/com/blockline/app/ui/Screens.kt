@@ -330,7 +330,7 @@ fun MoreScreen(vm: AppViewModel) {
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text("Version", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                     androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-                    Text("0.1.0 · Phase 1")
+                    Text("0.1.0 · Phase 1 + Phase 2 preview")
                 }
                 androidx.compose.material3.HorizontalDivider()
                 Text("Privacy", style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
