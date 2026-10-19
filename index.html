@@ -523,6 +523,27 @@ footer{border-top-color:#ffffff12}
 .feature::before,.feature::after{display:none}
 .story-step{transition:opacity .2s ease}
 @media(prefers-reduced-motion:reduce){.reveal,.reveal[data-reveal="left"],.reveal[data-reveal="right"],.reveal[data-reveal="scale"]{opacity:1;transform:none;transition:none}}
+
+/* Keep the signature visible, with motion and decoration in the background. */
+:root{--bg:#080b0a;--panel:#101512;--panel2:#151d18;--line:#2c3930;--text:#f3f6f2;--muted:#a1ada4;--green:#9be7b5;--green2:#b8f3cb;--amber:#e6b35a}
+body{background:#080b0a;background-image:none;background-attachment:scroll}
+.hero::before{display:none}
+.glow{background:#9be7b509;filter:blur(54px);animation:none}
+.button::after{display:none}
+.device{transform:none!important;animation:none!important;box-shadow:0 24px 60px #0007;border-color:#ffffff20}
+.feature{background:#101512;border-color:#ffffff14;border-radius:14px;min-height:205px}
+.feature:hover,.step:hover{transform:none;box-shadow:none}
+.featureIcon{background:#9be7b509;border:1px solid #9be7b51a;color:var(--green)}
+.featureIcon svg{width:22px;height:22px}
+.feature::before,.feature::after{display:none}
+.band{background:#0c110d;border-block-color:#ffffff10}
+.downloadCard{background:#101512;border-color:#34473a;box-shadow:none}
+.downloadCard:hover{box-shadow:none}
+.product-story{background:#0b100d;border-block-color:#ffffff10}
+.story-stage{background:#0d130f;box-shadow:0 20px 55px #0005}
+@media(min-width:821px){#features .feature:nth-child(3n + 2),#features .feature:nth-child(3n + 2).is-visible{transform:none}}
+@media(prefers-reduced-motion:reduce){.feature,.story-step,.downloadCard{transition:none}}
+
 </style>
 </head>
 <body>
