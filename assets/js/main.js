@@ -179,10 +179,11 @@
     try { localStorage.setItem('blockline-theme', next); } catch (_) {}
     document.querySelectorAll('.theme-toggle').forEach((button) => {
       button.setAttribute('aria-pressed', String(next === 'light'));
-      button.setAttribute('aria-label', next === 'light' ? 'Chuyển sang giao diện tối' : 'Chuyển sang giao diện sáng');
+      button.setAttribute('aria-label', currentLanguage === 'en' ? (next === 'light' ? 'Switch to dark theme' : 'Switch to light theme') : (next === 'light' ? 'Chuyển sang giao diện tối' : 'Chuyển sang giao diện sáng'));
     });
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) themeMeta.content = next === 'light' ? '#f4f7f2' : '#101612';
+    syncLocalizedControls();
   };
 
   let savedTheme = '';
@@ -208,6 +209,12 @@
       bar.classList.toggle('is-active', window.scrollY > 80 && maxScroll > 0);
     }
   };
+  const updateScrollDirection = () => {
+    const currentY = window.scrollY;
+    if (Math.abs(currentY - previousScrollY) > 2) scrollDirection = currentY > previousScrollY ? 1 : -1;
+    previousScrollY = currentY;
+  };
+  window.addEventListener('scroll', updateScrollDirection, { passive: true });
   const queueScrollChrome = () => {
     if (scrollFrame) return;
     scrollFrame = window.requestAnimationFrame(updateScrollChrome);
@@ -228,7 +235,7 @@
     menu.setAttribute('aria-hidden', 'false');
     menu.classList.add('is-open');
     menuToggle.setAttribute('aria-expanded', 'true');
-    menuToggle.setAttribute('aria-label', 'Đóng menu điều hướng');
+    menuToggle.setAttribute('aria-label', currentLanguage === 'en' ? 'Close navigation menu' : 'Đóng menu điều hướng');
     body.classList.add('menu-open');
     const first = menu.querySelector(menuFocusable);
     window.requestAnimationFrame(() => first?.focus());
@@ -238,7 +245,7 @@
     menuIsOpen = false;
     menu.classList.remove('is-open');
     menuToggle.setAttribute('aria-expanded', 'false');
-    menuToggle.setAttribute('aria-label', 'Mở menu điều hướng');
+    menuToggle.setAttribute('aria-label', currentLanguage === 'en' ? 'Open navigation menu' : 'Mở menu điều hướng');
     body.classList.remove('menu-open');
     window.setTimeout(() => {
       if (menuIsOpen) return;
@@ -278,13 +285,18 @@
 
   const revealTargets = [...document.querySelectorAll('.section-intro, .feature-row, .demo-layout, .comparison-wrap, .roadmap-item, .setup-step, .faq-list, .download-panel')];
   if (!reducedMotion.matches && 'IntersectionObserver' in window) {
-    const revealObserver = new IntersectionObserver((entries, observer) => {
+    const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
+        const target = entry.target;
+        if (entry.isIntersecting) {
+          target.style.setProperty('--reveal-y', scrollDirection > 0 ? '22px' : '-22px');
+          target.classList.add('is-visible');
+        } else {
+          target.style.setProperty('--reveal-y', scrollDirection > 0 ? '-22px' : '22px');
+          target.classList.remove('is-visible');
+        }
       });
-    }, { rootMargin: '0px 0px -7% 0px', threshold: 0.08 });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
     revealTargets.forEach((target, index) => {
       target.classList.add('reveal');
       if (target.classList.contains('roadmap-item') || target.classList.contains('setup-step')) {
@@ -442,9 +454,9 @@
         temporary.remove();
         if (!copied) throw new Error('copy failed');
       }
-      if (status) status.textContent = 'Đã chép liên kết. Hãy mở Chrome và dán liên kết vào thanh địa chỉ.';
+      if (status) status.textContent = currentLanguage === 'en' ? 'Link copied. Open Chrome and paste it into the address bar.' : 'Đã chép liên kết. Hãy mở Chrome và dán liên kết vào thanh địa chỉ.';
     } catch (_) {
-      if (status) status.textContent = 'Không thể tự chép liên kết. Hãy sao chép địa chỉ trên thanh trình duyệt.';
+      if (status) status.textContent = currentLanguage === 'en' ? 'Could not copy automatically. Copy the address from your browser bar.' : 'Không thể tự chép liên kết. Hãy sao chép địa chỉ trên thanh trình duyệt.';
     }
   });
   dialog?.addEventListener('click', (event) => {
@@ -454,4 +466,7 @@
   document.querySelectorAll('[data-current-year]').forEach((element) => {
     element.textContent = String(new Date().getFullYear());
   });
+  let preferredLanguage = 'vi';
+  try { preferredLanguage = localStorage.getItem('blockline-language') === 'en' ? 'en' : 'vi'; } catch (_) {}
+  setLanguage(preferredLanguage);
 })();
