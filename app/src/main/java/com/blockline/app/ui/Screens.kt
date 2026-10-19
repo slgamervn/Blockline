@@ -191,28 +191,91 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
 @Composable
 fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     var query by remember { mutableStateOf("") }
+    var contentMode by remember { mutableStateOf(false) }
     val p = vm.current
-    val matches = p?.let { project -> vm.repo.allFiles(project.id).filter { it.relativeTo(vm.repo.projectDir(project.id)).path.contains(query, true) } }.orEmpty()
+    val pathMatches = p?.let { project ->
+        vm.repo.allFiles(project.id).filter { vm.repo.relative(project.id, it).contains(query, true) }
+    }.orEmpty()
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Find files", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
-        OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("File name or path") }, modifier = Modifier.fillMaxWidth())
-        if (p == null) Text("Select a project first.")
-        else if (matches.isEmpty()) Text("No matching files")
-        else LazyColumn { items(matches, key = { it.path }) { f ->
-            val path = vm.repo.relative(p.id, f)
-            ListItem(headlineContent = { Text(f.name) }, supportingContent = { Text(path) }, modifier = Modifier.clickable { vm.openFile(path); onOpenEditor() })
-        } }
+        Text("Search project", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text(if (contentMode) "Search inside text files" else "File name or path") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.FilterChip(selected = !contentMode, onClick = { contentMode = false }, label = { Text("File paths") })
+            androidx.compose.material3.FilterChip(selected = contentMode, onClick = { contentMode = true }, label = { Text("File contents") })
+            if (contentMode) Button(onClick = { vm.searchProjectContentAsync(query) }, enabled = query.isNotBlank() && !vm.isSearchingContent) { Text(if (vm.isSearchingContent) "Searching…" else "Search") }
+        }
+        if (p == null) {
+            Text("Select a project first.")
+        } else if (!contentMode) {
+            if (pathMatches.isEmpty()) Text(if (query.isBlank()) "Enter a file name or path." else "No matching files")
+            else LazyColumn(Modifier.weight(1f)) {
+                items(pathMatches, key = { it.path }) { file ->
+                    val path = vm.repo.relative(p.id, file)
+                    ListItem(headlineContent = { Text(file.name) }, supportingContent = { Text(path) }, modifier = Modifier.clickable { vm.openFile(path); onOpenEditor() })
+                }
+            }
+        } else {
+            if (vm.contentSearchResults.isEmpty()) Text(if (query.isBlank()) "Enter text, then tap Search." else "No results yet. Tap Search to scan the project.")
+            else LazyColumn(Modifier.weight(1f)) {
+                items(vm.contentSearchResults, key = { "${it.first}:${it.second}" }) { result ->
+                    ListItem(
+                        headlineContent = { Text(result.first.substringAfterLast('/')) },
+                        supportingContent = { Text("${result.first} · line ${result.second}") },
+                        modifier = Modifier.clickable { vm.openFile(result.first); onOpenEditor() }
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun ToolsScreen(vm: AppViewModel) {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Project tools", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
-        Text("Tools operate on the selected local project only.")
-        Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text("  Create backup") }
-        Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text("  Restore latest backup") }
-        Button(onClick = { vm.current?.let { vm.message = "Project contains ${vm.repo.allFiles(it.id).size} files" } ?: run { vm.message = "Select a project first" } }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text("  Count project files") }
+    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item { Text("Project tools", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
+        item { Text("Tools operate on the selected local project only.") }
+        item {
+            Button(onClick = { vm.validateCurrentProject() }, enabled = vm.current != null && !vm.isValidating, modifier = Modifier.fillMaxWidth()) {
+                Text(if (vm.isValidating) "Validating project…" else "Validate Bedrock pack")
+            }
+        }
+        if (vm.validationIssues.isNotEmpty()) {
+            item {
+                val errors = vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
+                val warnings = vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Validation report", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                        Text("$errors errors · $warnings warnings · ${vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }} info")
+                        Text("External dependencies are informational when their UUID is not present in this project.")
+                    }
+                }
+            }
+            items(vm.validationIssues) { issue ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(issue.severity.name, color = when (issue.severity) {
+                            com.blockline.app.data.IssueSeverity.ERROR -> androidx.compose.material3.MaterialTheme.colorScheme.error
+                            com.blockline.app.data.IssueSeverity.WARNING -> androidx.compose.material3.MaterialTheme.colorScheme.tertiary
+                            com.blockline.app.data.IssueSeverity.INFO -> androidx.compose.material3.MaterialTheme.colorScheme.primary
+                        }, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                        Text(issue.path.ifBlank { "Project" }, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+                        Text(if (issue.line != null) "Line ${issue.line}${issue.column?.let { ":$it" } ?: ""} · ${issue.message}" else issue.message)
+                    }
+                }
+            }
+        } else {
+            item { Text(if (vm.isValidating) "Scanning JSON files and manifests…" else "Run validation to see JSON, manifest, UUID, and dependency findings.") }
+        }
+        item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text("  Create backup") } }
+        item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text("  Restore latest backup") } }
+        item { Button(onClick = { vm.current?.let { vm.message = "Project contains ${vm.repo.allFiles(it.id).size} files" } ?: run { vm.message = "Select a project first" } }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Archive, null); Text("  Count project files") } }
     }
 }
 
