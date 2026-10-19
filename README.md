@@ -44,7 +44,7 @@ Blockline is being built in phases. The table below describes the current scope 
 | Phase | Scope | Status |
 | --- | --- | --- |
 | **1 — Foundation** | Local projects, import/export, explorer, editor, backup, core navigation | In progress |
-| **2 — Search & validation** | Content index, UUID/dependency/reference checks, health report, error jump | Planned |
+| **2 — Search & validation** | JSON and manifest checks, UUID uniqueness, script-entry validation, dependency review, and text-content search | In progress |
 | **3 — Generators & snippets** | Pack resource generators, reusable snippets, templates | Planned |
 | **4 — Advanced workflow** | Diff, batch replace, dependency viewer, Script API reference | Planned |
 
