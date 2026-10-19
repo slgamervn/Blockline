@@ -37,7 +37,8 @@ object ProjectValidator {
                 issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Cannot read file: ${it.message ?: "unknown error"}")
                 return@forEach
             }
-            val clean = JsonTools.stripComments(source).removePrefix("\uFEFF")
+            val uncommented = JsonTools.stripComments(source)
+            val clean = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented
             try {
                 StrictJsonParser(clean).parse()
                 val tokener = JSONTokener(clean)
