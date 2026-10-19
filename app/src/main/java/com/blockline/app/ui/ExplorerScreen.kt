@@ -16,7 +16,7 @@ import com.blockline.app.AppViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
-    val files = listOf("manifest.json", "entities/sample_mob.json", "scripts/main.js")
+    val files = listOf("manifest.json", "entities/sample_mob.json", "scripts/main.js", "functions/hello.mcfunction")
     Scaffold(topBar = { TopAppBar(title = { Text("Explorer") }) }) { pad ->
         LazyColumn(Modifier.padding(pad).fillMaxSize()) {
             items(files) { f ->

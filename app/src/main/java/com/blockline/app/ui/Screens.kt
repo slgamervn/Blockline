@@ -1,7 +1,6 @@
 package com.blockline.app.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,7 +18,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
     Scaffold(topBar = { TopAppBar(title = { Text("Projects") }) }) { pad ->
         Column(Modifier.padding(pad).padding(16.dp)) {
             Text("Blockline Phase 1")
-            Button(onClick = onOpen) { Text("Open") }
+            Button(onClick = onOpen) { Text("Open Overview") }
         }
     }
 }
@@ -30,10 +29,10 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
 }
 
 @Composable
-fun SearchScreen() { Text("Search") }
+fun SearchScreen() { Text("Search (Phase 2)") }
 
 @Composable
-fun ToolsScreen() { Text("Tools") }
+fun ToolsScreen() { Text("Tools (Phase 3)") }
 
 @Composable
 fun MoreScreen(vm: AppViewModel) { Text("More") }
