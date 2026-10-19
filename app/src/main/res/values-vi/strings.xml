@@ -278,4 +278,5 @@
     <string name="manifest_no_dependencies">Không khai báo dependency.</string>
     <string name="manifest_dependency_line">%1$s · Phiên bản: %2$s</string>
     <string name="manifest_capabilities">Capabilities: %1$s</string>
+    <string name="file_operation_running">Đang cập nhật tệp…</string>
 </resources>

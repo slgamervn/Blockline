@@ -278,4 +278,5 @@
     <string name="manifest_no_dependencies">No declared dependencies.</string>
     <string name="manifest_dependency_line">%1$s · Version: %2$s</string>
     <string name="manifest_capabilities">Capabilities: %1$s</string>
+    <string name="file_operation_running">Updating files…</string>
 </resources>
