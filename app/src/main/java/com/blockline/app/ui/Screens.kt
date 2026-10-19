@@ -259,7 +259,7 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
             }
             items(vm.validationIssues) { issue ->
                 Card(Modifier.fillMaxWidth().clickable(enabled = issue.path.isNotBlank()) {
-                    vm.openFile(issue.path)
+                    vm.openFile(issue.path, issue.line)
                     onOpenEditor()
                 }) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
