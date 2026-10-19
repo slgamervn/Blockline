@@ -4,7 +4,7 @@
 
 ### Không gian làm việc di động dành cho nhà phát triển add-on Minecraft Bedrock.
 
-[![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
+[![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
 [![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
 
 [**Tải APK**](https://github.com/slgamervn/Blockline/releases/latest/download/Blockline.apk) · [Trang giới thiệu](https://slgamervn.github.io/Blockline/) · [Mã nguồn](https://github.com/slgamervn/Blockline)
@@ -19,7 +19,7 @@
 
 Blockline là ứng dụng Android hướng đến việc đọc, tổ chức và chỉnh sửa tệp add-on của **Minecraft Bedrock** ngay trên điện thoại. Dự án ưu tiên quy trình làm việc cục bộ: pack được sao chép vào vùng lưu trữ riêng của ứng dụng và không bị tải lên máy chủ.
 
-Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung vào nền tảng quản lý dự án, trình duyệt tệp và trình chỉnh sửa cơ bản. Các chức năng kiểm tra chuyên sâu, generator, phân tích dependency và Script API Reference sẽ được triển khai ở những phase tiếp theo.
+Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung vào nền tảng quản lý dự án, trình duyệt tệp và trình chỉnh sửa cơ bản. Phase 2 đang được triển khai từng phần, gồm kiểm tra cú pháp JSON, manifest, UUID, đường dẫn script entry, dependency và tìm kiếm nội dung. Generator và Script API Reference thuộc các phase sau.
 
 ## Tính năng hiện có
 
@@ -38,7 +38,7 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 | Phase | Phạm vi | Trạng thái |
 | --- | --- | --- |
 | **1 — Nền tảng** | Dự án cục bộ, import/export, explorer, editor, backup, điều hướng | Đang hoàn thiện |
-| **2 — Tìm kiếm và kiểm tra** | Index nội dung, UUID/dependency/reference, báo cáo lỗi | Dự kiến |
+| **2 — Tìm kiếm và kiểm tra** | Search nội dung, kiểm tra JSON/manifest/UUID/script entry và dependency | Đang triển khai |
 | **3 — Generator và snippet** | Tạo tài nguyên pack, snippet và template | Dự kiến |
 | **4 — Workflow nâng cao** | Diff, thay identifier hàng loạt, dependency viewer, Script API Reference | Dự kiến |
 
@@ -46,9 +46,9 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 
 - Metadata đang được lưu bằng JSON riêng và preferences; Room, Hilt và Clean Architecture đầy đủ chưa được triển khai.
 - Syntax highlighting hiện là bản cơ bản, chưa phải parser ngôn ngữ đầy đủ.
-- Search hiện lọc theo đường dẫn tệp; tìm nội dung, identifier và UUID thuộc Phase 2.
+- Search hỗ trợ đường dẫn và nội dung tệp văn bản; báo cáo validation có thể mở tệp bị lỗi. Tìm kiếm identifier/UUID và định vị con trỏ chính xác vẫn cần hoàn thiện.
 - Chưa có màn hình preview chuyên biệt cho từng loại tài nguyên Bedrock.
-- Vẫn cần bổ sung kiểm thử tự động và kiểm tra trên thiết bị thực trước khi xem là bản phát hành ổn định.
+- Validator hiện là phân tích tĩnh ban đầu, chưa thay thế đầy đủ schema chính thức của Mojang; vẫn cần kiểm thử tự động và kiểm tra trên thiết bị thực.
 
 ## Cài đặt
 
@@ -65,7 +65,7 @@ Bản phát hành hiện tại là **debug APK** được tạo từ GitHub Acti
 
 - Android Studio và Android SDK Platform 35
 - JDK 17
-- Gradle 8.10.2
+- Gradle 8.14.6
 - Android 8.0 (API 26) trở lên nếu chạy trên thiết bị
 
 ### Các bước
