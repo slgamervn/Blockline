@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#101612">
+<meta name="theme-color" content="#080b0a">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="description" content="Blockline is a mobile-first Android studio for Minecraft Bedrock add-on creators. Import, explore, edit and export packs locally.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Blockline — Bedrock Add-on Studio for Android">
@@ -542,10 +543,10 @@ footer{border-top-color:#ffffff12}
 </div>
 <div class="mockWrap" aria-label="Illustration of the Blockline mobile interface"><div class="glow"></div><div class="device"><div class="screen">
 <div class="status"><span>9:41</span><span>● ● ▰</span></div>
-<div class="apphead"><span class="appname">Blockline <span style="color:var(--green)">.</span></span><span class="pill">LOCAL WORKSPACE</span></div>
+<div class="apphead"><span class="appname">Blockline <span style="color:var(--green)">.</span></span><span class="pill">APP PREVIEW</span></div>
 <div class="screenbody"><div class="screenlabel">Your workspace</div><div class="screenTitle">Projects</div>
-<div class="miniCard"><div class="miniTop"><div class="fileIcon">▧</div><div><div class="mininame">My Survival Add-on</div><div class="minisub">Behavior Pack · 24 files</div></div><span class="tag">OPEN</span></div></div>
-<div class="miniCard"><div class="miniTop"><div class="fileIcon">◇</div><div><div class="mininame">Custom Textures</div><div class="minisub">Resource Pack · 18 files</div></div></div></div>
+<div class="miniCard"><div class="miniTop"><div class="fileIcon">▧</div><div><div class="mininame">Survival Pack</div><div class="minisub">Behavior Pack · example</div></div><span class="tag">EXAMPLE</span></div></div>
+<div class="miniCard"><div class="miniTop"><div class="fileIcon">◇</div><div><div class="mininame">Custom Textures</div><div class="minisub">Resource Pack · example</div></div></div></div>
 <div class="screenlabel" style="margin-top:22px">Quick edit</div><div class="code"><span class="k">import</span> { world } <span class="k">from</span> <span class="s">"@minecraft/server"</span>;<br><br>world.afterEvents.worldLoad<br>&nbsp; .subscribe(() =&gt; {<br>&nbsp;&nbsp; world.sendMessage(<span class="s">"Ready!"</span>);<br>});</div>
 </div><div class="tabbar"><span>▦ Projects</span><b>▤ Explorer</b><span>⌕ Search</span><span>⚒ Tools</span><span>⋯ More</span></div>
 </div></div></div>
@@ -566,7 +567,7 @@ footer{border-top-color:#ffffff12}
     <div class="story-layout">
       <div class="story-stage-wrap">
         <div class="story-stage" id="story-stage" data-scene="0" aria-live="polite">
-          <div class="stage-top"><div class="stage-brand"><span class="stage-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span> Blockline <span style="color:#6f8274;font-weight:500">/ Studio</span></div><span class="stage-live">LOCAL WORKSPACE</span></div>
+          <div class="stage-top"><div class="stage-brand"><span class="stage-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h16v4H8v12H4z"/><path d="M11 11h9v4h-5v5h-4z"/><path class="mark-accent" d="M17 17h3v3h-3z"/></svg></span> Blockline <span style="color:#6f8274;font-weight:500">/ Studio</span></div><span class="stage-live">APP PREVIEW</span></div>
           <div class="stage-content">
             <div class="stage-caption" id="stage-caption">01 / Import</div>
             <div class="stage-title" id="stage-title">Start with your pack.</div>
@@ -575,7 +576,7 @@ footer{border-top-color:#ffffff12}
               <div class="stage-windowbar"><i></i><i></i><i></i><span class="stage-path" id="stage-path">workspace / projects</span></div>
               <div class="stage-files">
                 <div class="stage-tree" data-scene-content="0"><span>▾ projects</span><span class="selected">↳ survival.mcaddon</span><span>↳ textures.mcpack</span><span>↳ backups</span></div>
-                <div class="stage-editor" data-scene-content="0"><span class="line-no">✓</span><span class="syntax">Archive detected</span><br><span class="line-no">✓</span>Behavior pack<br><span class="line-no">✓</span>Resource pack<br><span class="line-no">✓</span><span class="string">Manifest found</span><br><br><span class="comment">Ready to inspect →</span></div>
+                <div class="stage-editor" data-scene-content="0"><span class="line-no">✓</span><span class="syntax">Archive selected</span><br><span class="line-no">✓</span>Files extracted<br><span class="line-no">✓</span>Pack manifest<br><span class="line-no">✓</span><span class="string">Ready to inspect</span><br><br><span class="comment">Open the files →</span></div>
                 <div class="stage-tree" data-scene-content="1"><span>▾ behavior_pack</span><span>▾ scripts</span><span class="selected">↳ main.js</span><span>↳ manifest.json</span><span>▸ entities</span></div>
                 <div class="stage-editor" data-scene-content="1"><span class="line-no">1</span><span class="syntax">import</span> { world }<br><span class="line-no">2</span><span class="syntax">from</span> <span class="string">"@minecraft/server"</span>;<br><span class="line-no">3</span><br><span class="line-no">4</span><span class="syntax">world</span>.afterEvents<br><span class="line-no">5</span> .worldLoad.subscribe(() =&gt; {<br><span class="line-no">6</span> &nbsp;<span class="comment">// your logic</span><br><span class="line-no">7</span>});</div>
                 <div class="stage-tree" data-scene-content="2"><span>▾ export</span><span class="selected">✓ manifest.json</span><span>✓ scripts/</span><span>✓ textures/</span><span>✓ pack_icon.png</span></div>
@@ -612,12 +613,12 @@ footer{border-top-color:#ffffff12}
 </section>
 <section id="features"><div class="wrap"><div class="sectionhead"><div class="kicker">Made for the way you build</div><h2>Useful tools. No desktop-sized clutter.</h2><p>Blockline is designed around small screens and real pack files — with a simple workflow that keeps the project in your hands.</p></div>
 <div class="grid3">
-<article class="feature"><div class="featureIcon">▣</div><h3>Bring your packs</h3><p>Import .mcpack and .mcaddon files through Android’s system picker. Work on a private local copy.</p></article>
-<article class="feature"><div class="featureIcon">⌘</div><h3>Explore every file</h3><p>Browse folders, create and move files, rename items, and keep important files in favorites.</p></article>
-<article class="feature"><div class="featureIcon">{ }</div><h3>Edit on the go</h3><p>Work with JSON, JavaScript, and .mcfunction files using tabs, undo/redo, find, and JSON formatting.</p></article>
-<article class="feature"><div class="featureIcon">↗</div><h3>Export your work</h3><p>Package a behavior pack, resource pack, or combined add-on for the next step in your workflow.</p></article>
-<article class="feature"><div class="featureIcon">◷</div><h3>Backups when needed</h3><p>Create a local backup and restore the latest saved copy if you need to roll back.</p></article>
-<article class="feature"><div class="featureIcon">⌁</div><h3>Made for mobile</h3><p>Material 3, dark and light themes, adjustable editor text, and touch-friendly navigation.</p></article>
+<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m-4-4 4 4 4-4"/><path d="M5 16v4h14v-4"/></svg></div><h3>Bring your packs</h3><p>Import .mcpack and .mcaddon files through Android’s system picker. Work on a private local copy.</p></article>
+<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h7l2 2h9v10H3z"/><path d="M8 13h8"/></svg></div><h3>Explore every file</h3><p>Browse folders, create and move files, rename items, and keep important files in favorites.</p></article>
+<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5"/><path d="m16 7 5 5-5 5"/><path d="m14 5-4 14"/></svg></div><h3>Edit on the go</h3><p>Work with JSON, JavaScript, and .mcfunction files using tabs, undo/redo, find, and JSON formatting.</p></article>
+<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m-4-4 4 4 4-4"/><path d="M4 16v4h16v-4"/></svg></div><h3>Export your work</h3><p>Package a behavior pack, resource pack, or combined add-on for the next step in your workflow.</p></article>
+<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg></div><h3>Backups when needed</h3><p>Create a local backup and restore the latest saved copy if you need to roll back.</p></article>
+<article class="feature"><div class="featureIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg></div><h3>Made for mobile</h3><p>Material 3, dark and light themes, adjustable editor text, and touch-friendly navigation.</p></article>
 </div></div></section>
 <section class="band" id="workflow"><div class="wrap"><div class="sectionhead"><div class="kicker">A simple workflow</div><h2>From archive to add-on, in a few steps.</h2><p>Keep your files organized without moving your whole workflow to a desktop.</p></div>
 <div class="steps"><article class="step"><div class="stepnum">01</div><h3>Import a pack</h3><p>Select an existing .mcpack or .mcaddon from your device. Blockline copies its contents into app storage.</p></article><article class="step"><div class="stepnum">02</div><h3>Inspect and edit</h3><p>Open the project, explore its structure, inspect manifests, and edit supported text files.</p></article><article class="step"><div class="stepnum">03</div><h3>Back up and export</h3><p>Make a local backup, then export the pack you want to test in Minecraft Bedrock.</p></article></div>
