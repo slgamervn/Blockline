@@ -39,6 +39,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var validationIssues by mutableStateOf<List<ValidationIssue>>(emptyList())
         private set
+    var isSearchingContent by mutableStateOf(false)
+        private set
+    var contentSearchResults by mutableStateOf<List<Pair<String, Int>>>(emptyList())
+        private set
     val openTabs = mutableStateMapOf<String, String>()
     private val undo = mutableStateMapOf<String, MutableList<String>>()
     private val redo = mutableStateMapOf<String, MutableList<String>>()
@@ -67,6 +71,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val warnings = issues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
                 message = "Validation finished: $errors errors, $warnings warnings, ${issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }} info."
             }.onFailure { message = it.message ?: "Validation failed." }
+        }
+    }
+
+    fun searchProjectContentAsync(query: String) {
+        val project = current
+        if (project == null || query.isBlank() || isSearchingContent) return
+        isSearchingContent = true
+        contentSearchResults = emptyList()
+        viewModelScope.launch {
+            val results = withContext(Dispatchers.IO) { searchProjectContent(query) }
+            if (current?.id == project.id) contentSearchResults = results
+            isSearchingContent = false
+            message = "Content search found ${results.size} matches" + if (results.size >= 500) " (first 500 shown)" else "."
         }
     }
 
