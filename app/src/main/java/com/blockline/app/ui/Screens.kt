@@ -270,8 +270,10 @@ fun ToolsScreen(vm: AppViewModel) {
                     }
                 }
             }
+        } else if (vm.validationCompleted) {
+            item { Text("No issues found. The checks included JSON syntax, manifest fields, UUID uniqueness, script entry paths, and dependency metadata.") }
         } else {
-            item { Text(if (vm.isValidating) "Scanning JSON files and manifests…" else "Run validation to see JSON, manifest, UUID, and dependency findings.") }
+            item { Text(if (vm.isValidating) "Scanning JSON files and manifests…" else "Run validation to see JSON, manifest, UUID, script entry, and dependency findings.") }
         }
         item { Button(onClick = { vm.backup() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Backup, null); Text("  Create backup") } }
         item { Button(onClick = { vm.restore() }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Restore, null); Text("  Restore latest backup") } }
