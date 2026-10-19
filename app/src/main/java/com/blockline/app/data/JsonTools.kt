@@ -25,10 +25,15 @@ object JsonTools {
             } else if (c == '/' && i + 1 < s.length && s[i + 1] == '/') {
                 while (i < s.length && s[i] != '\n') i++
             } else if (c == '/' && i + 1 < s.length && s[i + 1] == '*') {
+                val start = i
                 i += 2
                 while (i < s.length && !(s[i] == '*' && i + 1 < s.length && s[i + 1] == '/')) {
                     if (s[i] == '\n') sb.append('\n')
                     i++
+                }
+                if (i >= s.length) {
+                    sb.append(s.substring(start))
+                    break
                 }
                 i += 2
             } else {
