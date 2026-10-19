@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
@@ -52,12 +54,33 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val path = vm.activeFile
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
+    var editorValue by remember(path) { mutableStateOf(TextFieldValue(vm.content)) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
     LaunchedEffect(path, vm.content) {
+        if (editorValue.text != vm.content) {
+            val cursor = editorValue.selection.start.coerceAtMost(vm.content.length)
+            editorValue = TextFieldValue(vm.content, TextRange(cursor))
+        }
         if (path != null && !vm.readOnly) {
             delay(900)
             vm.saveCurrent()
         }
+    }
+    LaunchedEffect(path, vm.pendingEditorLine, vm.content) {
+        val targetLine = vm.pendingEditorLine ?: return@LaunchedEffect
+        if (path == null) return@LaunchedEffect
+        val starts = vm.content.indices.filter { vm.content[it] == '\n' }
+        val offset = if (targetLine <= 1) 0 else {
+            var line = 1
+            var position = 0
+            while (position < vm.content.length && line < targetLine) {
+                if (vm.content[position] == '\n') line++
+                position++
+            }
+            position
+        }
+        editorValue = TextFieldValue(vm.content, TextRange(offset.coerceIn(0, vm.content.length)))
+        vm.consumePendingEditorLine()
     }
     Scaffold(
         topBar = {
@@ -99,8 +122,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 }
                 if (vm.readOnly) Text("Large file: read-only mode (over 1 MB)", color = androidx.compose.material3.MaterialTheme.colorScheme.error)
                 BasicTextField(
-                    value = vm.content,
-                    onValueChange = { vm.updateContent(it) },
+                    value = editorValue,
+                    onValueChange = {
+                        editorValue = it
+                        vm.updateContent(it.text)
+                    },
                     readOnly = vm.readOnly,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
