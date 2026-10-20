@@ -16,6 +16,7 @@ internal object ResourceReferenceChecker {
             .mapNotNull { runCatching { it.canonicalFile }.getOrNull() }
             .toSet()
 
+        val textureIndexByPack = mutableMapOf<String, Set<File>>()
         files.asSequence()
             .filter { it.isFile && it.extension.equals("json", true) }
             .filter { file ->
@@ -28,7 +29,9 @@ internal object ResourceReferenceChecker {
                     ?: return@forEach
                 val packRoot = findPackRoot(canonicalRoot, file) ?: canonicalRoot
                 val packPath = packRoot.path + File.separator
-                val packTextures = pngFiles.filter { it.path.startsWith(packPath) }.toSet()
+                val packTextures = textureIndexByPack.getOrPut(packRoot.path) {
+                    pngFiles.filter { it.path.startsWith(packPath) }.toSet()
+                }
                 inspectTextures(root, false) { reference ->
                     val normalized = reference.trim().replace('\\', '/').removePrefix("/")
                     if (!normalized.startsWith("textures/", true) || normalized.contains("..")) return@inspectTextures

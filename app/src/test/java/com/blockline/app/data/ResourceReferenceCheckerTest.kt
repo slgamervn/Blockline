@@ -44,6 +44,29 @@ class ResourceReferenceCheckerTest {
     }
 
     @Test
+    fun doesNotResolveTextureFromAnotherPackWithTheSameRelativePath() {
+        val root = Files.createTempDirectory("blockline-isolated-pack-texture-").toFile()
+        try {
+            val firstPack = File(root, "RP1").apply { mkdirs() }
+            val firstManifest = File(firstPack, "manifest.json").apply { writeText("""{"header":{"name":"RP1"}}""") }
+            val entity = File(firstPack, "entity/client_entity.json").apply {
+                parentFile?.mkdirs()
+                writeText("""{"description":{"textures":{"default":"textures/entity/mob"}}}""")
+            }
+            val secondPack = File(root, "RP2").apply { mkdirs() }
+            val secondManifest = File(secondPack, "manifest.json").apply { writeText("""{"header":{"name":"RP2"}}""") }
+            val otherPackTexture = File(secondPack, "textures/entity").apply { mkdirs() }.resolve("mob.png")
+            otherPackTexture.writeBytes(byteArrayOf(1, 2, 3))
+
+            val issues = ResourceReferenceChecker.check(root, listOf(firstManifest, entity, secondManifest, otherPackTexture))
+
+            assertEquals(1, issues.size)
+            assertTrue(issues.single().message.contains("textures/entity/mob"))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+    @Test
     fun resolvesTexturesRelativeToNestedPackRoot() {
         val root = Files.createTempDirectory("blockline-nested-pack-").toFile()
         try {

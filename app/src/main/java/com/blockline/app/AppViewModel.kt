@@ -550,7 +550,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteFile(path: String) {
         val p = current ?: return
         if (isFileOperationRunning) return
-        if (activeFile == path || activeFile?.startsWith("$path/") == true) saveCurrent(showMessage = false)
+        if ((activeFile == path || activeFile?.startsWith("$path/") == true) && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
             val result = runCatching {
