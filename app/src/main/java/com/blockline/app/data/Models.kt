@@ -28,3 +28,26 @@ val TEXT_EXT = setOf(
     "xml", "csv", "tsv", "fragment", "vertex", "glsl", "hlsl", "mcmeta", "cfg", "yaml", "yml",
     "html", "css", "geo", "toml", "ini", "log"
 )
+
+
+enum class SearchFileFilter {
+    ALL, JSON, SCRIPT, FUNCTION, MANIFEST;
+
+    fun matches(file: File, path: String): Boolean {
+        val extension = file.extension.lowercase(java.util.Locale.ROOT)
+        return when (this) {
+            ALL -> true
+            JSON -> extension in setOf("json", "json5", "mcmeta")
+            SCRIPT -> extension in setOf("js", "mjs", "ts")
+            FUNCTION -> extension == "mcfunction"
+            MANIFEST -> file.name.equals("manifest.json", ignoreCase = true) ||
+                file.name.equals("pack_manifest.json", ignoreCase = true)
+        }
+    }
+}
+
+data class ContentSearchResult(
+    val path: String,
+    val line: Int,
+    val snippet: String
+)
