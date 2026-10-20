@@ -203,6 +203,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }.getOrDefault(emptyList())
     }
     fun selectProject(p: Project) {
+        openFileRequestId++
+        isOpeningFile = false
         clearResourcePreview()
         if (current?.id == p.id) {
             repo.touch(p.id)
@@ -257,6 +259,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun deleteProject(p: Project) {
         if (isFileOperationRunning) return
+        openFileRequestId++
+        isOpeningFile = false
         if (current?.id == p.id) saveCurrent(showMessage = false)
         isFileOperationRunning = true
         viewModelScope.launch {
@@ -285,34 +289,78 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }.onFailure { message = it.message ?: text(R.string.project_deleted) }
         }
     }
+    private data class OpenedFile(val size: Long, val text: String)
+    private var openFileRequestId = 0
+    var isOpeningFile by mutableStateOf(false)
+        private set
+
     fun openFile(path: String) = openFile(path, null)
 
     fun openFile(path: String, line: Int?) {
-        pendingEditorLine = line?.coerceAtLeast(1)
-        val p = current ?: return
-        if (activeFile == path) {
+        val project = current ?: return
+        if (activeFile == path && !isOpeningFile) {
+            pendingEditorLine = line?.coerceAtLeast(1)
             if (line == null) pendingEditorLine = null
             return
         }
-        if (activeFile != null) saveCurrent(showMessage = false)
-        runCatching {
-            val file = repo.resolve(p.id, path)
-            require(file.isFile) { text(R.string.file_not_found) }
-            val size = file.length()
-            readOnly = size > 1024L * 1024L
-            activeFile = path
-            val buffered = openTabs[path]
-            content = buffered ?: if (size <= 2L * 1024L * 1024L) file.readText(Charsets.UTF_8) else ""
-            openTabs[path] = content
-            if (buffered == null) {
-                undo[path] = mutableListOf()
-                redo[path] = mutableListOf()
-                lastEditAt.remove(path)
+
+        val requestId = ++openFileRequestId
+        val previousPath = activeFile
+        val previousContent = content
+        val previousReadOnly = readOnly
+        if (previousPath != null && !previousReadOnly) openTabs[previousPath] = previousContent
+        val buffered = openTabs[path]
+        isOpeningFile = true
+
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    if (previousPath != null && previousPath != path && !previousReadOnly) {
+                        writeSnapshot(project.id, previousPath, previousContent)
+                    }
+                    val file = repo.resolve(project.id, path)
+                    require(file.isFile) { text(R.string.file_not_found) }
+                    val size = file.length()
+                    require(size <= 5L * 1024L * 1024L) { text(R.string.file_too_large) }
+                    val fileText = buffered ?: file.readText(Charsets.UTF_8)
+                    repo.addRecentFile(project.id, path)
+                    OpenedFile(size, fileText)
+                }
             }
-            repo.addRecentFile(p.id, path)
-        }.onFailure {
-            pendingEditorLine = null
-            message = it.message ?: text(R.string.cannot_open_file)
+
+            if (requestId != openFileRequestId || current?.id != project.id) return@launch
+            isOpeningFile = false
+            result.onSuccess { opened ->
+                activeFile = path
+                readOnly = opened.size > 1024L * 1024L
+                content = opened.text
+                openTabs[path] = opened.text
+                if (buffered == null) {
+                    undo[path] = mutableListOf()
+                    redo[path] = mutableListOf()
+                    lastEditAt.remove(path)
+                }
+                pendingEditorLine = line?.coerceAtLeast(1)
+            }.onFailure {
+                pendingEditorLine = null
+                activeFile = previousPath
+                content = previousContent
+                readOnly = previousReadOnly
+                message = it.message ?: text(R.string.cannot_open_file)
+            }
+        }
+    }
+
+    private fun writeSnapshot(projectId: String, path: String, value: String) {
+        val projectRoot = repo.projectDir(projectId).canonicalFile
+        val target = repo.resolve(projectId, path).canonicalFile
+        require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
+        check(target.isFile) { text(R.string.file_not_found) }
+        val temp = File(target.parentFile, target.name + ".saving")
+        temp.writeText(value, Charsets.UTF_8)
+        if (!temp.renameTo(target)) {
+            target.writeText(value, Charsets.UTF_8)
+            temp.delete()
         }
     }
     fun consumePendingEditorLine() {
