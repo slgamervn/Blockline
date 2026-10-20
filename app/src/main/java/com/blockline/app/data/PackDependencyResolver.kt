@@ -52,7 +52,7 @@ internal object PackDependencyResolver {
         manifests.forEach { (file, json) ->
             val path = relative(root, file)
             val sourceName = json.optJSONObject("header")?.optString("name")?.trim()
-                ?.ifBlank { null } ?: file.parentFile?.name ?: path
+                ?.takeIf { it.isNotBlank() } ?: file.parentFile?.name ?: path
             val value = json.opt("dependencies")
             if (value == null) return@forEach
             val dependencies = value as? JSONArray
