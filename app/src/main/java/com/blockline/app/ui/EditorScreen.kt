@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +36,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -52,6 +55,23 @@ import com.blockline.app.data.JsonTools
 import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
 
+private const val LARGE_FILE_PAGE_CHARS = 12_000
+
+private fun largeFilePageOffsets(text: String): List<Int> {
+    if (text.isEmpty()) return listOf(0)
+    val offsets = ArrayList<Int>((text.length / LARGE_FILE_PAGE_CHARS) + 1)
+    offsets += 0
+    var offset = LARGE_FILE_PAGE_CHARS
+    while (offset < text.length) {
+        if (offset > 0 && Character.isHighSurrogate(text[offset - 1]) && Character.isLowSurrogate(text[offset])) {
+            offset++
+        }
+        offsets += offset
+        offset += LARGE_FILE_PAGE_CHARS
+    }
+    return offsets
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
@@ -59,9 +79,33 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val path = vm.activeFile
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
-    var editorValue by remember(path) { mutableStateOf(TextFieldValue(vm.content)) }
+    var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
+    var largeFilePage by remember(path) { mutableStateOf(0) }
+    var matchCount by remember(path) { mutableStateOf(0) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
     var highlightSource by remember(path) { mutableStateOf("") }
+    val largeOffsets = remember(vm.content, vm.readOnly) {
+        if (vm.readOnly) largeFilePageOffsets(vm.content) else listOf(0)
+    }
+    val pageIndex = largeFilePage.coerceIn(0, (largeOffsets.size - 1).coerceAtLeast(0))
+    val pageStart = largeOffsets[pageIndex]
+    val pageEnd = largeOffsets.getOrNull(pageIndex + 1) ?: vm.content.length
+    val pageText = remember(vm.content, pageStart, pageEnd) {
+        vm.content.substring(pageStart.coerceAtMost(vm.content.length), pageEnd.coerceAtMost(vm.content.length))
+    }
+    LaunchedEffect(showFind, findText, path, vm.content) {
+        if (!showFind || findText.isBlank()) {
+            matchCount = 0
+        } else {
+            delay(250)
+            val query = findText
+            val source = vm.content
+            val count = withContext(Dispatchers.Default) {
+                Regex(Regex.escape(query), RegexOption.IGNORE_CASE).findAll(source).count()
+            }
+            if (query == findText) matchCount = count
+        }
+    }
     LaunchedEffect(path, editorValue.text, lang) {
         if (lang == null || editorValue.text.length > 48_000) {
             highlightSource = ""
@@ -70,13 +114,15 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             highlightSource = editorValue.text
         }
     }
-    LaunchedEffect(path, vm.content) {
-        if (editorValue.text != vm.content) {
+    LaunchedEffect(path, vm.content, vm.readOnly) {
+        if (vm.readOnly) {
+            if (editorValue.text.isNotEmpty()) editorValue = TextFieldValue()
+        } else if (editorValue.text != vm.content) {
             val cursor = editorValue.selection.start.coerceAtMost(vm.content.length)
             editorValue = TextFieldValue(vm.content, TextRange(cursor))
         }
     }
-    LaunchedEffect(path, vm.pendingEditorLine, vm.content) {
+    LaunchedEffect(path, vm.pendingEditorLine, vm.content, vm.readOnly, largeOffsets) {
         val targetLine = vm.pendingEditorLine ?: return@LaunchedEffect
         if (path == null) return@LaunchedEffect
         val offset = if (targetLine <= 1) 0 else {
@@ -88,7 +134,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
             position
         }
-        editorValue = TextFieldValue(vm.content, TextRange(offset.coerceIn(0, vm.content.length)))
+        if (vm.readOnly) {
+            largeFilePage = largeOffsets.indexOfLast { it <= offset }.coerceAtLeast(0)
+        } else {
+            editorValue = TextFieldValue(vm.content, TextRange(offset.coerceIn(0, vm.content.length)))
+        }
         vm.consumePendingEditorLine()
     }
     Scaffold(
@@ -97,22 +147,22 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) } },
                 actions = {
-                    IconButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Undo, stringResource(R.string.editor_undo_cd)) }
-                    IconButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Redo, stringResource(R.string.editor_redo_cd)) }
+                    IconButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Undo, stringResource(R.string.editor_undo_cd)) }
+                    IconButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Redo, stringResource(R.string.editor_redo_cd)) }
                     IconButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
                     IconButton(onClick = {
                         if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content))
                         vm.saveCurrent()
-                    }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
+                    }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
             )
         },
         bottomBar = {
             Row(Modifier.fillMaxWidth().imePadding().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Undo, null); Text(stringResource(R.string.undo)) }
-                TextButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Redo, null); Text(stringResource(R.string.redo)) }
-                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
-                TextButton(onClick = { vm.saveCurrent() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
+                TextButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Undo, null); Text(stringResource(R.string.undo)) }
+                TextButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Redo, null); Text(stringResource(R.string.redo)) }
+                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
+                TextButton(onClick = { vm.saveCurrent() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
                 TextButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
             }
         }
@@ -133,24 +183,62 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                 }
-                if (vm.readOnly) Text(stringResource(R.string.large_file_readonly), color = androidx.compose.material3.MaterialTheme.colorScheme.error)
-                BasicTextField(
-                    value = editorValue,
-                    onValueChange = {
-                        editorValue = it
-                        vm.updateContent(it.text)
-                    },
-                    readOnly = vm.readOnly || vm.isOpeningFile,
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                    visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= 48_000) HighlightTransformation(lang, Palette(
-                        androidx.compose.ui.graphics.Color(0xFF8FC9FF),
-                        androidx.compose.ui.graphics.Color(0xFFB5E7A0),
-                        androidx.compose.ui.graphics.Color(0xFFE6B35A),
-                        Emerald,
-                        androidx.compose.ui.graphics.Color(0xFF82958A)
-                    )) else VisualTransformation.None
-                )
+                if (vm.readOnly) {
+                    Text(
+                        stringResource(R.string.large_file_readonly),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        stringResource(R.string.large_file_page, pageIndex + 1, largeOffsets.size, pageStart + 1, pageEnd, vm.content.length),
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(
+                            onClick = { largeFilePage = (pageIndex - 1).coerceAtLeast(0) },
+                            enabled = pageIndex > 0
+                        ) { Text(stringResource(R.string.large_file_previous)) }
+                        TextButton(
+                            onClick = { largeFilePage = (pageIndex + 1).coerceAtMost(largeOffsets.lastIndex) },
+                            enabled = pageIndex < largeOffsets.lastIndex
+                        ) { Text(stringResource(R.string.large_file_next)) }
+                    }
+                    Column(
+                        Modifier.weight(1f).fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 4.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            pageText,
+                            style = TextStyle(
+                                color = OnSurface,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = vm.fontSize.sp,
+                                lineHeight = (vm.fontSize + 5).sp
+                            )
+                        )
+                    }
+                } else {
+                    BasicTextField(
+                        value = editorValue,
+                        onValueChange = {
+                            editorValue = it
+                            vm.updateContent(it.text)
+                        },
+                        readOnly = vm.isOpeningFile,
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
+                        visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= 48_000) HighlightTransformation(lang, Palette(
+                            androidx.compose.ui.graphics.Color(0xFF8FC9FF),
+                            androidx.compose.ui.graphics.Color(0xFFB5E7A0),
+                            androidx.compose.ui.graphics.Color(0xFFE6B35A),
+                            Emerald,
+                            androidx.compose.ui.graphics.Color(0xFF82958A)
+                        )) else VisualTransformation.None
+                    )
+                }
             }
         }
     }
@@ -159,18 +247,23 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         title = { Text(stringResource(R.string.find_in_file)) },
         text = { Column {
             OutlinedTextField(value = findText, onValueChange = { findText = it }, label = { Text(stringResource(R.string.text_to_find)) }, singleLine = true)
-            Text(if (findText.isBlank()) stringResource(R.string.enter_text_to_count) else stringResource(R.string.matches_count, Regex(Regex.escape(findText), RegexOption.IGNORE_CASE).findAll(vm.content).count()))
+            Text(if (findText.isBlank()) stringResource(R.string.enter_text_to_count) else stringResource(R.string.matches_count, matchCount))
         } },
         confirmButton = {
             TextButton(onClick = {
                 val query = findText
                 if (query.isNotBlank()) {
-                    val startAt = editorValue.selection.end.coerceIn(0, editorValue.text.length)
-                    val found = editorValue.text.indexOf(query, startAt, ignoreCase = true)
+                    val source = vm.content
+                    val startAt = if (vm.readOnly) pageEnd.coerceIn(0, source.length) else editorValue.selection.end.coerceIn(0, source.length)
+                    val found = source.indexOf(query, startAt, ignoreCase = true)
                         .takeIf { it >= 0 }
-                        ?: editorValue.text.indexOf(query, 0, ignoreCase = true)
+                        ?: source.indexOf(query, 0, ignoreCase = true)
                     if (found >= 0) {
-                        editorValue = editorValue.copy(selection = TextRange(found, found + query.length))
+                        if (vm.readOnly) {
+                            largeFilePage = largeOffsets.indexOfLast { it <= found }.coerceAtLeast(0)
+                        } else {
+                            editorValue = editorValue.copy(selection = TextRange(found, found + query.length))
+                        }
                         vm.message = context.getString(R.string.matches_count, 1)
                     } else {
                         vm.message = context.getString(R.string.find_not_found)
