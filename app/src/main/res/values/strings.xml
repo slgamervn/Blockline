@@ -303,4 +303,12 @@
     <string name="snippet_javascript_description">Sends a welcome message only when a player initially spawns in the world.</string>
     <string name="snippet_mcfunction_language">Minecraft function</string>
     <string name="snippet_javascript_language">JavaScript · Script API</string>
+    <string name="pack_manifest_generator_title">Pack manifest generator</string>
+    <string name="pack_manifest_generator_hint">Creates a new manifest with fresh UUIDs. Existing manifest files are never overwritten.</string>
+    <string name="generated_pack_name">Pack name</string>
+    <string name="generated_pack_description">Description</string>
+    <string name="generated_behavior_pack">Behavior Pack</string>
+    <string name="generated_resource_pack">Resource Pack</string>
+    <string name="generate_manifest">Generate and open manifest</string>
+    <string name="generated_manifest_created">Created %1$s</string>
 </resources>

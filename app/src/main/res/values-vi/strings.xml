@@ -303,4 +303,12 @@
     <string name="snippet_javascript_description">Chỉ gửi thông báo chào mừng khi người chơi xuất hiện lần đầu trong thế giới.</string>
     <string name="snippet_mcfunction_language">Minecraft function</string>
     <string name="snippet_javascript_language">JavaScript · Script API</string>
+    <string name="pack_manifest_generator_title">Tạo manifest cho pack</string>
+    <string name="pack_manifest_generator_hint">Tạo manifest mới với UUID riêng. Tệp manifest đã tồn tại sẽ không bị ghi đè.</string>
+    <string name="generated_pack_name">Tên pack</string>
+    <string name="generated_pack_description">Mô tả</string>
+    <string name="generated_behavior_pack">Behavior Pack</string>
+    <string name="generated_resource_pack">Resource Pack</string>
+    <string name="generate_manifest">Tạo và mở manifest</string>
+    <string name="generated_manifest_created">Đã tạo %1$s</string>
 </resources>

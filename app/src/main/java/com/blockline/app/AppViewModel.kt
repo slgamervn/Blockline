@@ -41,6 +41,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var fontSize by mutableStateOf(14)
     var activeFile by mutableStateOf<String?>(null)
         private set
+    var generatedFileToOpen by mutableStateOf<String?>(null)
+        private set
     var content by mutableStateOf("")
         private set
     var pendingEditorLine by mutableStateOf<Int?>(null)
@@ -500,6 +502,49 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (nextTab != null) openFile(nextTab)
         }
     }
+    fun consumeGeneratedFileToOpen() {
+        generatedFileToOpen = null
+    }
+
+    fun createFileFromTemplate(path: String, value: String) {
+        val project = current ?: return
+        if (isFileOperationRunning) return
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val target = repo.resolve(project.id, path)
+                    check(!target.exists()) { "File already exists; refusing to overwrite it." }
+                    val parent = target.parentFile ?: error("Target file has no parent directory.")
+                    check(parent.isDirectory || parent.mkdirs()) { "Could not create the target directory." }
+                    val temporary = File(parent, "${target.name}.creating.${java.util.UUID.randomUUID()}")
+                    try {
+                        temporary.writeText(value, Charsets.UTF_8)
+                        try {
+                            java.nio.file.Files.move(
+                                temporary.toPath(),
+                                target.toPath(),
+                                java.nio.file.StandardCopyOption.ATOMIC_MOVE
+                            )
+                        } catch (_: java.nio.file.AtomicMoveNotSupportedException) {
+                            java.nio.file.Files.move(temporary.toPath(), target.toPath())
+                        }
+                        check(target.isFile) { "Generated file could not be created." }
+                    } finally {
+                        temporary.delete()
+                    }
+                }
+            }
+            isFileOperationRunning = false
+            if (current?.id != project.id) return@launch
+            result.onSuccess {
+                refreshProjectEntries(project.id)
+                generatedFileToOpen = path
+                message = text(R.string.generated_manifest_created, path)
+            }.onFailure { message = it.message ?: text(R.string.create_failed) }
+        }
+    }
+
     fun createFile(path: String, directory: Boolean) {
         val p = current ?: return
         if (isFileOperationRunning) return

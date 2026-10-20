@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,8 @@ import com.blockline.app.BuildConfig
 import com.blockline.app.R
 import com.blockline.app.data.ExportMode
 import com.blockline.app.data.SearchFileFilter
+import com.blockline.app.data.GeneratedPackType
+import com.blockline.app.data.PackManifestGenerator
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
@@ -353,9 +356,68 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    var generatedPackName by remember { mutableStateOf("") }
+    var generatedPackDescription by remember { mutableStateOf("") }
+    var generatedPackType by remember { mutableStateOf(GeneratedPackType.BEHAVIOR) }
+    LaunchedEffect(vm.generatedFileToOpen) {
+        val generatedPath = vm.generatedFileToOpen ?: return@LaunchedEffect
+        vm.openFile(generatedPath)
+        onOpenEditor()
+        vm.consumeGeneratedFileToOpen()
+    }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text(stringResource(R.string.local_project_tools_hint)) }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.pack_manifest_generator_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.pack_manifest_generator_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedTextField(
+                        value = generatedPackName,
+                        onValueChange = { generatedPackName = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.generated_pack_name)) },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = generatedPackDescription,
+                        onValueChange = { generatedPackDescription = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.generated_pack_description)) },
+                        minLines = 2,
+                        maxLines = 3
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        androidx.compose.material3.FilterChip(
+                            selected = generatedPackType == GeneratedPackType.BEHAVIOR,
+                            onClick = { generatedPackType = GeneratedPackType.BEHAVIOR },
+                            label = { Text(stringResource(R.string.generated_behavior_pack)) }
+                        )
+                        androidx.compose.material3.FilterChip(
+                            selected = generatedPackType == GeneratedPackType.RESOURCE,
+                            onClick = { generatedPackType = GeneratedPackType.RESOURCE },
+                            label = { Text(stringResource(R.string.generated_resource_pack)) }
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            runCatching {
+                                PackManifestGenerator.generate(generatedPackName, generatedPackDescription, generatedPackType)
+                            }.onSuccess { json ->
+                                vm.createFileFromTemplate("${generatedPackType.folder}/manifest.json", json)
+                            }.onFailure { error ->
+                                vm.message = error.message ?: context.getString(R.string.create_failed)
+                            }
+                        },
+                        enabled = vm.current != null && generatedPackName.isNotBlank() && !vm.isFileOperationRunning,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.generate_manifest))
+                    }
+                }
+            }
+        }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
