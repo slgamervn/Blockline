@@ -116,7 +116,18 @@ jobs:
               details="$(gh release view "$tag" --json body,name)"
               release_name="$(jq -r '.name // empty' <<<"$details")"
               body="$(jq -r '.body // ""' <<<"$details")"
-              first_line="${body%%        uses: actions/upload-artifact@v6
+              first_line="$(printf '%s\n' "$body" | head -n 1)"
+              if [ -n "$release_name" ] && [ "$first_line" = "# $release_name" ]; then
+                notes_file="$(mktemp)"
+                printf '%s\n' "$body" | sed '1d' > "$notes_file"
+                gh release edit "$tag" --notes-file "$notes_file"
+                rm -f "$notes_file"
+                echo "Removed duplicated title heading from $tag"
+              fi
+            done
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v6
         with:
           name: Blockline-v${{ env.VERSION_NAME }}-apk
           path: Blockline-v${{ env.VERSION_NAME }}.apk
