@@ -290,4 +290,7 @@
     <string name="pack_health_score">Sức khỏe pack</string>
     <string name="pack_health_score_waiting">Chạy kiểm tra để tính điểm sức khỏe của pack.</string>
     <string name="pack_health_score_value">%1$d / 100</string>
+    <string name="large_file_page">Phần %1$d/%2$d · Ký tự %3$d–%4$d trên %5$d</string>
+    <string name="large_file_previous">Phần trước</string>
+    <string name="large_file_next">Phần tiếp</string>
 </resources>
