@@ -66,6 +66,7 @@ private fun largeFilePageOffsets(text: String): List<Int> {
         if (offset > 0 && Character.isHighSurrogate(text[offset - 1]) && Character.isLowSurrogate(text[offset])) {
             offset++
         }
+        if (offset >= text.length) break
         offsets += offset
         offset += LARGE_FILE_PAGE_CHARS
     }
