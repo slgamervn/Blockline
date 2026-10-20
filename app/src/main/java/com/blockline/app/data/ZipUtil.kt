@@ -78,6 +78,31 @@ object ZipUtil {
         }
     }
 
+    fun zipAddon(packs: List<File>, out: OutputStream, temporaryDirectory: File) {
+        require(packs.isNotEmpty()) { "At least one pack is required for an add-on archive." }
+        check(temporaryDirectory.mkdirs() || temporaryDirectory.isDirectory) {
+            "Could not create temporary export storage."
+        }
+        val temporaryArchives = mutableListOf<File>()
+        try {
+            ZipOutputStream(BufferedOutputStream(out)).use { addonZip ->
+                packs.forEach { pack ->
+                    require(pack.isDirectory) { "Pack folder does not exist: ${pack.name}" }
+                    val temporary = File.createTempFile("blockline-export-", ".mcpack", temporaryDirectory)
+                    temporaryArchives += temporary
+                    FileOutputStream(temporary).use { packOutput ->
+                        zip(listOf(pack to ""), packOutput)
+                    }
+                    addonZip.putNextEntry(ZipEntry("${pack.name}.mcpack"))
+                    temporary.inputStream().buffered().use { it.copyTo(addonZip) }
+                    addonZip.closeEntry()
+                }
+            }
+        } finally {
+            temporaryArchives.forEach { it.delete() }
+        }
+    }
+
     fun zip(roots: List<Pair<File, String>>, out: OutputStream) {
         ZipOutputStream(BufferedOutputStream(out)).use { zos ->
             for ((dir, prefix) in roots) {
