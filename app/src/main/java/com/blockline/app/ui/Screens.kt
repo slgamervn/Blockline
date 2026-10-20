@@ -145,6 +145,46 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                     }
                 }
             }
+            item {
+                val score = vm.packHealthScore
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(R.string.pack_health_score), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(
+                                score?.let { stringResource(R.string.pack_health_score_value, it) } ?: "— / 100",
+                                color = if (score == null) androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant else com.blockline.app.ui.theme.Emerald,
+                                style = androidx.compose.material3.MaterialTheme.typography.titleLarge
+                            )
+                        }
+                        if (score == null) {
+                            Text(stringResource(R.string.pack_health_score_waiting), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else {
+                            LinearProgressIndicator(progress = score / 100f, modifier = Modifier.fillMaxWidth())
+                            Text(
+                                stringResource(R.string.validation_counts,
+                                    vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR },
+                                    vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING },
+                                    vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO }
+                                ),
+                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Button(
+                            onClick = { vm.validateCurrentProject() },
+                            enabled = !vm.isValidating,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(if (vm.isValidating) R.string.validating_project else R.string.validate_pack))
+                        }
+                    }
+                }
+            }
             items(manifestFiles, key = { it.absolutePath }) { file ->
                 val json = runCatching { org.json.JSONObject(com.blockline.app.data.JsonTools.stripComments(file.readText())) }.getOrNull()
                 val header = json?.optJSONObject("header")

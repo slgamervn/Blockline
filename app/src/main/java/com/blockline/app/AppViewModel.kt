@@ -59,6 +59,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var validationCompleted by mutableStateOf(false)
         private set
+
+    val packHealthScore: Int?
+        get() = if (!validationCompleted) null else {
+            val errors = validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
+            val warnings = validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
+            (100 - errors * 12 - warnings * 4).coerceIn(0, 100)
+        }
     var previewPath by mutableStateOf<String?>(null)
         private set
     var resourcePreview by mutableStateOf<ResourcePreview?>(null)
