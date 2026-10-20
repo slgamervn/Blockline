@@ -103,29 +103,6 @@ jobs:
             echo "- If this is a debug build, installing over an APK signed with a different key may require uninstalling the older app first. Back up project files before doing so."
           } > RELEASE_NOTES.md
 
-      - name: Remove duplicated headings from existing release notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          gh release list --limit 100 --json tagName,name |
-            jq -c '.[]' |
-            while IFS= read -r release; do
-              tag="$(jq -r '.tagName // empty' <<<"$release")"
-              [ -n "$tag" ] || continue
-              details="$(gh release view "$tag" --json body,name)"
-              release_name="$(jq -r '.name // empty' <<<"$details")"
-              body="$(jq -r '.body // ""' <<<"$details")"
-              first_line="$(printf '%s\n' "$body" | head -n 1)"
-              if [ -n "$release_name" ] && [ "$first_line" = "# $release_name" ]; then
-                notes_file="$(mktemp)"
-                printf '%s\n' "$body" | sed '1d' > "$notes_file"
-                gh release edit "$tag" --notes-file "$notes_file"
-                rm -f "$notes_file"
-                echo "Removed duplicated title heading from $tag"
-              fi
-            done
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
         with:

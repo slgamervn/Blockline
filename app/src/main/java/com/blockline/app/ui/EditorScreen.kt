@@ -255,10 +255,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 val query = findText
                 if (query.isNotBlank()) {
                     val source = vm.content
-                    val startAt = if (vm.readOnly) pageEnd.coerceIn(0, source.length) else editorValue.selection.end.coerceIn(0, source.length)
-                    val found = source.indexOf(query, startAt, ignoreCase = true)
-                        .takeIf { it >= 0 }
-                        ?: source.indexOf(query, 0, ignoreCase = true)
+                    val startAt = if (vm.readOnly) pageStart.coerceIn(0, source.length) else editorValue.selection.end.coerceIn(0, source.length)
+                    val found = findWrappedMatch(source, query, startAt)
                     if (found >= 0) {
                         if (vm.readOnly) {
                             largeFilePage = largeOffsets.indexOfLast { it <= found }.coerceAtLeast(0)
