@@ -58,17 +58,31 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     var targetPath by remember { mutableStateOf("") }
     val allEntries = project?.let { vm.projectEntries[it.id] }.orEmpty()
     val recentPaths = project?.let { vm.repo.recentFiles(it.id) }.orEmpty()
-    val entries = allEntries.filter { file ->
-        val path = project?.let { vm.repo.relative(it.id, file) } ?: ""
-        when (filter) {
-            "Favorites" -> file.isFile && vm.isFavorite(path)
-            "Recent" -> file.isFile && path in recentPaths
-            else -> true
+    val entries = remember(allEntries, filter, recentPaths, project?.id) {
+        allEntries.filter { file ->
+            val path = project?.let { vm.repo.relative(it.id, file) } ?: ""
+            when (filter) {
+                "Favorites" -> file.isFile && vm.isFavorite(path)
+                "Recent" -> file.isFile && path in recentPaths
+                else -> true
+            }
+        }.let { filtered ->
+            if (filter == "Recent" && project != null) {
+                filtered.sortedBy { file ->
+                    recentPaths.indexOf(vm.repo.relative(project.id, file)).let { if (it < 0) Int.MAX_VALUE else it }
+                }
+            } else filtered
         }
-    }.let { filtered ->
-        if (filter == "Recent" && project != null) {
-            filtered.sortedBy { file -> recentPaths.indexOf(vm.repo.relative(project.id, file)).let { if (it < 0) Int.MAX_VALUE else it } }
-        } else filtered
+    }
+    val visibleEntries = remember(entries, expanded, filter, project?.id) {
+        if (filter != "All" || project == null) entries
+        else entries.filter { file ->
+            val path = vm.repo.relative(project.id, file)
+            val segments = path.split('/')
+            (1 until segments.size).all { depth ->
+                segments.take(depth).joinToString("/") in expanded
+            }
+        }
     }
 
     Scaffold(topBar = {
@@ -99,12 +113,9 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                     EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())
                 } else if (entries.isNotEmpty()) {
                     LazyColumn(Modifier.fillMaxSize()) {
-                        items(entries, key = { vm.repo.relative(project.id, it) }) { file ->
+                        items(visibleEntries, key = { vm.repo.relative(project.id, it) }, contentType = { if (it.isDirectory) "folder" else "file" }) { file ->
                             val path = vm.repo.relative(project.id, file)
-                            val parentPath = file.parentFile?.let { vm.repo.relative(project.id, it) }
-                            val visible = filter != "All" || parentPath == null || parentPath == "." || parentPath.isEmpty() || expanded.contains(parentPath)
-                            if (visible) {
-                                var menu by remember(path) { mutableStateOf(false) }
+                            var menu by remember(path) { mutableStateOf(false) }
                                 val depth = path.count { it == '/' }
                                 ListItem(
                                     leadingContent = { Icon(if (file.isDirectory) Icons.Default.Folder else Icons.Default.InsertDriveFile, null) },
@@ -133,7 +144,6 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                                         else { vm.openFile(path); onOpenEditor() }
                                     }
                                 )
-                            }
                         }
                     }
                 }
