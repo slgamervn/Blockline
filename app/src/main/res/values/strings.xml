@@ -279,4 +279,5 @@
     <string name="manifest_dependency_line">%1$s · Version: %2$s</string>
     <string name="manifest_capabilities">Capabilities: %1$s</string>
     <string name="file_operation_running">Updating files…</string>
+    <string name="find_not_found">No match found in this file.</string>
 </resources>
