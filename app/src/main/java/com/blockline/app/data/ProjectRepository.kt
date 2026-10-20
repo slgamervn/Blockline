@@ -16,15 +16,30 @@ class ProjectRepository(private val ctx: Context) {
     val prefs = ctx.getSharedPreferences("blockline", Context.MODE_PRIVATE)
 
     fun projectDir(id: String) = File(root, id)
-    fun list(): List<Project> = try {
-        if (!indexFile.exists()) emptyList() else {
+    fun list(): List<Project> {
+        if (!indexFile.isFile) return recoverProjectIndex()
+
+        return try {
             val arr = JSONArray(indexFile.readText())
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
                 Project(o.getString("id"), o.getString("name"), o.getLong("createdAt"), o.getLong("lastOpened"))
             }.filter { projectDir(it.id).isDirectory }.sortedByDescending { it.lastOpened }
+        } catch (_: Exception) {
+            recoverProjectIndex(preserveDamagedIndex = true)
         }
-    } catch (_: Exception) { emptyList() }
+    }
+
+    private fun recoverProjectIndex(preserveDamagedIndex: Boolean = false): List<Project> {
+        val recovered = ProjectMetadataRecovery.recover(root)
+        if (recovered.isEmpty()) return emptyList()
+        if (preserveDamagedIndex && indexFile.isFile) {
+            val damagedCopy = File(indexFile.parentFile, "projects.corrupt.${System.currentTimeMillis()}.json")
+            runCatching { indexFile.copyTo(damagedCopy, overwrite = false) }
+        }
+        runCatching { save(recovered) }
+        return recovered
+    }
 
     private fun save(list: List<Project>) {
         val arr = JSONArray()
