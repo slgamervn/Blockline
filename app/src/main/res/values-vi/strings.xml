@@ -282,4 +282,12 @@
     <string name="find_not_found">Không tìm thấy nội dung cần tìm trong tệp này.</string>
     <string name="opening_file">Đang mở tệp…</string>
     <string name="file_too_large">Tệp lớn hơn 5 MB nên không thể mở an toàn trong trình chỉnh sửa.</string>
+    <string name="filter_json">JSON</string>
+    <string name="filter_script">Script</string>
+    <string name="filter_function">Function</string>
+    <string name="filter_manifest">Manifest</string>
+    <string name="search_failed">Tìm kiếm thất bại. Hãy thử lại.</string>
+    <string name="pack_health_score">Sức khỏe pack</string>
+    <string name="pack_health_score_waiting">Chạy kiểm tra để tính điểm sức khỏe của pack.</string>
+    <string name="pack_health_score_value">%1$d / 100</string>
 </resources>
