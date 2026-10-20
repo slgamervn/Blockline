@@ -101,7 +101,7 @@ jobs:
             echo
             echo
             echo "## Installation"
-            printf '%s\n' "- Download `Blockline-v${VERSION_NAME}.apk` from the Assets section."
+            printf '%s\n' "- Download \`Blockline-v${VERSION_NAME}.apk\` from the Assets section."
             echo "- If this is a debug build, installing over an APK signed with a different key may require uninstalling the older app first. Back up project files before doing so."
           } > RELEASE_NOTES.md
 
