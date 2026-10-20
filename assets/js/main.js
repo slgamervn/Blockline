@@ -487,44 +487,6 @@
     });
   });
 
-  const isEmbeddedBrowser = () => {
-    const ua = navigator.userAgent || '';
-    return /(FBAN|FBAV|Instagram|Messenger|Zalo|Line\/|TikTok|MicroMessenger|wv\))/i.test(ua);
-  };
-  const showDownloadHelp = (event) => {
-    if (!isEmbeddedBrowser() || !dialog || typeof dialog.showModal !== 'function') return;
-    event.preventDefault();
-    if (!dialog.open) dialog.showModal();
-  };
-  document.querySelectorAll('[data-apk-link]').forEach((link) => link.addEventListener('click', showDownloadHelp));
-  document.querySelector('[data-close-dialog]')?.addEventListener('click', () => dialog?.close());
-  document.querySelector('[data-copy-page]')?.addEventListener('click', async () => {
-    const status = document.querySelector('.copy-status');
-    const pageUrl = window.location.href;
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(pageUrl);
-      } else {
-        const temporary = document.createElement('textarea');
-        temporary.value = pageUrl;
-        temporary.setAttribute('readonly', '');
-        temporary.style.position = 'fixed';
-        temporary.style.opacity = '0';
-        body.append(temporary);
-        temporary.select();
-        const copied = document.execCommand('copy');
-        temporary.remove();
-        if (!copied) throw new Error('copy failed');
-      }
-      if (status) { status.dataset.state = 'copied'; status.textContent = currentLanguage === 'en' ? 'Link copied. Open Chrome and paste it into the address bar.' : 'Đã chép liên kết. Hãy mở Chrome và dán liên kết vào thanh địa chỉ.'; }
-    } catch (_) {
-      if (status) { status.dataset.state = 'failed'; status.textContent = currentLanguage === 'en' ? 'Could not copy automatically. Copy the address from your browser bar.' : 'Không thể tự chép liên kết. Hãy sao chép địa chỉ trên thanh trình duyệt.'; }
-    }
-  });
-  dialog?.addEventListener('click', (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-
   document.querySelectorAll('[data-current-year]').forEach((element) => {
     element.textContent = String(new Date().getFullYear());
   });
