@@ -36,7 +36,7 @@ const visibleTextNodes = [...bodyMarkup.replace(/<script\b[^>]*>[\s\S]*?<\/scrip
 const untranslatedVisibleText = [...new Set(visibleTextNodes)].filter((value) => !englishKeys.has(value));
 assert(untranslatedVisibleText.length === 0, "All visible Vietnamese copy has an English translation");
 assert(/og:locale/.test(html) && /ogLocale\.content = currentLanguage === 'en'/.test(js), "Social metadata follows the selected language");
-assert(/filter:blur\(4px\)/.test(css) && /filter:none!important/.test(css), "Reveal blur respects reduced-motion preferences");
+assert(!/filter:\s*blur\(/.test(css) && !/backdrop-filter:\s*blur\(/.test(css), "Scroll effects avoid expensive blur filters");
 assert(/classList\.remove\('is-visible'\)/.test(js) && !/observer\.unobserve\(entry\.target\)/.test(js), "Scroll reveal exits and re-enters when scrolling in either direction");
 assert(/--reveal-y/.test(css) && /scrollDirection > 0/.test(js), "Scroll reveal direction is motion-aware");
 
