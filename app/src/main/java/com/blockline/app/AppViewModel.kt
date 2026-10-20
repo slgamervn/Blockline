@@ -471,12 +471,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun closeTab(path: String) {
-        if (activeFile == path) saveCurrent(showMessage = false)
+        val wasActive = activeFile == path
+        if (wasActive) saveCurrent(showMessage = false)
         openTabs.remove(path)
         undo.remove(path)
         redo.remove(path)
         lastEditAt.remove(path)
-        if (activeFile == path) { activeFile = null; content = "" }
+        if (wasActive) {
+            activeFile = null
+            content = ""
+            readOnly = false
+            val nextTab = openTabs.keys.lastOrNull()
+            if (nextTab != null) openFile(nextTab)
+        }
     }
     fun createFile(path: String, directory: Boolean) {
         val p = current ?: return
