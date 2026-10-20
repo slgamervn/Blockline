@@ -110,6 +110,19 @@ class ProjectValidatorTest {
     }
 
     @Test
+    fun detectsDuplicateKeysAfterUnicodeEscapeDecoding() {
+        val root = Files.createTempDirectory("blockline-escaped-duplicate-key-").toFile()
+        try {
+            val escapedKey = "u" + "0061"
+            val source = "{\"a\":1,\"" + "\\" + escapedKey + "\":2}"
+            File(root, "settings.json").writeText(source)
+            val issue = ProjectValidator.validate(root).single { it.message.contains("Duplicate object key") }
+            assertTrue(issue.message.contains("\\" + escapedKey))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+    @Test
     fun rejectsTrailingCommasAndReportsTheAffectedLine() {
         val root = Files.createTempDirectory("blockline-trailing-comma-").toFile()
         try {
