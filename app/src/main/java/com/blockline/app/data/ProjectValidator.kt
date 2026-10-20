@@ -255,9 +255,9 @@ object ProjectValidator {
                 whitespace()
                 if (index >= source.length || source[index] != '"') fail("Object keys must be double-quoted strings.")
                 val keyStart = index
-                stringValue()
+                val key = stringValue()
                 val rawKey = source.substring(keyStart, index)
-                if (!keys.add(rawKey)) fail("Duplicate object key $rawKey.")
+                if (!keys.add(key)) fail("Duplicate object key $rawKey.")
                 whitespace()
                 expect(':')
                 value()
@@ -283,24 +283,40 @@ object ProjectValidator {
             }
         }
 
-        private fun stringValue() {
+        private fun stringValue(): String {
             expect('"')
+            val decoded = StringBuilder()
             while (index < source.length) {
                 val ch = source[index++]
                 when {
-                    ch == '"' -> return
+                    ch == '"' -> return decoded.toString()
                     ch == '\\' -> {
                         if (index >= source.length) fail("Incomplete escape sequence.")
                         when (source[index++]) {
-                            '"', '\\', '/', 'b', 'f', 'n', 'r', 't' -> Unit
-                            'u' -> repeat(4) {
-                                if (index >= source.length || source[index].digitToIntOrNull(16) == null) fail("Invalid Unicode escape.")
-                                index++
+                            '"' -> decoded.append('"')
+                            '\\' -> decoded.append('\\')
+                            '/' -> decoded.append('/')
+                            'b' -> decoded.append('\b')
+                            'f' -> decoded.append('\u000C')
+                            'n' -> decoded.append('\n')
+                            'r' -> decoded.append('\r')
+                            't' -> decoded.append('\t')
+                            'u' -> {
+                                var codePoint = 0
+                                repeat(4) {
+                                    if (index >= source.length) fail("Invalid Unicode escape.")
+                                    val digit = source[index].digitToIntOrNull(16)
+                                        ?: fail("Invalid Unicode escape.")
+                                    codePoint = codePoint * 16 + digit
+                                    index++
+                                }
+                                decoded.append(codePoint.toChar())
                             }
                             else -> fail("Invalid escape sequence.")
                         }
                     }
                     ch.code < 0x20 -> fail("Unescaped control character in string.")
+                    else -> decoded.append(ch)
                 }
             }
             fail("Unterminated string.")
