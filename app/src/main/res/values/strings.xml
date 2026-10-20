@@ -293,4 +293,14 @@
     <string name="large_file_page">Part %1$d of %2$d · Characters %3$d–%4$d of %5$d</string>
     <string name="large_file_previous">Previous part</string>
     <string name="large_file_next">Next part</string>
+    <string name="snippet_library_title">Code snippets</string>
+    <string name="snippet_library_hint">Ready-to-copy examples for functions and the Minecraft Bedrock Script API. Script examples require a configured script module and @minecraft/server dependency.</string>
+    <string name="snippet_copy">Copy</string>
+    <string name="snippet_copied">Snippet copied to clipboard.</string>
+    <string name="snippet_mcfunction_title">Broadcast a message</string>
+    <string name="snippet_mcfunction_description">A simple function command. Save it as a .mcfunction file and run it from Minecraft.</string>
+    <string name="snippet_javascript_title">Welcome on first spawn</string>
+    <string name="snippet_javascript_description">Sends a welcome message only when a player initially spawns in the world.</string>
+    <string name="snippet_mcfunction_language">Minecraft function</string>
+    <string name="snippet_javascript_language">JavaScript · Script API</string>
 </resources>

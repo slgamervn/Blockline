@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restore
@@ -46,6 +47,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
@@ -348,9 +352,45 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 @Composable
 fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text(stringResource(R.string.local_project_tools_hint)) }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.snippet_library_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.snippet_library_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    builtInSnippets.forEach { snippet ->
+                        androidx.compose.material3.HorizontalDivider()
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(stringResource(snippet.titleRes), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                                Text(stringResource(snippet.languageRes), style = androidx.compose.material3.MaterialTheme.typography.labelSmall, color = androidx.compose.material3.MaterialTheme.colorScheme.primary)
+                            }
+                            TextButton(onClick = {
+                                clipboard.setText(AnnotatedString(snippet.code))
+                                vm.message = context.getString(R.string.snippet_copied)
+                            }) {
+                                Icon(Icons.Default.ContentCopy, null)
+                                Text(stringResource(R.string.snippet_copy))
+                            }
+                        }
+                        Text(stringResource(snippet.descriptionRes), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(10.dp),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text(snippet.code, fontFamily = FontFamily.Monospace, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
         item {
             Button(onClick = { vm.validateCurrentProject() }, enabled = vm.current != null && !vm.isValidating, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(if (vm.isValidating) R.string.validating_project else R.string.validate_pack))

@@ -293,4 +293,14 @@
     <string name="large_file_page">Phần %1$d/%2$d · Ký tự %3$d–%4$d trên %5$d</string>
     <string name="large_file_previous">Phần trước</string>
     <string name="large_file_next">Phần tiếp</string>
+    <string name="snippet_library_title">Thư viện snippet</string>
+    <string name="snippet_library_hint">Ví dụ có thể sao chép dùng cho function và Minecraft Bedrock Script API. Snippet JavaScript yêu cầu script module và dependency @minecraft/server được cấu hình đúng.</string>
+    <string name="snippet_copy">Sao chép</string>
+    <string name="snippet_copied">Đã sao chép snippet vào bộ nhớ tạm.</string>
+    <string name="snippet_mcfunction_title">Gửi thông báo cho người chơi</string>
+    <string name="snippet_mcfunction_description">Lệnh function cơ bản. Lưu thành tệp .mcfunction và chạy trong Minecraft.</string>
+    <string name="snippet_javascript_title">Chào mừng khi vào thế giới lần đầu</string>
+    <string name="snippet_javascript_description">Chỉ gửi thông báo chào mừng khi người chơi xuất hiện lần đầu trong thế giới.</string>
+    <string name="snippet_mcfunction_language">Minecraft function</string>
+    <string name="snippet_javascript_language">JavaScript · Script API</string>
 </resources>
