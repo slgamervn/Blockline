@@ -23,6 +23,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -96,27 +97,31 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) } },
                 actions = {
-                    IconButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, stringResource(R.string.editor_undo_cd)) }
-                    IconButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, stringResource(R.string.editor_redo_cd)) }
-                    IconButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
+                    IconButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Undo, stringResource(R.string.editor_undo_cd)) }
+                    IconButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Redo, stringResource(R.string.editor_redo_cd)) }
+                    IconButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
                     IconButton(onClick = {
                         if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content))
                         vm.saveCurrent()
-                    }) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
+                    }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
             )
         },
         bottomBar = {
             Row(Modifier.fillMaxWidth().imePadding().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = { vm.undo() }) { Icon(Icons.Default.Undo, null); Text(stringResource(R.string.undo)) }
-                TextButton(onClick = { vm.redo() }) { Icon(Icons.Default.Redo, null); Text(stringResource(R.string.redo)) }
-                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
-                TextButton(onClick = { vm.saveCurrent() }) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
-                TextButton(onClick = { showFind = true }) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
+                TextButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Undo, null); Text(stringResource(R.string.undo)) }
+                TextButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Redo, null); Text(stringResource(R.string.redo)) }
+                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
+                TextButton(onClick = { vm.saveCurrent() }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
+                TextButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
             }
         }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().imePadding().padding(12.dp)) {
+            if (vm.isOpeningFile) {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+                Text(stringResource(R.string.opening_file), style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+            }
             if (path == null) {
                 EmptyState(Icons.Default.ContentCopy, stringResource(R.string.no_file_open), stringResource(R.string.no_file_hint))
             } else {
@@ -135,7 +140,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         editorValue = it
                         vm.updateContent(it.text)
                     },
-                    readOnly = vm.readOnly,
+                    readOnly = vm.readOnly || vm.isOpeningFile,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
                     visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= 48_000) HighlightTransformation(lang, Palette(
