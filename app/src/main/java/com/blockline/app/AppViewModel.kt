@@ -233,7 +233,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             refreshProjectEntries(p.id)
             return
         }
-        saveCurrent(showMessage = false)
+        if (!saveCurrent(showMessage = false)) return
         current = p
         clearContentSearch()
         validationRequestId++
@@ -282,7 +282,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (isFileOperationRunning) return
         openFileRequestId++
         isOpeningFile = false
-        if (current?.id == p.id) saveCurrent(showMessage = false)
+        if (current?.id == p.id && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
             val result = runCatching { withContext(Dispatchers.IO) { repo.delete(p.id) } }
@@ -448,16 +448,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
-    fun saveCurrent(showMessage: Boolean = true) {
-        val p = current ?: return
-        val path = activeFile ?: return
-        if (readOnly) { if (showMessage) message = text(R.string.save_readonly); return }
+    fun saveCurrent(showMessage: Boolean = true): Boolean {
+        val p = current ?: return true
+        val path = activeFile ?: return true
+        if (readOnly) {
+            if (showMessage) message = text(R.string.save_readonly)
+            return true
+        }
         autoSaveJob?.cancel()
-        runCatching {
+        return runCatching {
             val f = repo.resolve(p.id, path)
             writeAtomically(f, content, ".saving")
             if (showMessage) message = text(R.string.saved_path, path)
-        }.onFailure { message = it.message ?: text(R.string.save_failed) }
+        }.onFailure { message = it.message ?: text(R.string.save_failed) }.isSuccess
     }
     fun undo() {
         val path = activeFile ?: return
@@ -484,7 +487,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun closeTab(path: String) {
         val wasActive = activeFile == path
-        if (wasActive) saveCurrent(showMessage = false)
+        if (wasActive && !saveCurrent(showMessage = false)) return
         openTabs.remove(path)
         undo.remove(path)
         redo.remove(path)
@@ -523,7 +526,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun renameFile(path: String, name: String) {
         val p = current ?: return
         if (isFileOperationRunning) return
-        if (activeFile == path || activeFile?.startsWith("$path/") == true) saveCurrent(showMessage = false)
+        if ((activeFile == path || activeFile?.startsWith("$path/") == true) && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
             val result = runCatching {
@@ -575,7 +578,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun moveFile(path: String, destination: String) {
         val p = current ?: return
         if (isFileOperationRunning) return
-        if (activeFile == path || activeFile?.startsWith("$path/") == true) saveCurrent(showMessage = false)
+        if ((activeFile == path || activeFile?.startsWith("$path/") == true) && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
             val result = runCatching {
@@ -614,6 +617,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun exportProject(uri: android.net.Uri, mode: ExportMode) {
         val project = current ?: return
         if (isExporting) return
+        if (!saveCurrent(showMessage = false)) return
         val projectId = project.id
         isExporting = true
         viewModelScope.launch {
@@ -641,7 +645,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun backup() {
         val p = current ?: return
-        saveCurrent(showMessage = false)
+        if (!saveCurrent(showMessage = false)) return
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching { repo.backup(p.id) }
             withContext(Dispatchers.Main) { message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) }) }
@@ -649,7 +653,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun restore() {
         val p = current ?: return
-        saveCurrent(showMessage = false)
+        if (!saveCurrent(showMessage = false)) return
         val activePathBeforeRestore = activeFile
         viewModelScope.launch {
             val result = runCatching { withContext(Dispatchers.IO) { repo.restoreLatest(p.id) } }
