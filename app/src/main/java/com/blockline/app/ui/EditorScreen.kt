@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -59,6 +60,15 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showFind by remember { mutableStateOf(false) }
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(vm.content)) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
+    var highlightSource by remember(path) { mutableStateOf("") }
+    LaunchedEffect(path, editorValue.text, lang) {
+        if (lang == null || editorValue.text.length > 48_000) {
+            highlightSource = ""
+        } else {
+            delay(180)
+            highlightSource = editorValue.text
+        }
+    }
     LaunchedEffect(path, vm.content) {
         if (editorValue.text != vm.content) {
             val cursor = editorValue.selection.start.coerceAtMost(vm.content.length)
@@ -128,7 +138,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     readOnly = vm.readOnly,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                    visualTransformation = if (lang != null && vm.content.length < 200_000) HighlightTransformation(lang, Palette(
+                    visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= 48_000) HighlightTransformation(lang, Palette(
                         androidx.compose.ui.graphics.Color(0xFF8FC9FF),
                         androidx.compose.ui.graphics.Color(0xFFB5E7A0),
                         androidx.compose.ui.graphics.Color(0xFFE6B35A),
