@@ -280,4 +280,6 @@
     <string name="manifest_capabilities">Capabilities: %1$s</string>
     <string name="file_operation_running">Updating files…</string>
     <string name="find_not_found">No match found in this file.</string>
+    <string name="opening_file">Opening file…</string>
+    <string name="file_too_large">This file is larger than 5 MB and cannot be opened safely in the editor.</string>
 </resources>
