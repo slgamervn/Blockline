@@ -122,4 +122,39 @@ class ProjectValidatorTest {
         }
     }
 
+    @Test
+    fun validatesMinimumEngineVersionAndWarnsWhenPackIconIsMissing() {
+        val root = Files.createTempDirectory("blockline-manifest-rules-").toFile()
+        try {
+            val pack = File(root, "BP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"min_engine_version":[1,21]}"""
+            )
+
+            val issues = ProjectValidator.validate(root)
+
+            assertTrue(issues.any { it.severity == IssueSeverity.ERROR && it.message.contains("min_engine_version must contain three") })
+            assertTrue(issues.any { it.severity == IssueSeverity.WARNING && it.message.contains("pack_icon.png is missing") })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun acceptsThreePartMinimumEngineVersion() {
+        val root = Files.createTempDirectory("blockline-engine-version-").toFile()
+        try {
+            val pack = File(root, "BP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"min_engine_version":[1,21,0]}"""
+            )
+
+            val issues = ProjectValidator.validate(root)
+
+            assertTrue(issues.none { it.severity == IssueSeverity.ERROR && it.message.contains("min_engine_version") })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
 }
