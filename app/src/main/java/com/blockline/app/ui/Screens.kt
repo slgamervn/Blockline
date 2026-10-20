@@ -269,6 +269,9 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     var query by remember { mutableStateOf("") }
     var contentMode by remember { mutableStateOf(false) }
     var filter by remember { mutableStateOf(SearchFileFilter.ALL) }
+    var replaceMode by remember { mutableStateOf(false) }
+    var replacementText by remember { mutableStateOf("") }
+    var showApplyReplaceConfirm by remember { mutableStateOf(false) }
     val p = vm.current
     val pathMatches = p?.let { project ->
         vm.projectEntries[project.id].orEmpty().filter {
@@ -287,7 +290,7 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         Text(stringResource(R.string.search_project), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
             value = query,
-            onValueChange = { query = it; vm.clearContentSearch() },
+            onValueChange = { query = it; vm.clearContentSearch(); vm.clearBatchReplacePreview() },
             label = { Text(stringResource(if (contentMode) R.string.search_inside_text else R.string.file_name_or_path)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -302,6 +305,40 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                 onClick = { vm.searchProjectContentAsync(query, filter) },
                 enabled = query.isNotBlank() && !vm.isSearchingContent
             ) { Text(stringResource(if (vm.isSearchingContent) R.string.searching else R.string.nav_search)) }
+        }
+        if (contentMode) {
+            androidx.compose.material3.FilterChip(
+                selected = replaceMode,
+                onClick = {
+                    replaceMode = !replaceMode
+                    showApplyReplaceConfirm = false
+                    vm.clearBatchReplacePreview()
+                },
+                label = { Text(stringResource(R.string.batch_replace_toggle)) }
+            )
+        }
+        if (contentMode && replaceMode) {
+            OutlinedTextField(
+                value = replacementText,
+                onValueChange = { replacementText = it; vm.clearBatchReplacePreview() },
+                label = { Text(stringResource(R.string.batch_replace_with)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = false,
+                minLines = 1,
+                maxLines = 3
+            )
+            Text(
+                stringResource(R.string.batch_replace_safety_hint),
+                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(
+                onClick = { vm.previewBatchReplace(query, replacementText, filter) },
+                enabled = query.isNotBlank() && !vm.isPreviewingBatchReplace && !vm.isApplyingBatchReplace,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(if (vm.isPreviewingBatchReplace) R.string.batch_replace_previewing else R.string.batch_replace_preview))
+            }
         }
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -330,6 +367,42 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                     ListItem(headlineContent = { Text(file.name) }, supportingContent = { Text(path) }, modifier = Modifier.clickable { vm.openFile(path); onOpenEditor() })
                 }
             }
+        } else if (replaceMode) {
+            if (vm.isPreviewingBatchReplace) {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+                Text(stringResource(R.string.batch_replace_previewing))
+            } else if (!vm.batchReplacePreviewReady) {
+                Text(stringResource(R.string.batch_replace_preview_hint))
+            } else {
+                if (vm.batchReplaceTruncated) {
+                    Text(stringResource(R.string.batch_replace_scan_limited), color = androidx.compose.material3.MaterialTheme.colorScheme.error)
+                }
+                Text(stringResource(R.string.batch_replace_preview_found, vm.batchReplacePreview.size))
+                if (vm.batchReplacePreview.isEmpty()) {
+                    Text(stringResource(R.string.batch_replace_no_matches))
+                } else {
+                    LazyColumn(Modifier.weight(1f)) {
+                        items(vm.batchReplacePreview, key = { it.path }) { result ->
+                            ListItem(
+                                headlineContent = { Text(result.path.substringAfterLast('/')) },
+                                supportingContent = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(stringResource(R.string.batch_replace_file_matches, result.occurrences, result.path))
+                                        if (result.sample.isNotBlank()) Text(result.sample, maxLines = 2, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = { showApplyReplaceConfirm = true },
+                        enabled = !vm.batchReplaceTruncated && !vm.isApplyingBatchReplace,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(if (vm.isApplyingBatchReplace) R.string.batch_replace_applying else R.string.batch_replace_apply))
+                    }
+                }
+            }
         } else {
             if (vm.isSearchingContent) {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -351,6 +424,28 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
             }
         }
     }
+    if (showApplyReplaceConfirm) AlertDialog(
+        onDismissRequest = { showApplyReplaceConfirm = false },
+        title = { Text(stringResource(R.string.batch_replace_confirm_title)) },
+        text = {
+            Text(
+                stringResource(
+                    R.string.batch_replace_confirm_body,
+                    vm.batchReplacePreview.sumOf { it.occurrences },
+                    vm.batchReplacePreview.size
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                showApplyReplaceConfirm = false
+                vm.applyBatchReplace()
+            }) { Text(stringResource(R.string.batch_replace_apply)) }
+        },
+        dismissButton = {
+            TextButton(onClick = { showApplyReplaceConfirm = false }) { Text(stringResource(R.string.cancel)) }
+        }
+    )
 }
 
 @Composable

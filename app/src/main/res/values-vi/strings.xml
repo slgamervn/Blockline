@@ -329,4 +329,25 @@
     <string name="dependency_version_mismatch">Phiên bản số được yêu cầu không khớp với phiên bản tìm thấy trong dự án.</string>
     <string name="dependency_external_uuid_note">Không tìm thấy UUID này trong dự án hiện tại. Nó có thể thuộc Minecraft hoặc pack khác đã cài; không xem đây là tệp nội bộ bị thiếu.</string>
     <string name="dependency_invalid_note">Mục dependency chưa đủ thông tin hoặc sai kiểu dữ liệu. Hãy chạy kiểm tra pack để biết thêm chi tiết.</string>
+    <string name="batch_replace_toggle">Thay thế trong tệp</string>
+    <string name="batch_replace_with">Thay bằng</string>
+    <string name="batch_replace_safety_hint">Thay thế nguyên văn, phân biệt chữ hoa/thường trong tệp văn bản hỗ trợ tối đa 1 MB mỗi tệp. Ứng dụng sẽ sao lưu trước khi ghi.</string>
+    <string name="batch_replace_preview">Xem trước thay thế</string>
+    <string name="batch_replace_previewing">Đang quét tệp để tìm nội dung cần thay…</string>
+    <string name="batch_replace_preview_hint">Nhập nội dung cần tìm và nội dung thay thế, sau đó xem trước các tệp bị ảnh hưởng.</string>
+    <string name="batch_replace_preview_found">Số tệp có kết quả: %1$d</string>
+    <string name="batch_replace_file_matches">%1$d kết quả · %2$s</string>
+    <string name="batch_replace_no_matches">Không tìm thấy tệp phù hợp.</string>
+    <string name="batch_replace_scan_limited">Đã chạm giới hạn an toàn khi quét. Hãy thu hẹp bộ lọc loại tệp trước khi áp dụng.</string>
+    <string name="batch_replace_apply">Áp dụng thay thế</string>
+    <string name="batch_replace_applying">Đang áp dụng thay thế…</string>
+    <string name="batch_replace_confirm_title">Áp dụng thay thế hàng loạt?</string>
+    <string name="batch_replace_confirm_body">Thay %1$d vị trí trong %2$d tệp? Ứng dụng sẽ sao lưu trước.</string>
+    <string name="batch_replace_empty_query">Nội dung tìm kiếm không được để trống.</string>
+    <string name="batch_replace_preview_failed">Không thể xem trước thay thế. Hãy kiểm tra quyền truy cập tệp và thử lại.</string>
+    <string name="batch_replace_preview_stale">Tệp trong bản xem trước đã thay đổi hoặc không còn phù hợp. Hãy xem trước lại. %1$s</string>
+    <string name="batch_replace_backup_failed">Không tạo được bản sao lưu nên chưa có tệp nào bị thay đổi. %1$s</string>
+    <string name="batch_replace_rolled_back">Thay thế thất bại; dự án đã được khôi phục từ bản sao lưu. %1$s</string>
+    <string name="batch_replace_rollback_failed">Thay thế thất bại và không thể tự động khôi phục hoàn toàn. Bản sao lưu vẫn được giữ lại. %1$s</string>
+    <string name="batch_replace_done">Đã thay %1$d vị trí trong %2$d tệp.</string>
 </resources>

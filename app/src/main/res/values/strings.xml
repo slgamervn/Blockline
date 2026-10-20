@@ -329,4 +329,25 @@
     <string name="dependency_version_mismatch">The requested numeric version does not match the version found in this project.</string>
     <string name="dependency_external_uuid_note">This UUID was not found inside the current project. It may belong to Minecraft or another installed pack; this is not reported as a missing local file.</string>
     <string name="dependency_invalid_note">The dependency entry is incomplete or has an invalid type. Run pack validation for details.</string>
+    <string name="batch_replace_toggle">Replace in files</string>
+    <string name="batch_replace_with">Replace with</string>
+    <string name="batch_replace_safety_hint">Literal, case-sensitive replacement in supported text files up to 1 MB each. A backup is created before changes are written.</string>
+    <string name="batch_replace_preview">Preview replacements</string>
+    <string name="batch_replace_previewing">Scanning files for replacement matches…</string>
+    <string name="batch_replace_preview_hint">Enter search text and replacement, then preview the affected files before applying.</string>
+    <string name="batch_replace_preview_found">Files with matches: %1$d</string>
+    <string name="batch_replace_file_matches">%1$d matches · %2$s</string>
+    <string name="batch_replace_no_matches">No matching files found.</string>
+    <string name="batch_replace_scan_limited">The scan reached its safety limit. Narrow the file-type filter before applying replacements.</string>
+    <string name="batch_replace_apply">Apply replacements</string>
+    <string name="batch_replace_applying">Applying replacements…</string>
+    <string name="batch_replace_confirm_title">Apply batch replacement?</string>
+    <string name="batch_replace_confirm_body">Replace %1$d occurrences across %2$d files? A backup will be created first.</string>
+    <string name="batch_replace_empty_query">Search text cannot be empty.</string>
+    <string name="batch_replace_preview_failed">Could not preview replacements. Check file access and try again.</string>
+    <string name="batch_replace_preview_stale">A previewed file changed or is no longer eligible. Preview again. %1$s</string>
+    <string name="batch_replace_backup_failed">Could not create a backup, so no files were changed. %1$s</string>
+    <string name="batch_replace_rolled_back">Replacement failed; the project was restored from backup. %1$s</string>
+    <string name="batch_replace_rollback_failed">Replacement failed and automatic restore could not finish. Your backup is retained. %1$s</string>
+    <string name="batch_replace_done">Replaced %1$d occurrences across %2$d files.</string>
 </resources>

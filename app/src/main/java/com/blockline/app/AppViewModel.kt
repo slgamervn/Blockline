@@ -17,6 +17,9 @@ import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.PackDependency
 import com.blockline.app.data.PackDependencyResolver
+import com.blockline.app.data.BatchReplaceEngine
+import com.blockline.app.data.BatchReplaceFailure
+import com.blockline.app.data.BatchReplaceFilePreview
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
@@ -69,6 +72,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var dependencyAnalysisCompleted by mutableStateOf(false)
         private set
+    var batchReplacePreview by mutableStateOf<List<BatchReplaceFilePreview>>(emptyList())
+        private set
+    var isPreviewingBatchReplace by mutableStateOf(false)
+        private set
+    var batchReplacePreviewReady by mutableStateOf(false)
+        private set
+    var batchReplaceTruncated by mutableStateOf(false)
+        private set
+    var isApplyingBatchReplace by mutableStateOf(false)
+        private set
 
     val packHealthScore: Int?
         get() = if (!validationCompleted) null else {
@@ -95,6 +108,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
     private var dependencyRequestId = 0
+    private var batchReplaceRequestId = 0
+    private var batchReplaceProjectId: String? = null
+    private var batchReplaceQuery = ""
+    private var batchReplaceReplacement = ""
+    private var batchReplaceFilter = SearchFileFilter.ALL
     private var fileIndexRequestId = 0
     private var autoSaveJob: Job? = null
 
@@ -147,6 +165,198 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 dependencyAnalysisCompleted = true
             }.onFailure {
                 message = it.message ?: text(R.string.validation_failed)
+            }
+        }
+    }
+
+    fun clearBatchReplacePreview() {
+        batchReplaceRequestId++
+        batchReplacePreview = emptyList()
+        isPreviewingBatchReplace = false
+        batchReplacePreviewReady = false
+        batchReplaceTruncated = false
+        batchReplaceProjectId = null
+        batchReplaceQuery = ""
+        batchReplaceReplacement = ""
+        batchReplaceFilter = SearchFileFilter.ALL
+    }
+
+    fun previewBatchReplace(query: String, replacement: String, filter: SearchFileFilter) {
+        val project = current ?: return
+        if (query.isBlank()) {
+            message = text(R.string.batch_replace_empty_query)
+            clearBatchReplacePreview()
+            return
+        }
+        if (isFileOperationRunning || isApplyingBatchReplace) return
+        if (!saveCurrent(showMessage = false)) return
+        clearBatchReplacePreview()
+        val requestId = ++batchReplaceRequestId
+        val projectId = project.id
+        isPreviewingBatchReplace = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val eligible = repo.allFiles(projectId).asSequence().filter { file ->
+                        file.length() <= 1024L * 1024L &&
+                            file.extension.lowercase(java.util.Locale.ROOT) in com.blockline.app.data.TEXT_EXT &&
+                            filter.matches(file, repo.relative(projectId, file))
+                    }.toList()
+                    val found = mutableListOf<BatchReplaceFilePreview>()
+                    var scannedBytes = 0L
+                    var scannedFiles = 0
+                    var truncated = false
+                    for (file in eligible) {
+                        val size = file.length()
+                        if (scannedFiles >= 5000 || scannedBytes + size > 50L * 1024L * 1024L) {
+                            truncated = true
+                            break
+                        }
+                        scannedFiles++
+                        scannedBytes += size
+                        val source = file.readText(Charsets.UTF_8)
+                        val occurrences = BatchReplaceEngine.countOccurrences(source, query)
+                        if (occurrences > 0) {
+                            found += BatchReplaceFilePreview(
+                                path = repo.relative(projectId, file),
+                                occurrences = occurrences,
+                                sample = BatchReplaceEngine.sampleLine(source, query)
+                            )
+                        }
+                    }
+                    BatchReplaceScanResult(found, truncated)
+                }
+            }
+            if (requestId != batchReplaceRequestId) return@launch
+            isPreviewingBatchReplace = false
+            if (current?.id != projectId) return@launch
+            result.onSuccess { scan ->
+                batchReplacePreview = scan.files
+                batchReplaceTruncated = scan.truncated
+                batchReplacePreviewReady = true
+                batchReplaceProjectId = projectId
+                batchReplaceQuery = query
+                batchReplaceReplacement = replacement
+                batchReplaceFilter = filter
+                message = text(R.string.batch_replace_preview_found, scan.files.size)
+            }.onFailure {
+                message = it.message ?: text(R.string.batch_replace_preview_failed)
+            }
+        }
+    }
+
+    fun applyBatchReplace() {
+        val project = current ?: return
+        if (!batchReplacePreviewReady || batchReplacePreview.isEmpty() || batchReplaceTruncated) return
+        if (batchReplaceProjectId != project.id || batchReplaceQuery.isBlank()) {
+            clearBatchReplacePreview()
+            message = text(R.string.batch_replace_preview_stale)
+            return
+        }
+        if (isFileOperationRunning || isApplyingBatchReplace) return
+        if (!saveCurrent(showMessage = false)) return
+
+        val projectId = project.id
+        val query = batchReplaceQuery
+        val replacement = batchReplaceReplacement
+        val preview = batchReplacePreview.toList()
+        isApplyingBatchReplace = true
+        isFileOperationRunning = true
+        autoSaveJob?.cancel()
+
+        viewModelScope.launch {
+            val outcome = withContext(Dispatchers.IO) {
+                try {
+                    repo.backup(projectId)
+                } catch (error: Exception) {
+                    return@withContext com.blockline.app.data.BatchReplaceOutcome(
+                        failure = BatchReplaceFailure.BACKUP_FAILED,
+                        details = error.message
+                    )
+                }
+
+                data class Prepared(val path: String, val file: File, val content: String, val occurrences: Int)
+                val prepared = try {
+                    preview.map { item ->
+                        val file = repo.resolve(projectId, item.path)
+                        check(file.isFile) { "A previewed file no longer exists: ${item.path}" }
+                        check(file.length() <= 1024L * 1024L) { "A previewed file exceeded the 1 MB limit: ${item.path}" }
+                        check(file.extension.lowercase(java.util.Locale.ROOT) in com.blockline.app.data.TEXT_EXT) {
+                            "A previewed file is no longer a supported text file: ${item.path}"
+                        }
+                        val original = file.readText(Charsets.UTF_8)
+                        val actualCount = BatchReplaceEngine.countOccurrences(original, query)
+                        check(actualCount == item.occurrences && actualCount > 0) {
+                            "A previewed file changed since preview: ${item.path}"
+                        }
+                        Prepared(item.path, file, BatchReplaceEngine.replaceLiteral(original, query, replacement), actualCount)
+                    }
+                } catch (error: Exception) {
+                    return@withContext com.blockline.app.data.BatchReplaceOutcome(
+                        failure = BatchReplaceFailure.PREVIEW_STALE,
+                        details = error.message
+                    )
+                }
+
+                var changedCount = 0
+                try {
+                    prepared.forEach { item ->
+                        BatchReplaceEngine.writeAtomically(item.file, item.content)
+                        changedCount++
+                    }
+                    com.blockline.app.data.BatchReplaceOutcome(
+                        changedFiles = changedCount,
+                        occurrences = prepared.sumOf { it.occurrences },
+                        changedContents = prepared.associate { it.path to it.content }
+                    )
+                } catch (error: Exception) {
+                    val restored = runCatching { repo.restoreLatest(projectId) }.getOrDefault(false)
+                    com.blockline.app.data.BatchReplaceOutcome(
+                        failure = if (restored) BatchReplaceFailure.WRITE_ROLLED_BACK else BatchReplaceFailure.WRITE_ROLLBACK_FAILED,
+                        details = error.message
+                    )
+                }
+            }
+
+            isApplyingBatchReplace = false
+            isFileOperationRunning = false
+            if (current?.id != projectId) return@launch
+
+            if (outcome.failure == null) {
+                outcome.changedContents.forEach { (path, value) ->
+                    if (openTabs.containsKey(path)) openTabs[path] = value
+                    undo.remove(path)
+                    redo.remove(path)
+                    lastEditAt.remove(path)
+                    if (activeFile == path) content = value
+                }
+                autoSaveJob?.cancel()
+                refreshProjectEntries(projectId)
+                message = text(R.string.batch_replace_done, outcome.occurrences, outcome.changedFiles)
+                clearBatchReplacePreview()
+            } else {
+                message = when (outcome.failure) {
+                    BatchReplaceFailure.BACKUP_FAILED -> text(R.string.batch_replace_backup_failed, outcome.details.orEmpty())
+                    BatchReplaceFailure.PREVIEW_STALE -> text(R.string.batch_replace_preview_stale, outcome.details.orEmpty())
+                    BatchReplaceFailure.WRITE_ROLLED_BACK -> text(R.string.batch_replace_rolled_back, outcome.details.orEmpty())
+                    BatchReplaceFailure.WRITE_ROLLBACK_FAILED -> text(R.string.batch_replace_rollback_failed, outcome.details.orEmpty())
+                }
+                if (outcome.failure == BatchReplaceFailure.WRITE_ROLLED_BACK) {
+                    val previousPath = activeFile
+                    autoSaveJob?.cancel()
+                    openTabs.clear()
+                    undo.clear()
+                    redo.clear()
+                    lastEditAt.clear()
+                    activeFile = null
+                    content = ""
+                    readOnly = false
+                    pendingEditorLine = null
+                    refreshProjectEntries(projectId)
+                    if (previousPath != null && runCatching { repo.resolve(projectId, previousPath).isFile }.getOrDefault(false)) {
+                        openFile(previousPath)
+                    }
+                }
             }
         }
     }
@@ -276,6 +486,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         if (!saveCurrent(showMessage = false)) return
         current = p
+        clearBatchReplacePreview()
         dependencyRequestId++
         dependencies = emptyList()
         isLoadingDependencies = false
@@ -346,6 +557,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     validationIssues = emptyList()
                     validationCompleted = false
                     contentSearchResults = emptyList()
+                    clearBatchReplacePreview()
                     dependencyRequestId++
                     dependencies = emptyList()
                     isLoadingDependencies = false
