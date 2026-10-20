@@ -279,4 +279,5 @@
     <string name="manifest_dependency_line">%1$s · Phiên bản: %2$s</string>
     <string name="manifest_capabilities">Capabilities: %1$s</string>
     <string name="file_operation_running">Đang cập nhật tệp…</string>
+    <string name="find_not_found">Không tìm thấy nội dung cần tìm trong tệp này.</string>
 </resources>
