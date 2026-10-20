@@ -168,7 +168,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         editorValue = editorValue.copy(selection = TextRange(found, found + query.length))
                         vm.message = context.getString(R.string.matches_count, 1)
                     } else {
-                        vm.message = context.getString(R.string.no_matching_files)
+                        vm.message = context.getString(R.string.find_not_found)
                     }
                 }
                 showFind = false
