@@ -156,6 +156,24 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             OutlinedTextField(value = findText, onValueChange = { findText = it }, label = { Text(stringResource(R.string.text_to_find)) }, singleLine = true)
             Text(if (findText.isBlank()) stringResource(R.string.enter_text_to_count) else stringResource(R.string.matches_count, Regex(Regex.escape(findText), RegexOption.IGNORE_CASE).findAll(vm.content).count()))
         } },
-        confirmButton = { TextButton(onClick = { showFind = false }) { Text(stringResource(R.string.close)) } }
+        confirmButton = {
+            TextButton(onClick = {
+                val query = findText
+                if (query.isNotBlank()) {
+                    val startAt = editorValue.selection.end.coerceIn(0, editorValue.text.length)
+                    val found = editorValue.text.indexOf(query, startAt, ignoreCase = true)
+                        .takeIf { it >= 0 }
+                        ?: editorValue.text.indexOf(query, 0, ignoreCase = true)
+                    if (found >= 0) {
+                        editorValue = editorValue.copy(selection = TextRange(found, found + query.length))
+                        vm.message = context.getString(R.string.matches_count, 1)
+                    } else {
+                        vm.message = context.getString(R.string.no_matching_files)
+                    }
+                }
+                showFind = false
+            }) { Text(stringResource(R.string.find)) }
+        },
+        dismissButton = { TextButton(onClick = { showFind = false }) { Text(stringResource(R.string.close)) } }
     )
 }
