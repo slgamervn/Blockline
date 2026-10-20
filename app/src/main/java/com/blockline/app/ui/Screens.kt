@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
@@ -50,6 +52,7 @@ import com.blockline.app.AppViewModel
 import com.blockline.app.BuildConfig
 import com.blockline.app.R
 import com.blockline.app.data.ExportMode
+import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
@@ -215,13 +218,23 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
 
 @Composable
 fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
-    val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     var contentMode by remember { mutableStateOf(false) }
+    var filter by remember { mutableStateOf(SearchFileFilter.ALL) }
     val p = vm.current
     val pathMatches = p?.let { project ->
-        vm.projectEntries[project.id].orEmpty().filter { it.isFile && vm.repo.relative(project.id, it).contains(query, true) }
+        vm.projectEntries[project.id].orEmpty().filter {
+            it.isFile && filter.matches(it, vm.repo.relative(project.id, it)) &&
+                vm.repo.relative(project.id, it).contains(query, true)
+        }
     }.orEmpty()
+    val filterOptions = listOf(
+        SearchFileFilter.ALL to R.string.filter_all,
+        SearchFileFilter.JSON to R.string.filter_json,
+        SearchFileFilter.SCRIPT to R.string.filter_script,
+        SearchFileFilter.FUNCTION to R.string.filter_function,
+        SearchFileFilter.MANIFEST to R.string.filter_manifest
+    )
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text(stringResource(R.string.search_project), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
@@ -233,8 +246,30 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             androidx.compose.material3.FilterChip(selected = !contentMode, onClick = { contentMode = false }, label = { Text(stringResource(R.string.file_paths)) })
-            androidx.compose.material3.FilterChip(selected = contentMode, onClick = { contentMode = true }, label = { Text(stringResource(R.string.file_contents)) })
-            if (contentMode) Button(onClick = { vm.searchProjectContentAsync(query) }, enabled = query.isNotBlank() && !vm.isSearchingContent) { Text(stringResource(if (vm.isSearchingContent) R.string.searching else R.string.nav_search)) }
+            androidx.compose.material3.FilterChip(selected = contentMode, onClick = {
+                contentMode = true
+                if (query.isNotBlank()) vm.searchProjectContentAsync(query, filter)
+            }, label = { Text(stringResource(R.string.file_contents)) })
+            if (contentMode) Button(
+                onClick = { vm.searchProjectContentAsync(query, filter) },
+                enabled = query.isNotBlank() && !vm.isSearchingContent
+            ) { Text(stringResource(if (vm.isSearchingContent) R.string.searching else R.string.nav_search)) }
+        }
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            filterOptions.forEach { (option, label) ->
+                androidx.compose.material3.FilterChip(
+                    selected = filter == option,
+                    onClick = {
+                        filter = option
+                        vm.clearContentSearch()
+                        if (contentMode && query.isNotBlank()) vm.searchProjectContentAsync(query, option)
+                    },
+                    label = { Text(stringResource(label)) }
+                )
+            }
         }
         if (p == null) {
             Text(stringResource(R.string.select_project_first))
@@ -248,13 +283,21 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                 }
             }
         } else {
-            if (vm.contentSearchResults.isEmpty()) Text(stringResource(if (query.isBlank()) R.string.enter_text_search else R.string.no_search_results))
-            else LazyColumn(Modifier.weight(1f)) {
-                items(vm.contentSearchResults, key = { "${it.first}:${it.second}" }) { result ->
+            if (vm.isSearchingContent) {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+            } else if (vm.contentSearchResults.isEmpty()) {
+                Text(stringResource(if (query.isBlank()) R.string.enter_text_search else R.string.no_search_results))
+            } else LazyColumn(Modifier.weight(1f)) {
+                items(vm.contentSearchResults, key = { "${it.path}:${it.line}:${it.snippet}" }) { result ->
                     ListItem(
-                        headlineContent = { Text(result.first.substringAfterLast('/')) },
-                        supportingContent = { Text(stringResource(R.string.line_result, result.first, result.second)) },
-                        modifier = Modifier.clickable { vm.openFile(result.first); onOpenEditor() }
+                        headlineContent = { Text(result.path.substringAfterLast('/')) },
+                        supportingContent = {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(stringResource(R.string.line_result, result.path, result.line))
+                                Text(result.snippet, maxLines = 2, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        },
+                        modifier = Modifier.clickable { vm.openFile(result.path, result.line); onOpenEditor() }
                     )
                 }
             }
