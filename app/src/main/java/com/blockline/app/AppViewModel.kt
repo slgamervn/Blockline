@@ -638,12 +638,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restore() {
         val p = current ?: return
         saveCurrent(showMessage = false)
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = runCatching { repo.restoreLatest(p.id) }
+        val activePathBeforeRestore = activeFile
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { repo.restoreLatest(p.id) } }
+            val restoredFileStillExists = if (result.getOrDefault(false) && activePathBeforeRestore != null) {
+                withContext(Dispatchers.IO) {
+                    runCatching { repo.resolve(p.id, activePathBeforeRestore).isFile }.getOrDefault(false)
+                }
+            } else false
+
             withContext(Dispatchers.Main) {
                 val restored = result.getOrDefault(false)
                 message = if (restored) text(R.string.latest_backup_restored) else result.exceptionOrNull()?.message ?: text(R.string.no_backup_found)
-                if (restored) activeFile?.let { path -> openFile(path) }
+                if (restored && current?.id == p.id) {
+                    autoSaveJob?.cancel()
+                    clearResourcePreview()
+                    clearContentSearch()
+                    activeFile = null
+                    content = ""
+                    readOnly = false
+                    pendingEditorLine = null
+                    openTabs.clear()
+                    undo.clear()
+                    redo.clear()
+                    lastEditAt.clear()
+                    refreshProjectEntries(p.id)
+                    if (activePathBeforeRestore != null && restoredFileStillExists) {
+                        openFile(activePathBeforeRestore)
+                    }
+                }
                 refresh()
             }
         }
