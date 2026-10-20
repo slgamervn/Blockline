@@ -144,31 +144,3 @@ jobs:
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-\n'*}"
-              if [ -n "$release_name" ] && [ "$first_line" = "# $release_name" ]; then
-                notes_file="$(mktemp)"
-                printf '%s\n' "$body" | sed '1d' > "$notes_file"
-                gh release edit "$tag" --notes-file "$notes_file"
-                rm -f "$notes_file"
-                echo "Removed duplicated title heading from $tag"
-              fi
-            done
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: Blockline-v${{ env.VERSION_NAME }}-apk
-          path: Blockline-v${{ env.VERSION_NAME }}.apk
-          if-no-files-found: error
-
-      - name: Create Release with versioned APK and change summary
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v${{ env.VERSION_NAME }}
-          name: Blockline v${{ env.VERSION_NAME }}
-          body_path: RELEASE_NOTES.md
-          files: Blockline-v${{ env.VERSION_NAME }}.apk
-          generate_release_notes: false
-          make_latest: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
