@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.blockline.app.data.ExportMode
+import com.blockline.app.data.SearchFileFilter
+import com.blockline.app.data.ContentSearchResult
 import com.blockline.app.data.Project
 import com.blockline.app.data.ProjectRepository
 import com.blockline.app.data.ResourcePreview
@@ -67,7 +69,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var isSearchingContent by mutableStateOf(false)
         private set
-    var contentSearchResults by mutableStateOf<List<Pair<String, Int>>>(emptyList())
+    var contentSearchResults by mutableStateOf<List<ContentSearchResult>>(emptyList())
         private set
     val openTabs = mutableStateMapOf<String, String>()
     private val undo = mutableStateMapOf<String, MutableList<String>>()
@@ -159,19 +161,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         isLoadingPreview = false
     }
 
-    fun searchProjectContentAsync(query: String) {
+    fun searchProjectContentAsync(query: String, filter: SearchFileFilter = SearchFileFilter.ALL) {
         val project = current
         if (project == null || query.isBlank()) return
         val requestId = ++contentSearchRequestId
         isSearchingContent = true
         contentSearchResults = emptyList()
         viewModelScope.launch {
-            val results = withContext(Dispatchers.IO) { searchProjectContent(project.id, query) }
+            val result = runCatching {
+                withContext(Dispatchers.IO) { searchProjectContent(project.id, query, filter) }
+            }
             if (requestId != contentSearchRequestId) return@launch
             isSearchingContent = false
             if (current?.id == project.id) {
-                contentSearchResults = results
-                message = text(R.string.content_search_found, results.size, if (results.size >= 500) text(R.string.first_500_shown) else "")
+                result.onSuccess { results ->
+                    contentSearchResults = results
+                    message = text(R.string.content_search_found, results.size, if (results.size >= 500) text(R.string.first_500_shown) else "")
+                }.onFailure { error ->
+                    message = error.message ?: text(R.string.search_failed)
+                }
             }
         }
     }
@@ -182,25 +190,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         contentSearchResults = emptyList()
     }
 
-    fun searchProjectContent(query: String): List<Pair<String, Int>> {
+    fun searchProjectContent(query: String, filter: SearchFileFilter = SearchFileFilter.ALL): List<ContentSearchResult> {
         val project = current ?: return emptyList()
-        return searchProjectContent(project.id, query)
+        return searchProjectContent(project.id, query, filter)
     }
 
-    private fun searchProjectContent(projectId: String, query: String): List<Pair<String, Int>> {
+    private fun searchProjectContent(projectId: String, query: String, filter: SearchFileFilter): List<ContentSearchResult> {
         if (query.isBlank()) return emptyList()
-        return runCatching {
-            repo.allFiles(projectId).asSequence()
-                .filter { it.length() <= 1024L * 1024L && it.extension.lowercase() in com.blockline.app.data.TEXT_EXT }
-                .flatMap { file ->
-                    val path = repo.relative(projectId, file)
-                    file.readLines(Charsets.UTF_8).asSequence().mapIndexedNotNull { index, line ->
-                        if (line.contains(query, ignoreCase = true)) path to (index + 1) else null
-                    }
+        return repo.allFiles(projectId).asSequence()
+            .filter { file ->
+                file.length() <= 1024L * 1024L &&
+                    file.extension.lowercase(java.util.Locale.ROOT) in com.blockline.app.data.TEXT_EXT &&
+                    filter.matches(file, repo.relative(projectId, file))
+            }
+            .flatMap { file ->
+                val path = repo.relative(projectId, file)
+                file.useLines(Charsets.UTF_8) { lines ->
+                    lines.mapIndexedNotNull { index, line ->
+                        if (line.contains(query, ignoreCase = true)) {
+                            ContentSearchResult(path, index + 1, line.trim().take(200))
+                        } else null
+                    }.toList().asSequence()
                 }
-                .take(500)
-                .toList()
-        }.getOrDefault(emptyList())
+            }
+            .take(500)
+            .toList()
     }
     fun selectProject(p: Project) {
         openFileRequestId++
