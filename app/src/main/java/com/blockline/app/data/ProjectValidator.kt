@@ -127,8 +127,26 @@ object ProjectValidator {
                     }
                 }
             }
-            val formatVersion = json.optInt("format_version", -1)
-            if (formatVersion < 2) issues += ValidationIssue(IssueSeverity.WARNING, path, message = "format_version is missing or older than the common manifest format.")
+            val formatValue = json.opt("format_version")
+            val formatNumber = (formatValue as? Number)?.toDouble()
+            if (formatNumber == null || !formatNumber.isFinite() || formatNumber < 2.0 || formatNumber % 1.0 != 0.0) {
+                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "format_version is missing or is not a supported integer manifest format version.")
+            }
+
+            val engineValue = json.opt("min_engine_version")
+            if (engineValue == null || engineValue == JSONObject.NULL) {
+                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "min_engine_version is not declared; compatibility with the target Minecraft version cannot be checked.")
+            } else if (intVersion(engineValue) == null) {
+                issues += ValidationIssue(IssueSeverity.ERROR, path, message = "min_engine_version must contain three non-negative integers, for example [1, 21, 0].")
+            }
+
+            val packRoot = file.parentFile
+            val hasPackIcon = packRoot?.listFiles()?.any {
+                it.isFile && it.name.equals("pack_icon.png", ignoreCase = true)
+            } == true
+            if (!hasPackIcon) {
+                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "pack_icon.png is missing from this pack folder.")
+            }
         }
 
         manifests.forEach { file ->
