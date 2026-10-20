@@ -290,4 +290,7 @@
     <string name="pack_health_score">Pack health</string>
     <string name="pack_health_score_waiting">Run validation to calculate this pack\'s health score.</string>
     <string name="pack_health_score_value">%1$d / 100</string>
+    <string name="large_file_page">Part %1$d of %2$d · Characters %3$d–%4$d of %5$d</string>
+    <string name="large_file_previous">Previous part</string>
+    <string name="large_file_next">Next part</string>
 </resources>
