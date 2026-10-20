@@ -372,17 +372,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private fun writeAtomically(target: File, value: String, suffix: String) {
+        val parent = target.parentFile ?: error("Target file has no parent directory.")
+        check(parent.isDirectory || parent.mkdirs()) { "Could not create the target directory." }
+        val temporary = File(parent, target.name + suffix)
+        temporary.writeText(value, Charsets.UTF_8)
+        try {
+            try {
+                java.nio.file.Files.move(
+                    temporary.toPath(),
+                    target.toPath(),
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                )
+            } catch (_: java.nio.file.AtomicMoveNotSupportedException) {
+                java.nio.file.Files.move(
+                    temporary.toPath(),
+                    target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                )
+            }
+        } finally {
+            temporary.delete()
+        }
+    }
+
     private fun writeSnapshot(projectId: String, path: String, value: String) {
         val projectRoot = repo.projectDir(projectId).canonicalFile
         val target = repo.resolve(projectId, path).canonicalFile
         require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
         check(target.isFile) { text(R.string.file_not_found) }
-        val temp = File(target.parentFile, target.name + ".saving")
-        temp.writeText(value, Charsets.UTF_8)
-        if (!temp.renameTo(target)) {
-            target.writeText(value, Charsets.UTF_8)
-            temp.delete()
-        }
+        writeAtomically(target, value, ".saving")
     }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
@@ -420,12 +440,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 withContext(Dispatchers.IO) {
                     require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
                     check(target.isFile) { "File no longer exists." }
-                    val temp = File(target.parentFile, target.name + ".autosaving")
-                    temp.writeText(value, Charsets.UTF_8)
-                    if (!temp.renameTo(target)) {
-                        target.writeText(value, Charsets.UTF_8)
-                        temp.delete()
-                    }
+                    writeAtomically(target, value, ".autosaving")
                 }
             }
             if (result.isFailure && current?.id == projectId && activeFile == path) {
@@ -440,10 +455,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         autoSaveJob?.cancel()
         runCatching {
             val f = repo.resolve(p.id, path)
-            f.parentFile?.mkdirs()
-            val tmp = File(f.parentFile, f.name + ".saving")
-            tmp.writeText(content, Charsets.UTF_8)
-            if (!tmp.renameTo(f)) { f.writeText(content, Charsets.UTF_8); tmp.delete() }
+            writeAtomically(f, content, ".saving")
             if (showMessage) message = text(R.string.saved_path, path)
         }.onFailure { message = it.message ?: text(R.string.save_failed) }
     }
