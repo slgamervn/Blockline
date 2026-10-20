@@ -302,7 +302,11 @@ class ProjectRepository(private val ctx: Context) {
             ExportMode.BOTH -> packs
         }
         if (chosen.isEmpty()) throw NothingToExport()
-        ZipUtil.zip(chosen.map { it to if (mode == ExportMode.BOTH) "${it.name}/" else "" }, output)
+        if (mode == ExportMode.BOTH) {
+            ZipUtil.zipAddon(chosen, output, ctx.cacheDir)
+        } else {
+            ZipUtil.zip(chosen.map { it to "" }, output)
+        }
     }
 
     private fun backupDir(id: String) = File(backupRoot, id)
