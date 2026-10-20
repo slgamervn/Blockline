@@ -9,7 +9,7 @@
 [![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
 [![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
 
-[Download APK](https://github.com/slgamervn/Blockline/releases/latest/download/Blockline.apk) · [Project website](https://slgamervn.github.io/Blockline/) · [Report a bug](https://github.com/slgamervn/Blockline/issues)
+[Download APK](https://github.com/slgamervn/Blockline/releases/latest) · [Project website](https://slgamervn.github.io/Blockline/) · [Report a bug](https://github.com/slgamervn/Blockline/issues)
 
 [Tiếng Việt](README.vi.md)
 
@@ -59,11 +59,11 @@ Blockline is being built in phases. The table below describes the current scope 
 ## Download and install
 
 1. Open the [latest release](https://github.com/slgamervn/Blockline/releases/latest).
-2. Download **Blockline.apk**.
+2. Download the versioned APK, for example **Blockline-v0.1.123.apk**.
 3. Open the downloaded APK on your Android device and follow the system installation prompts. Android may ask you to allow installation from the app used to download the file.
 4. If you prefer not to install an APK, build the app from source using Android Studio.
 
-**Release note:** GitHub Actions builds a signed release APK when repository signing secrets are configured; otherwise it falls back to a debug APK. This is an early-access build, not a Play Store release.
+**Release note:** GitHub Actions names each APK with its build version (for example `Blockline-v0.1.123.apk`) and writes release notes for that build from the actual commit history. A signed release APK is produced when repository signing secrets are configured; otherwise the workflow publishes a debug APK. Debug builds may not install as an update over an APK signed with a different key. This is an early-access build, not a Play Store release.
 
 ## Build from source
 
