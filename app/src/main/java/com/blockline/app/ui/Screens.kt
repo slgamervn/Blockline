@@ -60,6 +60,7 @@ import com.blockline.app.data.ExportMode
 import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.data.GeneratedPackType
 import com.blockline.app.data.PackManifestGenerator
+import com.blockline.app.data.DependencyKind
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
@@ -448,6 +449,68 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
                             horizontalArrangement = Arrangement.Start
                         ) {
                             Text(snippet.code, fontFamily = FontFamily.Monospace, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.dependency_viewer_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.dependency_viewer_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(
+                        onClick = { vm.loadCurrentProjectDependencies() },
+                        enabled = vm.current != null && !vm.isLoadingDependencies,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(if (vm.isLoadingDependencies) R.string.dependency_analyzing else R.string.dependency_analyze))
+                    }
+                    if (vm.isLoadingDependencies) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    if (vm.dependencyAnalysisCompleted && vm.dependencies.isEmpty()) {
+                        Text(stringResource(R.string.dependency_none))
+                    } else if (vm.dependencies.isNotEmpty()) {
+                        Text(stringResource(R.string.dependency_count, vm.dependencies.size), style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+        }
+        if (vm.dependencies.isNotEmpty()) {
+            items(
+                vm.dependencies,
+                key = { "${it.sourcePath}:${it.target}:${it.kind}:${it.requestedVersion.orEmpty()}" }
+            ) { dependency ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            stringResource(
+                                when (dependency.kind) {
+                                    DependencyKind.INTERNAL_PACK -> R.string.dependency_internal_pack
+                                    DependencyKind.EXTERNAL_MODULE -> R.string.dependency_external_module
+                                    DependencyKind.EXTERNAL_UUID -> R.string.dependency_external_uuid
+                                    DependencyKind.INVALID -> R.string.dependency_invalid
+                                }
+                            ),
+                            color = when {
+                                dependency.versionMismatch || dependency.kind == DependencyKind.INVALID -> androidx.compose.material3.MaterialTheme.colorScheme.error
+                                dependency.kind == DependencyKind.INTERNAL_PACK -> androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                else -> androidx.compose.material3.MaterialTheme.colorScheme.tertiary
+                            },
+                            style = androidx.compose.material3.MaterialTheme.typography.labelLarge
+                        )
+                        Text(stringResource(R.string.dependency_source, dependency.sourceName, dependency.sourcePath))
+                        Text(stringResource(R.string.dependency_target, dependency.target))
+                        dependency.requestedVersion?.let { Text(stringResource(R.string.dependency_requested_version, it)) }
+                        dependency.targetPath?.let { Text(stringResource(R.string.dependency_installed_path, it)) }
+                        dependency.installedVersion?.let { Text(stringResource(R.string.dependency_installed_version, it)) }
+                        if (dependency.versionMismatch) {
+                            Text(stringResource(R.string.dependency_version_mismatch), color = androidx.compose.material3.MaterialTheme.colorScheme.error)
+                        }
+                        if (dependency.kind == DependencyKind.EXTERNAL_UUID) {
+                            Text(stringResource(R.string.dependency_external_uuid_note), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        if (dependency.kind == DependencyKind.INVALID) {
+                            Text(stringResource(R.string.dependency_invalid_note), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

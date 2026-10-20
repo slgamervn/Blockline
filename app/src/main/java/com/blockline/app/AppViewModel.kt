@@ -15,6 +15,8 @@ import com.blockline.app.data.ProjectRepository
 import com.blockline.app.data.ResourcePreview
 import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
+import com.blockline.app.data.PackDependency
+import com.blockline.app.data.PackDependencyResolver
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
@@ -61,6 +63,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var validationCompleted by mutableStateOf(false)
         private set
+    var dependencies by mutableStateOf<List<PackDependency>>(emptyList())
+        private set
+    var isLoadingDependencies by mutableStateOf(false)
+        private set
+    var dependencyAnalysisCompleted by mutableStateOf(false)
+        private set
 
     val packHealthScore: Int?
         get() = if (!validationCompleted) null else {
@@ -86,6 +94,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val lastEditAt = mutableMapOf<String, Long>()
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
+    private var dependencyRequestId = 0
     private var fileIndexRequestId = 0
     private var autoSaveJob: Job? = null
 
@@ -109,6 +118,36 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (current?.id == projectId) isIndexingProjectFiles = false
             result.onSuccess { projectEntries[projectId] = it }
                 .onFailure { if (current?.id == projectId) message = it.message ?: text(R.string.scanning_files) }
+        }
+    }
+
+    fun loadCurrentProjectDependencies() {
+        val project = current
+        if (project == null) {
+            dependencies = emptyList()
+            dependencyAnalysisCompleted = false
+            message = text(R.string.select_project_before_validating)
+            return
+        }
+        if (isLoadingDependencies) return
+        val requestId = ++dependencyRequestId
+        isLoadingDependencies = true
+        dependencyAnalysisCompleted = false
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    PackDependencyResolver.resolve(repo.projectDir(project.id), repo.allFiles(project.id))
+                }
+            }
+            if (requestId != dependencyRequestId) return@launch
+            isLoadingDependencies = false
+            if (current?.id != project.id) return@launch
+            result.onSuccess {
+                dependencies = it
+                dependencyAnalysisCompleted = true
+            }.onFailure {
+                message = it.message ?: text(R.string.validation_failed)
+            }
         }
     }
 
@@ -237,6 +276,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         if (!saveCurrent(showMessage = false)) return
         current = p
+        dependencyRequestId++
+        dependencies = emptyList()
+        isLoadingDependencies = false
+        dependencyAnalysisCompleted = false
         clearContentSearch()
         validationRequestId++
         isValidating = false
@@ -303,6 +346,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     validationIssues = emptyList()
                     validationCompleted = false
                     contentSearchResults = emptyList()
+                    dependencyRequestId++
+                    dependencies = emptyList()
+                    isLoadingDependencies = false
+                    dependencyAnalysisCompleted = false
                     isIndexingProjectFiles = false
                     fileIndexRequestId++
                 }

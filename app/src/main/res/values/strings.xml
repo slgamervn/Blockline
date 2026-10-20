@@ -311,4 +311,22 @@
     <string name="generated_resource_pack">Resource Pack</string>
     <string name="generate_manifest">Generate and open manifest</string>
     <string name="generated_manifest_created">Created %1$s</string>
+    <string name="dependency_viewer_title">Dependency viewer</string>
+    <string name="dependency_viewer_hint">Resolve manifest dependencies within this project. External UUIDs may be provided by Minecraft or another installed pack.</string>
+    <string name="dependency_analyze">Analyze dependencies</string>
+    <string name="dependency_analyzing">Analyzing dependencies…</string>
+    <string name="dependency_none">No dependencies were declared in the readable manifests.</string>
+    <string name="dependency_count">Found %1$d dependencies</string>
+    <string name="dependency_internal_pack">Internal pack dependency</string>
+    <string name="dependency_external_module">External module dependency</string>
+    <string name="dependency_external_uuid">External UUID dependency</string>
+    <string name="dependency_invalid">Invalid dependency declaration</string>
+    <string name="dependency_source">Source: %1$s (%2$s)</string>
+    <string name="dependency_target">Target: %1$s</string>
+    <string name="dependency_requested_version">Requested version: %1$s</string>
+    <string name="dependency_installed_path">Resolved manifest: %1$s</string>
+    <string name="dependency_installed_version">Installed project version: %1$s</string>
+    <string name="dependency_version_mismatch">The requested numeric version does not match the version found in this project.</string>
+    <string name="dependency_external_uuid_note">This UUID was not found inside the current project. It may belong to Minecraft or another installed pack; this is not reported as a missing local file.</string>
+    <string name="dependency_invalid_note">The dependency entry is incomplete or has an invalid type. Run pack validation for details.</string>
 </resources>

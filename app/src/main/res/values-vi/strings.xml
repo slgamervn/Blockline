@@ -311,4 +311,22 @@
     <string name="generated_resource_pack">Resource Pack</string>
     <string name="generate_manifest">Tạo và mở manifest</string>
     <string name="generated_manifest_created">Đã tạo %1$s</string>
+    <string name="dependency_viewer_title">Trình xem dependency</string>
+    <string name="dependency_viewer_hint">Đối chiếu dependency trong manifest của dự án. UUID bên ngoài có thể do Minecraft hoặc pack khác đã cài cung cấp.</string>
+    <string name="dependency_analyze">Phân tích dependency</string>
+    <string name="dependency_analyzing">Đang phân tích dependency…</string>
+    <string name="dependency_none">Không tìm thấy dependency trong các manifest đọc được.</string>
+    <string name="dependency_count">Tìm thấy %1$d dependency</string>
+    <string name="dependency_internal_pack">Dependency nội bộ trong dự án</string>
+    <string name="dependency_external_module">Dependency module bên ngoài</string>
+    <string name="dependency_external_uuid">Dependency UUID bên ngoài</string>
+    <string name="dependency_invalid">Khai báo dependency không hợp lệ</string>
+    <string name="dependency_source">Nguồn: %1$s (%2$s)</string>
+    <string name="dependency_target">Đích: %1$s</string>
+    <string name="dependency_requested_version">Phiên bản yêu cầu: %1$s</string>
+    <string name="dependency_installed_path">Manifest đã đối chiếu: %1$s</string>
+    <string name="dependency_installed_version">Phiên bản trong dự án: %1$s</string>
+    <string name="dependency_version_mismatch">Phiên bản số được yêu cầu không khớp với phiên bản tìm thấy trong dự án.</string>
+    <string name="dependency_external_uuid_note">Không tìm thấy UUID này trong dự án hiện tại. Nó có thể thuộc Minecraft hoặc pack khác đã cài; không xem đây là tệp nội bộ bị thiếu.</string>
+    <string name="dependency_invalid_note">Mục dependency chưa đủ thông tin hoặc sai kiểu dữ liệu. Hãy chạy kiểm tra pack để biết thêm chi tiết.</string>
 </resources>
