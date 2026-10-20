@@ -7,7 +7,7 @@
 [![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
 [![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
 
-[**Tải APK**](https://github.com/slgamervn/Blockline/releases/latest/download/Blockline.apk) · [Trang giới thiệu](https://slgamervn.github.io/Blockline/) · [Mã nguồn](https://github.com/slgamervn/Blockline)
+[**Tải APK**](https://github.com/slgamervn/Blockline/releases/latest) · [Trang giới thiệu](https://slgamervn.github.io/Blockline/) · [Mã nguồn](https://github.com/slgamervn/Blockline)
 
 [English README](README.md)
 
@@ -53,11 +53,11 @@ Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung
 ## Cài đặt
 
 1. Mở [GitHub Releases mới nhất](https://github.com/slgamervn/Blockline/releases/latest).
-2. Tải tệp **Blockline.apk**.
+2. Tải APK có tên kèm phiên bản build, ví dụ **Blockline-v0.1.123.apk**.
 3. Mở APK trên thiết bị Android và làm theo hướng dẫn của hệ thống. Android có thể yêu cầu cho phép cài đặt từ ứng dụng tải tệp.
 4. Nếu không muốn cài APK, bạn có thể build ứng dụng từ source bằng Android Studio.
 
-GitHub Actions tạo **signed release APK** khi repository có đủ signing secrets; nếu không, workflow sẽ tạo debug APK thay thế. Đây là bản truy cập sớm, chưa phải bản phát hành trên Google Play.
+GitHub Actions đặt tên APK theo phiên bản build (ví dụ `Blockline-v0.1.123.apk`) và tự tạo ghi chú phát hành cho từng bản từ lịch sử commit thực tế. Workflow tạo APK đã ký khi repository có đủ signing secrets; nếu không, nó tạo debug APK. Debug APK có thể không cài đè cập nhật được lên bản ký bằng khóa khác. Đây là bản truy cập sớm, chưa phải bản phát hành trên Google Play.
 
 ## Build từ source
 
