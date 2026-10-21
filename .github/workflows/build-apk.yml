@@ -3,6 +3,7 @@ name: Build APK
 on:
   push:
     branches: [main, master]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -17,12 +18,22 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       HAS_SIGNING_KEY: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 != '' }}
-      VERSION_NAME: 0.1.${{ github.run_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Determine app version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME="0.1.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -58,16 +69,21 @@ jobs:
       - name: Build signed release APK
         if: ${{ env.HAS_SIGNING_KEY == 'true' }}
         env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
           BLOCKLINE_KEYSTORE_PASSWORD: ${{ secrets.BLOCKLINE_KEYSTORE_PASSWORD }}
           BLOCKLINE_KEY_ALIAS: ${{ secrets.BLOCKLINE_KEY_ALIAS }}
           BLOCKLINE_KEY_PASSWORD: ${{ secrets.BLOCKLINE_KEY_PASSWORD }}
-        run: gradle assembleRelease -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=${{ env.VERSION_NAME }} --stacktrace --no-daemon
+        run: gradle assembleRelease -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
 
       - name: Build debug APK (signing setup required for upgrade installs)
         if: ${{ env.HAS_SIGNING_KEY != 'true' }}
-        run: gradle assembleDebug -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=${{ env.VERSION_NAME }} --stacktrace --no-daemon
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+        run: gradle assembleDebug -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
 
       - name: Prepare versioned APK
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
         run: |
           if [ "$HAS_SIGNING_KEY" = "true" ]; then
             cp app/build/outputs/apk/release/app-release.apk "Blockline-v${VERSION_NAME}.apk"
@@ -79,8 +95,9 @@ jobs:
           echo "APK_FILE=Blockline-v${VERSION_NAME}.apk" >> "$GITHUB_ENV"
 
       - name: Generate release notes from actual commits
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
-          VERSION_NAME: ${{ env.VERSION_NAME }}
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
         run: |
           PREVIOUS_TAG="$(git tag --list 'v*' --sort=-version:refname | grep -v "^v${VERSION_NAME}$" | head -n 1)"
           {
@@ -110,17 +127,18 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
         with:
-          name: Blockline-v${{ env.VERSION_NAME }}-apk
-          path: Blockline-v${{ env.VERSION_NAME }}.apk
+          name: Blockline-v${{ steps.version.outputs.version_name }}-apk
+          path: Blockline-v${{ steps.version.outputs.version_name }}.apk
           if-no-files-found: error
 
       - name: Create Release with versioned APK and change summary
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ env.VERSION_NAME }}
-          name: Blockline v${{ env.VERSION_NAME }}
+          tag_name: ${{ github.ref_name }}
+          name: Blockline v${{ steps.version.outputs.version_name }}
           body_path: RELEASE_NOTES.md
-          files: Blockline-v${{ env.VERSION_NAME }}.apk
+          files: Blockline-v${{ steps.version.outputs.version_name }}.apk
           generate_release_notes: false
           make_latest: true
         env:
