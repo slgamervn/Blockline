@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem in Blockline
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please remove private project data, access tokens, and personal information from logs or screenshots before posting.
+  - type: input
+    id: version
+    attributes:
+      label: Blockline version
+      description: Find this under More → About.
+      placeholder: "e.g. 0.1.342"
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device
+      placeholder: "e.g. Android 13, device model"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the unexpected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open...
+        2. Tap...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or logs
+      description: Attach only sanitized screenshots/logs; do not include private pack contents.
+    validations:
+      required: false
