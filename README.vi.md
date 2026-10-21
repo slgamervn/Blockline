@@ -2,7 +2,9 @@
 
 # Blockline
 
-### Không gian làm việc di động dành cho nhà phát triển add-on Minecraft Bedrock.
+### Không gian làm việc trên điện thoại dành cho người tạo add-on Minecraft Bedrock.
+
+**Nhập · Duyệt · Sửa · Kiểm tra · Tạo · So sánh · Xuất**
 
 [![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
 [![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
@@ -17,98 +19,96 @@
 
 ## Blockline là gì?
 
-Blockline là ứng dụng Android hướng đến việc đọc, tổ chức và chỉnh sửa tệp add-on của **Minecraft Bedrock** ngay trên điện thoại. Dự án ưu tiên quy trình làm việc cục bộ: pack được sao chép vào vùng lưu trữ riêng của ứng dụng và không bị tải lên máy chủ.
+Blockline là ứng dụng Android-native để đọc, tổ chức và chỉnh sửa **add-on Minecraft Bedrock** trực tiếp trên điện thoại. Ứng dụng dùng Kotlin, Jetpack Compose, Material 3 và lưu bản sao dự án trong vùng lưu trữ riêng của ứng dụng; việc nhập/xuất dùng trình chọn tệp của Android.
 
-Blockline đang trong giai đoạn phát triển. Bản hiện tại tập trung vào nền tảng quản lý dự án, trình duyệt tệp và trình chỉnh sửa cơ bản. Phase 2 đang được triển khai từng phần, gồm kiểm tra cú pháp JSON, manifest, UUID, đường dẫn script entry, dependency và tìm kiếm nội dung. Generator và Script API Reference thuộc các phase sau.
+Repository hiện đã có các phần triển khai thuộc cả bốn phase ban đầu. Tuy nhiên, đây vẫn là dự án đang phát triển: CI thành công xác nhận các kiểm tra tự động và quy trình build của commit đó đã chạy qua, không thay thế việc thử nghiệm trên thiết bị thật hoặc xác thực mọi schema Bedrock.
 
-## Tính năng hiện có
+## Tính năng
 
-- **Nhập pack:** mở tệp `.mcpack` và `.mcaddon` bằng trình chọn tệp của Android.
-- **Quản lý dự án:** tạo project mẫu, mở, đổi tên, sao chép và xóa project.
-- **Tổng quan pack:** đọc metadata từ `manifest.json` và mở manifest để chỉnh sửa.
-- **File Explorer:** duyệt thư mục; tạo, đổi tên, di chuyển và xóa tệp/thư mục; đánh dấu yêu thích, xem tối đa 30 tệp gần đây và mở preview chỉ đọc cho JSON, script, function và file ngôn ngữ.
-- **Trình chỉnh sửa:** nhiều tab, tô màu cú pháp cơ bản, Undo/Redo, định dạng JSON, tìm kiếm và tự lưu.
-- **Giải nén an toàn hơn:** kiểm tra đường dẫn trong archive để hạn chế lỗi ZIP-slip.
-- **Sao lưu và khôi phục:** tạo backup cục bộ, khôi phục bản gần nhất và tự sao lưu trước khi export (giữ tối đa 5 bản mới nhất).
-- **Xuất pack:** xuất Behavior Pack, Resource Pack hoặc gói kết hợp nếu project có đủ pack tương ứng.
-- **Giao diện di động:** Material 3, theme tối/sáng/theo hệ thống và tùy chỉnh cỡ chữ editor.
+### Quản lý dự án
+- Nhập `.mcpack`, `.mcaddon` và archive tương thích ZIP qua trình chọn tệp Android.
+- Lưu bản sao project trong bộ nhớ riêng của ứng dụng; tạo project mẫu, chuyển project, đổi tên, nhân bản và xóa.
+- Xem manifest và metadata pack; tạo bản sao lưu cục bộ hoặc khôi phục backup gần nhất.
+- Xuất Behavior Pack, Resource Pack hoặc add-on kết hợp; tạo backup trước khi export.
+- Giải nén archive có kiểm tra đường dẫn đích để giảm nguy cơ ZIP-slip và xử lý lỗi archive an toàn hơn.
 
-## Tiến độ phát triển
+### Explorer và editor
+- Duyệt và quản lý tệp/thư mục: tạo, đổi tên, di chuyển, xóa, đánh dấu yêu thích và mở lại tệp gần đây.
+- Xem trước metadata và mã nguồn của các loại tài nguyên được nhận diện; đây không phải trình render trong game.
+- Chỉnh sửa JSON, JavaScript và `.mcfunction` với nhiều tab, Undo/Redo, tự lưu, tìm kiếm và định dạng JSON giữ comment.
+- Có giới hạn với tệp lớn: tệp trên 1 MiB được mở chỉ đọc; tệp vượt ngưỡng cứng do ứng dụng quy định sẽ không được nạp vào editor.
+- Tô màu cú pháp hiện là giải pháp gọn nhẹ, chưa phải language server hay parser IDE đầy đủ.
 
-| Phase | Phạm vi | Trạng thái |
-| --- | --- | --- |
-| **1 — Nền tảng** | Dự án cục bộ, import/export, explorer, editor, backup, điều hướng | Đang hoàn thiện |
-| **2 — Tìm kiếm và kiểm tra** | Search nội dung, kiểm tra JSON/manifest/UUID/script entry và dependency | Đang triển khai |
-| **3 — Generator và snippet** | Tạo tài nguyên pack, snippet và template | Dự kiến |
-| **4 — Workflow nâng cao** | Diff, thay identifier hàng loạt, dependency viewer, Script API Reference | Dự kiến |
+### Tìm kiếm, kiểm tra và sức khỏe pack
+- Tìm đường dẫn và nội dung văn bản trong project theo bộ lọc loại tệp; xem dòng khớp và mở kết quả trong editor.
+- Kiểm tra cú pháp JSON, trường manifest, định dạng/trùng UUID, đường dẫn script entry, metadata dependency và một số tham chiếu tài nguyên.
+- Xem báo cáo lỗi/cảnh báo/thông tin đã bản địa hóa và điểm sức khỏe pack mang tính heuristic. Điểm này chỉ hỗ trợ rà soát, không bảo đảm Minecraft sẽ tải pack thành công.
+- Phân tích dependency để phân biệt mục tìm thấy trong project với dependency bên ngoài có thể do Minecraft hoặc pack đã cài cung cấp.
 
-### Giới hạn hiện tại
+### Generator và snippet
+- Tạo manifest Behavior Pack hoặc Resource Pack với UUID mới; generator không ghi đè manifest đã tồn tại.
+- Xem và sao chép snippet JavaScript Script API cùng `.mcfunction`.
+- Dùng sample pack đi kèm làm điểm khởi đầu.
 
-- Metadata đang được lưu bằng JSON riêng và preferences; Room, Hilt và Clean Architecture đầy đủ chưa được triển khai.
-- Syntax highlighting hiện là bản cơ bản, chưa phải parser ngôn ngữ đầy đủ.
-- Search hỗ trợ đường dẫn và nội dung tệp văn bản; báo cáo validation có thể mở tệp bị lỗi. Tìm kiếm identifier/UUID và định vị con trỏ chính xác vẫn cần hoàn thiện.
-- Preview hiện nhận diện một số metadata JSON và hiển thị mã nguồn chỉ đọc cho entity, item, block, recipe, loot table, manifest, function, script và file ngôn ngữ. Đây chưa phải trình kết xuất trong game; kiểm tra tham chiếu tài nguyên vẫn chưa đầy đủ.
-- Validator hiện là phân tích tĩnh ban đầu, chưa thay thế đầy đủ schema chính thức của Mojang; vẫn cần kiểm thử tự động và kiểm tra trên thiết bị thực.
+### Workflow nâng cao và Script API Reference
+- So sánh nội dung văn bản bằng line-diff engine.
+- Xem trước thay thế văn bản hàng loạt trước khi áp dụng, có bước xác nhận và thao tác dự án có hỗ trợ backup.
+- Kiểm tra dependency trong manifest, nguồn/đích, sai khác phiên bản và UUID bên ngoài chưa được phân giải trong project.
+- Tra cứu TypeScript declaration của các npm package được hỗ trợ. Repository tra cứu có thể lấy metadata phiên bản từ npm, lấy declaration từ jsDelivr, cache phiên bản/mã nguồn để dùng lại khi offline và fallback sang snapshot đi kèm. Các declaration chưa parse được vẫn được giữ ở dạng raw thay vì bị loại bỏ.
 
-## Cài đặt
+## Điều hướng
 
-1. Mở [GitHub Releases mới nhất](https://github.com/slgamervn/Blockline/releases/latest).
-2. Tải APK có tên kèm phiên bản build, ví dụ **Blockline-v0.1.123.apk**.
-3. Mở APK trên thiết bị Android và làm theo hướng dẫn của hệ thống. Android có thể yêu cầu cho phép cài đặt từ ứng dụng tải tệp.
-4. Nếu không muốn cài APK, bạn có thể build ứng dụng từ source bằng Android Studio.
+Ứng dụng có năm mục chính: **Projects, Explorer, Search, Tools và More**. Có tùy chọn giao diện và cỡ chữ editor. Hầu hết tác vụ chỉnh sửa pack chạy cục bộ; làm mới Script API từ nguồn online cần mạng, còn dữ liệu đã cache hoặc snapshot đi kèm có thể dùng offline.
 
-GitHub Actions đặt tên APK theo phiên bản build (ví dụ `Blockline-v0.1.123.apk`) và tự tạo ghi chú phát hành cho từng bản từ lịch sử commit thực tế. Workflow tạo APK đã ký khi repository có đủ signing secrets; nếu không, nó tạo debug APK. Debug APK có thể không cài đè cập nhật được lên bản ký bằng khóa khác. Đây là bản truy cập sớm, chưa phải bản phát hành trên Google Play.
+## Build và kiểm thử
 
-## Build từ source
-
-### Yêu cầu
-
+Yêu cầu:
 - Android Studio và Android SDK Platform 35
 - JDK 17
 - Gradle 8.14.6
-- Android 8.0 (API 26) trở lên nếu chạy trên thiết bị
-
-### Các bước
+- Android 8.0 (API 26) trở lên để chạy ứng dụng
 
 ```bash
 git clone https://github.com/slgamervn/Blockline.git
 cd Blockline
+gradle testDebugUnitTest
 gradle assembleDebug
 ```
 
-APK được tạo tại:
+APK debug được tạo tại `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions chạy unit test trước khi build và phát hành APK theo phiên bản. Vào **Actions → Build APK** để xem log và tải artifact. Tệp phát hành có tên `Blockline-v<version>.apk`; APK release đã ký cần signing secrets của repository, nếu không workflow tạo APK debug. APK debug dùng khóa khác có thể không cài đè cập nhật lên bản đã ký bằng khóa khác.
 
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
+## Nguyên tắc hiệu năng và độ tin cậy
 
-Hoặc mở repository bằng Android Studio, đồng bộ Gradle rồi chạy cấu hình `app`. Bạn cũng có thể vào **Actions → Build APK** để xem log và tải artifact.
-
-## Công nghệ
-
-- Kotlin
-- Jetpack Compose
-- Material 3
-- Navigation Compose
-- Kotlin Coroutines
-- Android Storage Access Framework (SAF)
-- App-private storage
+Blockline áp dụng các hướng dẫn Compose phù hợp với ứng dụng: lazy layout cho danh sách có thể lớn, stable key cho danh sách thay đổi, chuyển công việc nặng khỏi các lần UI recomposition thường xuyên và giới hạn rõ ràng với tệp editor lớn. Các kỹ thuật này giúp giảm công việc dư thừa nhưng không thay thế việc profiling trên thiết bị đại diện.
 
 ## Quyền riêng tư và bảo mật
 
-- Nội dung pack được lưu trong vùng riêng của ứng dụng.
-- Phase 1 không yêu cầu quyền `INTERNET` và không tải nội dung project lên mạng.
-- Không tích hợp analytics hoặc tracking.
-- Giải nén archive có kiểm tra đường dẫn để hạn chế ZIP-slip.
+- Pack nhập vào được sao chép vào vùng lưu trữ riêng của ứng dụng và không được tải lên trong quy trình chỉnh sửa thông thường.
+- Làm mới Script API là tính năng mạng có chủ đích, dùng để lấy metadata npm và declaration.
+- Giải nén archive có kiểm tra đường dẫn đích để giảm nguy cơ ZIP-slip.
+- Không đăng pack riêng tư hoặc log có thông tin nhạy cảm lên issue công khai.
+
+## Giới hạn hiện tại
+
+- Validator tĩnh chưa thay thế đầy đủ schema Mojang và không thể bảo đảm tương thích trong game.
+- Preview tài nguyên chỉ hiển thị metadata/mã nguồn, không render như trong game.
+- Bộ phân tích Script API declaration ưu tiên khả năng chịu lỗi, không phải TypeScript compiler đầy đủ; declaration thô được giữ lại khi không phân tích được cấu trúc.
+- Vẫn cần QA trên thiết bị thật, profiling hiệu năng và kiểm thử hồi quy trên nhiều phiên bản Android cùng các pack mẫu trước khi coi bất kỳ build nào là bản production.
 
 ## Đóng góp và báo lỗi
 
-Khi báo lỗi, vui lòng cung cấp phiên bản Android, thiết bị, build/tag đang dùng, các bước tái hiện và hành vi mong đợi/thực tế. Nếu gửi pack mẫu hoặc log, hãy loại bỏ dữ liệu riêng tư trước khi chia sẻ.
+Khi báo lỗi, hãy cung cấp phiên bản Blockline, phiên bản Android/thiết bị, các bước tái hiện, hành vi mong đợi và thực tế cùng log liên quan. Xóa nội dung pack riêng tư và thông tin xác thực trước khi chia sẻ.
 
 ## License
 
-Repository hiện chưa có tệp license. Cho đến khi maintainer bổ sung license, không nên mặc định rằng việc mã nguồn được công khai đồng nghĩa với quyền tái sử dụng hoặc phân phối lại.
+Repository hiện chưa có tệp license. Không nên mặc định rằng mã nguồn công khai đồng nghĩa với quyền tái sử dụng hoặc phân phối lại cho đến khi dự án bổ sung license.
 
 ---
 
-<div align="center">Được xây dựng cho cộng đồng tạo add-on Minecraft Bedrock trên thiết bị di động.</div>
+<div align="center">
+
+Được xây dựng cho cộng đồng tạo add-on Minecraft Bedrock trên thiết bị di động.
+
+[Website](https://slgamervn.github.io/Blockline/) · [Releases](https://github.com/slgamervn/Blockline/releases) · [Issues](https://github.com/slgamervn/Blockline/issues)
+
+</div>
