@@ -449,4 +449,34 @@
     <string name="update_check_failed_detail">Update check failed: %1$s</string>
     <string name="update_open_failed">Could not open the official APK download link.</string>
     <string name="loading">Loading…</string>
+
+    <string name="creator_resources_title">Creator resources</string>
+    <string name="creator_resources_hint">Reference editors, documentation, templates and helper tools. These links open in your browser.</string>
+    <string name="resource_category_editor">Editors and coding</string>
+    <string name="resource_category_docs">Documentation and learning</string>
+    <string name="resource_category_templates">Templates and pack ideas</string>
+    <string name="resource_category_utilities">Utilities</string>
+    <string name="resource_bridge_title">bridge. Editor</string>
+    <string name="resource_bridge_desc">Browser-based Bedrock add-on editor and project workflow.</string>
+    <string name="resource_vscode_title">Visual Studio Code for the Web</string>
+    <string name="resource_vscode_desc">Edit code in a browser; device and workspace capabilities vary.</string>
+    <string name="resource_blockbench_title">Blockbench</string>
+    <string name="resource_blockbench_desc">Create and edit Minecraft models, textures and animations.</string>
+    <string name="resource_wiki_title">Bedrock Wiki</string>
+    <string name="resource_wiki_desc">Community guides for JSON, commands, entities, blocks and scripting.</string>
+    <string name="resource_microsoft_title">Microsoft Creator Documentation</string>
+    <string name="resource_microsoft_desc">Primary reference for stable Creator APIs, schemas and pack formats.</string>
+    <string name="resource_hg_title">MCBE Command Wiki VN by Hg</string>
+    <string name="resource_hg_desc">Vietnamese community command notes; verify examples against your game version.</string>
+    <string name="resource_tweaks_title">Bedrock Tweaks</string>
+    <string name="resource_tweaks_desc">Browse resource packs, add-ons and crafting tweaks for inspiration.</string>
+    <string name="resource_mctools_title">Minecraft Creator Tools</string>
+    <string name="resource_mctools_desc">Official creator toolset for creating, editing and validating projects.</string>
+    <string name="resource_mctools_net_title">MCTools</string>
+    <string name="resource_mctools_net_desc">Browser utilities such as pack merging, conversion, skins and coordinates.</string>
+    <string name="resource_pixelart_title">MakeBead Pixel Art Generator</string>
+    <string name="resource_pixelart_desc">Turn an image into a Minecraft block pattern and material list.</string>
+    <string name="resource_open">Open</string>
+    <string name="resource_open_failed">Could not open this resource. Check that a browser is available.</string>
+    <string name="resource_trust_notice">External websites are independently maintained. Blockline does not own or verify their content; check version compatibility, licenses and downloaded files before using them.</string>
 </resources>

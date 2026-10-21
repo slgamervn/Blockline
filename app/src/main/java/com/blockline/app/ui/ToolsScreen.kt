@@ -102,6 +102,7 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text(stringResource(R.string.local_project_tools_hint)) }
+        item { CreatorResourcesCard(vm) }
         item { BatchRenameToolCard(vm) }
         item { DiffToolCard(vm) }
         item { ScriptApiReferenceCard(vm, onOpenEditor) }
@@ -666,6 +667,63 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                     vm.message = context.getString(R.string.api_reference_raw_copied)
                 }) { Text(stringResource(R.string.api_reference_copy_raw)) }
             }
+        }
+    }
+}
+
+
+private data class CreatorResource(
+    val title: Int,
+    val description: Int,
+    val category: Int,
+    val url: String
+)
+
+@Composable
+private fun CreatorResourcesCard(vm: AppViewModel) {
+    val context = LocalContext.current
+    val resources = listOf(
+        CreatorResource(R.string.resource_bridge_title, R.string.resource_bridge_desc, R.string.resource_category_editor, "https://editor.bridge-core.app/"),
+        CreatorResource(R.string.resource_vscode_title, R.string.resource_vscode_desc, R.string.resource_category_editor, "https://vscode.dev/"),
+        CreatorResource(R.string.resource_blockbench_title, R.string.resource_blockbench_desc, R.string.resource_category_editor, "https://blockbench.net/"),
+        CreatorResource(R.string.resource_wiki_title, R.string.resource_wiki_desc, R.string.resource_category_docs, "https://wiki.bedrock.dev/"),
+        CreatorResource(R.string.resource_microsoft_title, R.string.resource_microsoft_desc, R.string.resource_category_docs, "https://learn.microsoft.com/vi-vn/minecraft/creator/?view=minecraft-bedrock-stable"),
+        CreatorResource(R.string.resource_hg_title, R.string.resource_hg_desc, R.string.resource_category_docs, "https://hgvn23.github.io/"),
+        CreatorResource(R.string.resource_tweaks_title, R.string.resource_tweaks_desc, R.string.resource_category_templates, "https://bedrocktweaks.net/"),
+        CreatorResource(R.string.resource_mctools_title, R.string.resource_mctools_desc, R.string.resource_category_utilities, "https://mctools.dev/"),
+        CreatorResource(R.string.resource_mctools_net_title, R.string.resource_mctools_net_desc, R.string.resource_category_utilities, "https://mc-tools.net/"),
+        CreatorResource(R.string.resource_pixelart_title, R.string.resource_pixelart_desc, R.string.resource_category_utilities, "https://makebead.com/minecraft-pixel-art-generator/")
+    )
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.creator_resources_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.creator_resources_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            resources.groupBy { it.category }.forEach { (category, items) ->
+                Text(stringResource(category), style = androidx.compose.material3.MaterialTheme.typography.titleMedium, color = androidx.compose.material3.MaterialTheme.colorScheme.primary)
+                items.forEach { resource ->
+                    androidx.compose.material3.HorizontalDivider()
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(stringResource(resource.title), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(resource.description), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        TextButton(onClick = {
+                            runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(resource.url)))
+                            }.onFailure {
+                                vm.message = context.getString(R.string.resource_open_failed)
+                            }
+                        }) {
+                            Text(stringResource(R.string.resource_open))
+                        }
+                    }
+                }
+            }
+            Text(stringResource(R.string.resource_trust_notice), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

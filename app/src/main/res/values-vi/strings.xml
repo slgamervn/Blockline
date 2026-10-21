@@ -449,4 +449,34 @@
     <string name="update_check_failed_detail">Kiểm tra cập nhật thất bại: %1$s</string>
     <string name="update_open_failed">Không thể mở liên kết tải APK chính thức.</string>
     <string name="loading">Đang tải…</string>
+
+    <string name="creator_resources_title">Tài nguyên dành cho nhà sáng tạo</string>
+    <string name="creator_resources_hint">Tham khảo trình soạn thảo, tài liệu, mẫu và công cụ hỗ trợ. Liên kết sẽ mở trong trình duyệt.</string>
+    <string name="resource_category_editor">Trình soạn thảo và lập trình</string>
+    <string name="resource_category_docs">Tài liệu và hướng dẫn</string>
+    <string name="resource_category_templates">Mẫu và ý tưởng pack</string>
+    <string name="resource_category_utilities">Công cụ tiện ích</string>
+    <string name="resource_bridge_title">Trình soạn thảo bridge.</string>
+    <string name="resource_bridge_desc">Trình soạn thảo add-on Bedrock và quy trình dự án chạy trên trình duyệt.</string>
+    <string name="resource_vscode_title">Visual Studio Code trên web</string>
+    <string name="resource_vscode_desc">Soạn mã trong trình duyệt; khả năng truy cập thiết bị và workspace có thể khác nhau.</string>
+    <string name="resource_blockbench_title">Blockbench</string>
+    <string name="resource_blockbench_desc">Tạo và chỉnh sửa model, texture và animation Minecraft.</string>
+    <string name="resource_wiki_title">Bedrock Wiki</string>
+    <string name="resource_wiki_desc">Hướng dẫn cộng đồng về JSON, command, entity, block và scripting.</string>
+    <string name="resource_microsoft_title">Tài liệu Creator của Microsoft</string>
+    <string name="resource_microsoft_desc">Tài liệu tham chiếu chính thức về Creator API ổn định, schema và định dạng pack.</string>
+    <string name="resource_hg_title">MCBE Command Wiki VN by Hg</string>
+    <string name="resource_hg_desc">Ghi chú command từ cộng đồng Việt Nam; hãy đối chiếu ví dụ với phiên bản game đang dùng.</string>
+    <string name="resource_tweaks_title">Bedrock Tweaks</string>
+    <string name="resource_tweaks_desc">Tham khảo resource pack, add-on và crafting tweak để lấy ý tưởng.</string>
+    <string name="resource_mctools_title">Minecraft Creator Tools</string>
+    <string name="resource_mctools_desc">Bộ công cụ dành cho nhà sáng tạo để tạo, chỉnh sửa và kiểm tra dự án.</string>
+    <string name="resource_mctools_net_title">MCTools</string>
+    <string name="resource_mctools_net_desc">Công cụ web như gộp pack, chuyển đổi, chỉnh skin và tọa độ.</string>
+    <string name="resource_pixelart_title">MakeBead Pixel Art Generator</string>
+    <string name="resource_pixelart_desc">Chuyển hình ảnh thành sơ đồ khối Minecraft và danh sách vật liệu.</string>
+    <string name="resource_open">Mở</string>
+    <string name="resource_open_failed">Không thể mở tài nguyên này. Hãy kiểm tra thiết bị có trình duyệt hay không.</string>
+    <string name="resource_trust_notice">Các website bên ngoài do đơn vị riêng quản lý. Blockline không sở hữu hoặc xác minh nội dung của họ; hãy kiểm tra phiên bản tương thích, giấy phép và tệp tải xuống trước khi sử dụng.</string>
 </resources>
