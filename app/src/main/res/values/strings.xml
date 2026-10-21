@@ -115,7 +115,7 @@
     <string name="version">Version</string>
     <string name="version_phase">%1$s · Phase 1 and Phase 2 preview</string>
     <string name="privacy">Privacy</string>
-    <string name="privacy_detail">Project files stay in app-private storage. The current build works offline and has no analytics or tracking.</string>
+    <string name="privacy_detail">Project files and per-project activity logs stay in app-private storage. Script API online refresh requires internet; the app has no analytics or tracking.</string>
     <string name="early_notice">Blockline is still in development. Some advanced tools will arrive in later releases.</string>
     <string name="explorer_empty_hint">Open a project from Projects first</string>
     <string name="explorer_no_results_hint">Create a file or change the filter</string>
@@ -404,4 +404,27 @@
 
     <string name="batch_rename_conflict_exists">Target already exists: %1$s → %2$s</string>
     <string name="batch_rename_conflict_duplicate">Several files would become %2$s: %1$s</string>
+
+    <string name="operation_log_title">Project activity log</string>
+    <string name="operation_log_hint">A local history of key file operations for the selected project. Up to 100 entries are kept.</string>
+    <string name="operation_log_empty">No recorded operations yet.</string>
+    <string name="operation_log_select_project">Select a project to view its activity log.</string>
+    <string name="operation_log_clear">Clear log</string>
+    <string name="operation_log_copy">Copy log</string>
+    <string name="operation_log_copied">Copied project activity log.</string>
+    <string name="operation_log_cleared">Cleared project activity log.</string>
+    <string name="operation_log_load_failed">Could not load the project activity log.</string>
+    <string name="operation_log_more">%1$d older entries are hidden from this view.</string>
+    <string name="operation_action_renamed">File renamed</string>
+    <string name="operation_action_deleted">File deleted</string>
+    <string name="operation_action_moved">File moved</string>
+    <string name="operation_action_batch_renamed">Batch rename completed</string>
+    <string name="operation_action_batch_replaced">Batch replacement completed</string>
+    <string name="operation_action_exported">Pack exported</string>
+    <string name="operation_action_backup">Backup created</string>
+    <string name="operation_action_restore">Backup restored</string>
+    <string name="operation_action_validated">Pack validation completed</string>
+    <string name="operation_detail_file_count">%1$d files</string>
+    <string name="operation_detail_replace_count">%1$d replacements across %2$d files</string>
+    <string name="operation_detail_export_mode">Export mode: %1$s</string>
 </resources>

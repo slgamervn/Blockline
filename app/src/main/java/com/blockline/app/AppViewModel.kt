@@ -12,6 +12,8 @@ import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.data.ContentSearchResult
 import com.blockline.app.data.Project
 import com.blockline.app.data.ProjectRepository
+import com.blockline.app.data.OperationLogEntry
+import com.blockline.app.data.OperationLogRepository
 import com.blockline.app.data.ResourcePreview
 import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
@@ -38,6 +40,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun text(id: Int, vararg args: Any): String = getApplication<Application>().getString(id, *args)
 
     val repo = ProjectRepository(app)
+    private val operationLogRepository = OperationLogRepository(File(app.filesDir, "operation-logs"))
+    var operationLog by mutableStateOf<List<OperationLogEntry>>(emptyList())
+        private set
+    private var operationLogRequestId = 0
     var projects by mutableStateOf<List<Project>>(emptyList())
         private set
     var current by mutableStateOf<Project?>(null)
@@ -123,6 +129,55 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     init { refresh() }
 
     fun refresh() { projects = repo.list() }
+    fun refreshOperationLog() {
+        val projectId = current?.id
+        if (projectId == null) {
+            operationLog = emptyList()
+            operationLogRequestId++
+            return
+        }
+        val requestId = ++operationLogRequestId
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { operationLogRepository.list(projectId) } }
+            if (requestId != operationLogRequestId || current?.id != projectId) return@launch
+            result.onSuccess { operationLog = it }
+                .onFailure { message = it.message ?: text(R.string.operation_log_load_failed) }
+        }
+    }
+
+    fun clearOperationLog() {
+        val projectId = current?.id ?: return
+        val requestId = ++operationLogRequestId
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    operationLogRepository.clear(projectId)
+                    operationLogRepository.list(projectId)
+                }
+            }
+            if (requestId != operationLogRequestId || current?.id != projectId) return@launch
+            result.onSuccess {
+                operationLog = it
+                message = text(R.string.operation_log_cleared)
+            }.onFailure { message = it.message ?: text(R.string.operation_log_load_failed) }
+        }
+    }
+
+    private fun recordOperation(action: String, detail: String) {
+        val projectId = current?.id ?: return
+        val requestId = ++operationLogRequestId
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    operationLogRepository.append(projectId, action, detail)
+                    operationLogRepository.list(projectId)
+                }
+            }
+            if (requestId != operationLogRequestId || current?.id != projectId) return@launch
+            result.onSuccess { operationLog = it }
+        }
+    }
+
 
     private fun refreshProjectEntries(projectId: String) {
         if (current?.id != projectId) {
@@ -342,6 +397,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 autoSaveJob?.cancel()
                 refreshProjectEntries(projectId)
                 message = text(R.string.batch_replace_done, outcome.occurrences, outcome.changedFiles)
+                recordOperation(text(R.string.operation_action_batch_replaced), text(R.string.operation_detail_replace_count, outcome.occurrences, outcome.changedFiles))
                 clearBatchReplacePreview()
             } else {
                 message = when (outcome.failure) {
@@ -415,6 +471,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 candidates.forEach { remapOpenPaths(it.oldPath, it.newPath) }
                 refreshProjectEntries(projectId)
                 message = text(R.string.batch_rename_done, outcome.changedCount)
+                recordOperation(text(R.string.operation_action_batch_renamed), text(R.string.operation_detail_file_count, outcome.changedCount))
             } else if (outcome.backupFailed) {
                 message = text(R.string.batch_rename_backup_failed, outcome.details.orEmpty())
             } else {
@@ -461,6 +518,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val errors = issues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
                 val warnings = issues.count { it.severity == com.blockline.app.data.IssueSeverity.WARNING }
                 message = text(R.string.validation_finished, errors, warnings, issues.count { it.severity == com.blockline.app.data.IssueSeverity.INFO })
+                recordOperation(text(R.string.operation_action_validated), text(R.string.operation_detail_validation_counts, errors, warnings))
             }.onFailure { message = it.message ?: text(R.string.validation_failed) }
         }
     }
@@ -562,6 +620,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         if (!saveCurrent(showMessage = false)) return
         current = p
+        refreshOperationLog()
         clearBatchReplacePreview()
         dependencyRequestId++
         dependencies = emptyList()
@@ -924,6 +983,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 remapOpenPaths(path, newPath)
                 refreshProjectEntries(p.id)
                 message = text(R.string.renamed)
+                recordOperation(text(R.string.operation_action_renamed), "$path → $newPath")
             }.onFailure { message = it.message ?: text(R.string.rename_failed) }
         }
     }
@@ -952,6 +1012,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 refreshProjectEntries(p.id)
                 message = text(R.string.deleted_path, path)
+                recordOperation(text(R.string.operation_action_deleted), path)
             }.onFailure { message = it.message ?: text(R.string.delete_failed) }
         }
     }
@@ -977,6 +1038,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 remapOpenPaths(path, newPath)
                 refreshProjectEntries(p.id)
                 message = text(R.string.moved_to, newPath)
+                recordOperation(text(R.string.operation_action_moved), "$path → $newPath")
             }.onFailure { message = it.message ?: text(R.string.move_unsafe) }
         }
     }
@@ -1020,6 +1082,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 { text(R.string.pack_exported) },
                 { it.message ?: text(R.string.export_failed) }
             )
+            if (result.isSuccess) recordOperation(text(R.string.operation_action_exported), text(R.string.operation_detail_export_mode, mode.name))
         }
     }
 
@@ -1028,7 +1091,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (!saveCurrent(showMessage = false)) return
         viewModelScope.launch(Dispatchers.IO) {
             val result = runCatching { repo.backup(p.id) }
-            withContext(Dispatchers.Main) { message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) }) }
+            withContext(Dispatchers.Main) {
+                message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) })
+                if (result.isSuccess) recordOperation(text(R.string.operation_action_backup), "")
+            }
         }
     }
     fun restore() {
@@ -1046,6 +1112,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             withContext(Dispatchers.Main) {
                 val restored = result.getOrDefault(false)
                 message = if (restored) text(R.string.latest_backup_restored) else result.exceptionOrNull()?.message ?: text(R.string.no_backup_found)
+                if (restored) recordOperation(text(R.string.operation_action_restore), "")
                 if (restored && current?.id == p.id) {
                     autoSaveJob?.cancel()
                     clearResourcePreview()

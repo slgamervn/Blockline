@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
@@ -711,7 +712,10 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 
 @Composable
 fun MoreScreen(vm: AppViewModel) {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    LaunchedEffect(vm.current?.id) { vm.refreshOperationLog() }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(stringResource(R.string.nav_more), style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
             Text(stringResource(R.string.more_subtitle), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
@@ -748,6 +752,50 @@ fun MoreScreen(vm: AppViewModel) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     androidx.compose.material3.OutlinedButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }, enabled = vm.fontSize > 10) { Text(stringResource(R.string.smaller_text)) }
                     Button(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }, enabled = vm.fontSize < 24) { Text(stringResource(R.string.larger_text)) }
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.operation_log_title), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.operation_log_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = { vm.clearOperationLog() },
+                        enabled = vm.current != null && vm.operationLog.isNotEmpty()
+                    ) { Text(stringResource(R.string.operation_log_clear)) }
+                    TextButton(
+                        onClick = {
+                            val copiedText = vm.operationLog.takeLast(100).joinToString("\n") { entry ->
+                                val time = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(entry.timestamp))
+                                "$time · ${entry.action}${if (entry.detail.isBlank()) "" else " — ${entry.detail}"}"
+                            }
+                            clipboard.setText(AnnotatedString(copiedText))
+                            vm.message = context.getString(R.string.operation_log_copied)
+                        },
+                        enabled = vm.operationLog.isNotEmpty()
+                    ) { Text(stringResource(R.string.operation_log_copy)) }
+                }
+                if (vm.current == null) {
+                    Text(stringResource(R.string.operation_log_select_project))
+                } else if (vm.operationLog.isEmpty()) {
+                    Text(stringResource(R.string.operation_log_empty), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    vm.operationLog.takeLast(20).asReversed().forEach { entry ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(entry.action, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                            if (entry.detail.isNotBlank()) Text(entry.detail, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                            Text(
+                                android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(entry.timestamp)),
+                                style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        androidx.compose.material3.HorizontalDivider()
+                    }
+                    if (vm.operationLog.size > 20) {
+                        Text(stringResource(R.string.operation_log_more, vm.operationLog.size - 20), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
