@@ -86,6 +86,7 @@ import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
+@Composable
 fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     var query by remember { mutableStateOf("") }
     var contentMode by remember { mutableStateOf(false) }

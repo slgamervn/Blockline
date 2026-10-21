@@ -259,8 +259,6 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     )
 }
 
-@Composable
-
 private fun manifestValueText(value: Any): String = when (value) {
     is org.json.JSONArray -> (0 until value.length()).joinToString(".") { value.optString(it) }
     is org.json.JSONObject -> "Object (${value.length()} fields)"
