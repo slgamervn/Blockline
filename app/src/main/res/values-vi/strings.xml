@@ -401,4 +401,7 @@
     <string name="batch_rename_restored">Đổi tên hàng loạt thất bại; dự án đã được khôi phục từ backup. %1$s</string>
     <string name="batch_rename_restore_failed">Đổi tên hàng loạt thất bại và không thể tự khôi phục hoàn toàn. Backup vẫn được giữ lại. %1$s</string>
     <string name="batch_rename_preview_failed">Không thể chuẩn bị bản xem trước đổi tên.</string>
+
+    <string name="batch_rename_conflict_exists">Tên đích đã tồn tại: %1$s → %2$s</string>
+    <string name="batch_rename_conflict_duplicate">Nhiều tệp sẽ trùng tên %2$s: %1$s</string>
 </resources>

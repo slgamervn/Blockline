@@ -1,7 +1,8 @@
 package com.blockline.app.data
 
 data class BatchRenameCandidate(val oldPath: String, val newPath: String)
-data class BatchRenamePreview(val candidates: List<BatchRenameCandidate>, val conflicts: List<String>)
+data class BatchRenameConflict(val sourcePaths: List<String>, val targetPath: String, val targetExists: Boolean, val duplicateTarget: Boolean)
+data class BatchRenamePreview(val candidates: List<BatchRenameCandidate>, val conflicts: List<BatchRenameConflict>)
 data class BatchRenameOutcome(
     val changedCount: Int = 0,
     val backupFailed: Boolean = false,
@@ -31,14 +32,24 @@ object BatchRenameEngine {
             BatchRenameCandidate(oldPath, newPath)
         }
 
-        val conflicts = mutableListOf<String>()
+        val conflicts = mutableListOf<BatchRenameConflict>()
         candidates.forEach { candidate ->
             if (candidate.newPath in existingPaths && candidate.newPath != candidate.oldPath) {
-                conflicts += "${candidate.oldPath} → ${candidate.newPath}: target already exists"
+                conflicts += BatchRenameConflict(
+                    sourcePaths = listOf(candidate.oldPath),
+                    targetPath = candidate.newPath,
+                    targetExists = true,
+                    duplicateTarget = false
+                )
             }
         }
         candidates.groupBy { it.newPath }.filterValues { it.size > 1 }.forEach { (target, group) ->
-            conflicts += "${group.joinToString { it.oldPath }} → $target: multiple files would use the same name"
+            conflicts += BatchRenameConflict(
+                sourcePaths = group.map { it.oldPath },
+                targetPath = target,
+                targetExists = false,
+                duplicateTarget = true
+            )
         }
         return BatchRenamePreview(candidates, conflicts.distinct())
     }

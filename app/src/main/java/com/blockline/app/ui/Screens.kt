@@ -1,5 +1,11 @@
 package com.blockline.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -812,14 +818,19 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
                         error = null
                     }.onFailure {
                         preview = null
-                        error = it.message ?: previewFailedText
+                        error = previewFailedText
                     }
                 },
                 enabled = project != null && query.isNotBlank() && !vm.isFileOperationRunning,
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.batch_rename_preview)) }
             error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
-            preview?.let { plan ->
+            AnimatedVisibility(
+                visible = preview != null,
+                enter = fadeIn(tween(180)) + slideInVertically(tween(180)) { it / 10 },
+                exit = fadeOut(tween(120)) + slideOutVertically(tween(120)) { it / 10 }
+            ) {
+                preview?.let { plan ->
                 Text(stringResource(R.string.batch_rename_preview_count, plan.candidates.size, plan.conflicts.size))
                 plan.candidates.take(30).forEach { candidate ->
                     Text(
@@ -833,7 +844,12 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
                 }
                 if (plan.conflicts.isNotEmpty()) {
                     plan.conflicts.take(5).forEach { conflict ->
-                        Text(conflict, color = androidx.compose.material3.MaterialTheme.colorScheme.error, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        val message = if (conflict.targetExists) {
+                            stringResource(R.string.batch_rename_conflict_exists, conflict.sourcePaths.joinToString(), conflict.targetPath)
+                        } else {
+                            stringResource(R.string.batch_rename_conflict_duplicate, conflict.sourcePaths.joinToString(), conflict.targetPath)
+                        }
+                        Text(message, color = androidx.compose.material3.MaterialTheme.colorScheme.error, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                     }
                     if (plan.conflicts.size > 5) Text(stringResource(R.string.batch_rename_more_conflicts, plan.conflicts.size - 5), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                 } else if (plan.candidates.isEmpty()) {
@@ -844,6 +860,7 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
                     enabled = plan.candidates.isNotEmpty() && plan.conflicts.isEmpty() && !vm.isFileOperationRunning,
                     modifier = Modifier.fillMaxWidth()
                 ) { Text(stringResource(if (vm.isFileOperationRunning) R.string.batch_rename_applying else R.string.batch_rename_apply)) }
+                }
             }
         }
     }
@@ -944,6 +961,11 @@ private fun DiffToolCard(vm: AppViewModel) {
             }
             if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
+            AnimatedVisibility(
+                visible = diff != null,
+                enter = fadeIn(tween(180)) + slideInVertically(tween(180)) { it / 10 },
+                exit = fadeOut(tween(120)) + slideOutVertically(tween(120)) { it / 10 }
+            ) {
             diff?.let { result ->
                 if (result.limited) {
                     Text(stringResource(R.string.diff_limit_reached), color = androidx.compose.material3.MaterialTheme.colorScheme.tertiary)
@@ -972,6 +994,7 @@ private fun DiffToolCard(vm: AppViewModel) {
                         Text(stringResource(R.string.diff_more_lines, result.lines.size - 120), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                     }
                 }
+            }
             }
         }
     }

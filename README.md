@@ -52,7 +52,7 @@ The repository has working implementations across the original four development 
 
 ### Advanced workflow and Script API reference
 - Compare text using a line-diff engine.
-- Preview batch text replacement before applying it, with confirmation and backup-aware project operations.
+- Preview literal batch file-name renames and text replacements before applying them, with collision checks, backups, and rollback-aware project operations.
 - Inspect manifest dependencies, their source and target, version mismatches, and unresolved external UUIDs.
 - Browse Script API TypeScript declarations for supported npm packages. The reference repository can fetch package metadata from npm and declarations from jsDelivr, cache versions and source for offline reuse, and fall back to bundled snapshots. Parsed symbols and members retain raw declarations for constructs the lightweight parser does not recognize.
 

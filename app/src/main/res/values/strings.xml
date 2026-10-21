@@ -401,4 +401,7 @@
     <string name="batch_rename_restored">Batch rename failed; the project was restored from backup. %1$s</string>
     <string name="batch_rename_restore_failed">Batch rename failed and automatic restore could not finish. Your backup is retained. %1$s</string>
     <string name="batch_rename_preview_failed">Could not prepare the rename preview.</string>
+
+    <string name="batch_rename_conflict_exists">Target already exists: %1$s → %2$s</string>
+    <string name="batch_rename_conflict_duplicate">Several files would become %2$s: %1$s</string>
 </resources>

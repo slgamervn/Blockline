@@ -43,6 +43,18 @@ class BatchRenameEngineTest {
     }
 
     @Test
+    fun detectsMultipleFilesCollapsingToTheSameTarget() {
+        val result = BatchRenameEngine.preview(
+            filePaths = listOf("BP/a.json", "BP/aa.json"),
+            existingPaths = setOf("BP/a.json", "BP/aa.json"),
+            query = "a",
+            replacement = ""
+        )
+        assertEquals(1, result.conflicts.count { it.duplicateTarget })
+        assertTrue(result.conflicts.none { it.targetExists })
+    }
+
+    @Test
     fun returnsEmptyPreviewWhenNoNamesMatch() {
         val result = BatchRenameEngine.preview(
             filePaths = listOf("BP/a.json"),
