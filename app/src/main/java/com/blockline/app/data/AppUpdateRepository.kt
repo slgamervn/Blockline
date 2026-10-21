@@ -60,6 +60,7 @@ class AppUpdateRepository {
     companion object {
         private const val REPOSITORY = "slgamervn/Blockline"
         const val RELEASES_URL = "https://github.com/$REPOSITORY/releases"
+        const val LATEST_RELEASE_PAGE_URL = "https://github.com/$REPOSITORY/releases/latest"
         private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$REPOSITORY/releases/latest"
         private const val CONNECT_TIMEOUT_MS = 8_000
         private const val READ_TIMEOUT_MS = 12_000
