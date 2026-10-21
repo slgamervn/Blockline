@@ -350,4 +350,33 @@
     <string name="batch_replace_rolled_back">Replacement failed; the project was restored from backup. %1$s</string>
     <string name="batch_replace_rollback_failed">Replacement failed and automatic restore could not finish. Your backup is retained. %1$s</string>
     <string name="batch_replace_done">Replaced %1$d occurrences across %2$d files.</string>
+
+    <string name="diff_tool_title">Text diff</string>
+    <string name="diff_tool_hint">Compare two readable text files in this project. Very large comparisons are limited to protect memory.</string>
+    <string name="diff_choose_before">Choose original file</string>
+    <string name="diff_choose_after">Choose changed file</string>
+    <string name="diff_compare">Compare files</string>
+    <string name="diff_comparing">Comparing…</string>
+    <string name="diff_limit_reached">This comparison exceeds the safe size limit. Choose smaller files.</string>
+    <string name="diff_summary">+%1$d additions · −%2$d removals</string>
+    <string name="diff_more_lines">%1$d more lines omitted from this preview.</string>
+    <string name="api_reference_title">Script API reference</string>
+    <string name="api_reference_hint">Search supported Minecraft Script API declarations. Cached and bundled references work offline; refreshing versions requires internet access.</string>
+    <string name="api_reference_version">Package version (optional)</string>
+    <string name="api_reference_latest_hint">Leave blank to use the default version</string>
+    <string name="api_reference_load">Load cached</string>
+    <string name="api_reference_refresh">Refresh online</string>
+    <string name="api_reference_status">%1$s · %2$s · Source: %3$s</string>
+    <string name="api_reference_versions_cached">Known versions: %1$d</string>
+    <string name="api_source_live">online</string>
+    <string name="api_source_cache">cache</string>
+    <string name="api_source_bundled">bundled snapshot</string>
+    <string name="api_reference_search">Search symbols and documentation</string>
+    <string name="api_reference_no_symbols">No matching symbols. Try a shorter query or refresh the package.</string>
+    <string name="api_reference_copy">Copy declaration</string>
+    <string name="api_reference_insert">Insert into TypeScript editor</string>
+    <string name="api_reference_copied">Copied declaration for %1$s.</string>
+    <string name="api_reference_copy_raw">Copy raw declaration source</string>
+    <string name="api_reference_raw_copied">Copied raw TypeScript declarations.</string>
+    <string name="api_reference_load_failed">Could not load the Script API reference.</string>
 </resources>
