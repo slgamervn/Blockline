@@ -115,7 +115,7 @@ These links are references to independently maintained tools and documentation. 
 - [MC-Tools](https://mc-tools.net/) — browser utilities for Minecraft workflows.
 - [MakeBead Pixel Art Generator](https://makebead.com/minecraft-pixel-art-generator/) — image-to-pixel-art pattern and material-list generation.
 
-External services can change independently. Verify compatibility, license terms, and download sources before applying examples or reusing third-party content.
+External services can change independently. Verify compatibility, license terms, and download sources before applying examples or reusing third-party content. See [the technical validation and external-resource policy](docs/technical-validation-policy.md) for Blockline's source priority, validation limits, and template licensing rules.
 
 ## Contributing and bug reports
 
