@@ -427,4 +427,5 @@
     <string name="operation_detail_file_count">%1$d files</string>
     <string name="operation_detail_replace_count">%1$d replacements across %2$d files</string>
     <string name="operation_detail_export_mode">Export mode: %1$s</string>
+    <string name="operation_detail_validation_counts">%1$d errors · %2$d warnings</string>
 </resources>
