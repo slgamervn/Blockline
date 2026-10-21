@@ -4,12 +4,14 @@ import java.io.File
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 import java.util.UUID
 
 data class BatchReplaceFilePreview(
     val path: String,
     val occurrences: Int,
-    val sample: String
+    val sample: String,
+    val fingerprint: String
 )
 
 enum class BatchReplaceFailure {
@@ -53,6 +55,11 @@ object BatchReplaceEngine {
 
     fun sampleLine(source: String, query: String): String =
         source.lineSequence().firstOrNull { it.contains(query) }?.trim()?.take(180).orEmpty()
+
+    fun fingerprint(source: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(source.toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+    }
 
     fun writeAtomically(target: File, value: String) {
         val parent = target.parentFile ?: error("Target file has no parent directory.")
