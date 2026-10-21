@@ -221,7 +221,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             found += BatchReplaceFilePreview(
                                 path = repo.relative(projectId, file),
                                 occurrences = occurrences,
-                                sample = BatchReplaceEngine.sampleLine(source, query)
+                                sample = BatchReplaceEngine.sampleLine(source, query),
+                                fingerprint = BatchReplaceEngine.fingerprint(source)
                             )
                         }
                     }
@@ -287,7 +288,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         }
                         val original = file.readText(Charsets.UTF_8)
                         val actualCount = BatchReplaceEngine.countOccurrences(original, query)
-                        check(actualCount == item.occurrences && actualCount > 0) {
+                        check(
+                            actualCount == item.occurrences &&
+                                actualCount > 0 &&
+                                BatchReplaceEngine.fingerprint(original) == item.fingerprint
+                        ) {
                             "A previewed file changed since preview: ${item.path}"
                         }
                         Prepared(item.path, file, BatchReplaceEngine.replaceLiteral(original, query, replacement), actualCount)
@@ -342,8 +347,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     BatchReplaceFailure.WRITE_ROLLED_BACK -> text(R.string.batch_replace_rolled_back, outcome.details.orEmpty())
                     BatchReplaceFailure.WRITE_ROLLBACK_FAILED -> text(R.string.batch_replace_rollback_failed, outcome.details.orEmpty())
                 }
-                if (outcome.failure == BatchReplaceFailure.WRITE_ROLLED_BACK) {
-                    val previousPath = activeFile
+                if (
+                    outcome.failure == BatchReplaceFailure.WRITE_ROLLED_BACK ||
+                    outcome.failure == BatchReplaceFailure.WRITE_ROLLBACK_FAILED
+                ) {
                     autoSaveJob?.cancel()
                     openTabs.clear()
                     undo.clear()
@@ -354,9 +361,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     readOnly = false
                     pendingEditorLine = null
                     refreshProjectEntries(projectId)
-                    if (previousPath != null && runCatching { repo.resolve(projectId, previousPath).isFile }.getOrDefault(false)) {
-                        openFile(previousPath)
-                    }
                 }
             }
         }
