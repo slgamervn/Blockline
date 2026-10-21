@@ -12,7 +12,7 @@ const js = readFileSync(jsPath, "utf8");
 
 assert.match(html, /<html\b[^>]*\blang=["']vi["']/i, "The document declares its default language.");
 assert.match(html, /name=["']viewport["']/i, "The page declares a mobile viewport.");
-assert.match(html, /href=["']assets\/css\/style\.css["']/i, "The external stylesheet is linked.");
+assert.match(html, /href=["']assets\/css\/style\.css(?:\?[^"']*)?["']/i, "The external stylesheet is linked, optionally with a cache-busting query.");
 assert.match(html, /src=["']assets\/js\/main\.js["'][^>]*defer\b/i, "The external interaction script is deferred.");
 assert.ok(existsSync(path.join(root, "favicon.svg")), "The declared favicon file exists.");
 assert.ok(/<main\b/i.test(html), "The page has a main landmark.");
