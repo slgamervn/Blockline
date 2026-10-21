@@ -61,6 +61,15 @@ import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.data.GeneratedPackType
 import com.blockline.app.data.PackManifestGenerator
 import com.blockline.app.data.DependencyKind
+import com.blockline.app.data.LineDiffEngine
+import com.blockline.app.data.DiffLineKind
+import com.blockline.app.data.ScriptApiReferenceRepository
+import com.blockline.app.data.ScriptApiLoadResult
+import com.blockline.app.data.ScriptApiSource
+import com.blockline.app.data.TEXT_EXT
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
@@ -464,6 +473,8 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text(stringResource(R.string.local_project_tools_hint)) }
+        item { DiffToolCard(vm) }
+        item { ScriptApiReferenceCard(vm, onOpenEditor) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -720,4 +731,266 @@ private fun manifestValueText(value: Any): String = when (value) {
     is org.json.JSONArray -> (0 until value.length()).joinToString(".") { value.optString(it) }
     is org.json.JSONObject -> "Object (${value.length()} fields)"
     else -> value.toString()
+
+@Composable
+private fun DiffToolCard(vm: AppViewModel) {
+    val project = vm.current
+    val entries = project?.let { vm.projectEntries[it.id] }.orEmpty()
+    val files = remember(project?.id, entries) {
+        project?.let { selected ->
+            entries.asSequence()
+                .filter { it.isFile && it.length() <= 1024L * 1024L && it.extension.lowercase(java.util.Locale.ROOT) in TEXT_EXT }
+                .map { vm.repo.relative(selected.id, it) }
+                .toList()
+        }.orEmpty()
+    }
+    var beforePath by remember(project?.id) { mutableStateOf("") }
+    var afterPath by remember(project?.id) { mutableStateOf("") }
+    var beforeMenu by remember { mutableStateOf(false) }
+    var afterMenu by remember { mutableStateOf(false) }
+    var diff by remember { mutableStateOf<com.blockline.app.data.LineDiffResult?>(null) }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    LaunchedEffect(project?.id, files) {
+        if (beforePath !in files) beforePath = files.getOrNull(0).orEmpty()
+        if (afterPath !in files || afterPath == beforePath) afterPath = files.firstOrNull { it != beforePath }.orEmpty()
+        diff = null
+        error = null
+    }
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.diff_tool_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.diff_tool_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
+                    TextButton(onClick = { beforeMenu = true }, enabled = files.isNotEmpty()) {
+                        Text(beforePath.ifBlank { stringResource(R.string.diff_choose_before) }, maxLines = 2)
+                    }
+                    DropdownMenu(expanded = beforeMenu, onDismissRequest = { beforeMenu = false }) {
+                        files.take(250).forEach { path ->
+                            DropdownMenuItem(text = { Text(path, maxLines = 1) }, onClick = {
+                                beforePath = path
+                                beforeMenu = false
+                                diff = null
+                            })
+                        }
+                    }
+                }
+                androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
+                    TextButton(onClick = { afterMenu = true }, enabled = files.isNotEmpty()) {
+                        Text(afterPath.ifBlank { stringResource(R.string.diff_choose_after) }, maxLines = 2)
+                    }
+                    DropdownMenu(expanded = afterMenu, onDismissRequest = { afterMenu = false }) {
+                        files.take(250).forEach { path ->
+                            DropdownMenuItem(text = { Text(path, maxLines = 1) }, onClick = {
+                                afterPath = path
+                                afterMenu = false
+                                diff = null
+                            })
+                        }
+                    }
+                }
+            }
+            Button(
+                onClick = {
+                    val selectedProject = project ?: return@Button
+                    loading = true
+                    error = null
+                    diff = null
+                    scope.launch {
+                        val result = runCatching {
+                            withContext(Dispatchers.IO) {
+                                require(beforePath in files && afterPath in files) { "Choose two readable text files." }
+                                require(beforePath != afterPath) { "Choose two different files to compare." }
+                                val before = vm.repo.resolve(selectedProject.id, beforePath)
+                                val after = vm.repo.resolve(selectedProject.id, afterPath)
+                                require(before.isFile && after.isFile) { "A selected file no longer exists." }
+                                LineDiffEngine.compare(before.readText(Charsets.UTF_8), after.readText(Charsets.UTF_8))
+                            }
+                        }
+                        loading = false
+                        result.onSuccess { diff = it }.onFailure { error = it.message ?: "Could not compare these files." }
+                    }
+                },
+                enabled = project != null && beforePath.isNotBlank() && afterPath.isNotBlank() && !loading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(if (loading) R.string.diff_comparing else R.string.diff_compare))
+            }
+            if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
+            diff?.let { result ->
+                if (result.limited) {
+                    Text(stringResource(R.string.diff_limit_reached), color = androidx.compose.material3.MaterialTheme.colorScheme.tertiary)
+                } else {
+                    Text(stringResource(R.string.diff_summary, result.additions, result.removals))
+                    result.lines.take(120).forEach { line ->
+                        val prefix = when (line.kind) {
+                            DiffLineKind.ADDED -> "+"
+                            DiffLineKind.REMOVED -> "−"
+                            DiffLineKind.UNCHANGED -> " "
+                        }
+                        val tint = when (line.kind) {
+                            DiffLineKind.ADDED -> androidx.compose.material3.MaterialTheme.colorScheme.primary
+                            DiffLineKind.REMOVED -> androidx.compose.material3.MaterialTheme.colorScheme.error
+                            DiffLineKind.UNCHANGED -> androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        Text(
+                            "$prefix ${line.oldLineNumber ?: "·"}:${line.newLineNumber ?: "·"}  ${line.text}",
+                            color = tint,
+                            fontFamily = FontFamily.Monospace,
+                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                            maxLines = 3
+                        )
+                    }
+                    if (result.lines.size > 120) {
+                        Text(stringResource(R.string.diff_more_lines, result.lines.size - 120), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val repository = remember(context) { ScriptApiReferenceRepository(context) }
+    var packageName by remember { mutableStateOf("@minecraft/server") }
+    var version by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf<ScriptApiLoadResult?>(null) }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    fun loadReference(selectedPackage: String, selectedVersion: String?, refreshOnline: Boolean) {
+        if (loading) return
+        loading = true
+        error = null
+        scope.launch {
+            val loaded = runCatching { repository.load(selectedPackage, selectedVersion, refreshOnline) }
+            loading = false
+            loaded.onSuccess {
+                result = it
+                packageName = selectedPackage
+                version = it.version
+                error = it.error
+            }.onFailure {
+                error = it.message ?: context.getString(R.string.api_reference_load_failed)
+            }
+        }
+    }
+
+    LaunchedEffect(repository) {
+        loadReference(packageName, null, false)
+    }
+
+    val filteredSymbols = remember(result, query) {
+        result?.symbols.orEmpty().filter {
+            query.isBlank() || it.name.contains(query, true) || it.kind.contains(query, true) ||
+                it.documentation.contains(query, true)
+        }.take(20)
+    }
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.api_reference_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.api_reference_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("@minecraft/server", "@minecraft/server-ui", "@minecraft/common").forEach { candidate ->
+                    androidx.compose.material3.FilterChip(
+                        selected = packageName == candidate,
+                        onClick = {
+                            if (packageName != candidate) {
+                                packageName = candidate
+                                version = ""
+                                result = null
+                                loadReference(candidate, null, false)
+                            }
+                        },
+                        label = { Text(candidate.substringAfterLast('/')) }
+                    )
+                }
+            }
+            OutlinedTextField(
+                value = version,
+                onValueChange = { version = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.api_reference_version)) },
+                placeholder = { Text(stringResource(R.string.api_reference_latest_hint)) },
+                singleLine = true
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { loadReference(packageName, version.takeIf { it.isNotBlank() }, false) },
+                    enabled = !loading,
+                    modifier = Modifier.weight(1f)
+                ) { Text(stringResource(R.string.api_reference_load)) }
+                TextButton(
+                    onClick = { loadReference(packageName, version.takeIf { it.isNotBlank() }, true) },
+                    enabled = !loading
+                ) { Text(stringResource(R.string.api_reference_refresh)) }
+            }
+            if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            result?.let { loaded ->
+                val sourceLabel = when (loaded.source) {
+                    ScriptApiSource.LIVE -> stringResource(R.string.api_source_live)
+                    ScriptApiSource.CACHE -> stringResource(R.string.api_source_cache)
+                    ScriptApiSource.BUNDLED -> stringResource(R.string.api_source_bundled)
+                }
+                Text(stringResource(R.string.api_reference_status, loaded.packageName, loaded.version, sourceLabel))
+                if (loaded.availableVersions.isNotEmpty()) {
+                    Text(stringResource(R.string.api_reference_versions_cached, loaded.availableVersions.size), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                }
+            }
+            error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.tertiary, style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.api_reference_search)) },
+                singleLine = true
+            )
+            if (result != null && filteredSymbols.isEmpty()) {
+                Text(stringResource(R.string.api_reference_no_symbols))
+            }
+            filteredSymbols.forEach { symbol ->
+                androidx.compose.material3.HorizontalDivider()
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text("${symbol.kind}  ${symbol.name}", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                    Text(symbol.signature, fontFamily = FontFamily.Monospace, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    if (symbol.documentation.isNotBlank()) {
+                        Text(symbol.documentation, style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = {
+                            clipboard.setText(AnnotatedString(symbol.rawDeclaration))
+                            vm.message = context.getString(R.string.api_reference_copied, symbol.name)
+                        }) { Icon(Icons.Default.ContentCopy, null); Text(stringResource(R.string.api_reference_copy)) }
+                        TextButton(
+                            enabled = vm.activeFile?.substringAfterLast('.') == "ts" && !vm.readOnly,
+                            onClick = {
+                                val separator = if (vm.content.isBlank()) "" else "\n\n"
+                                vm.updateContent(vm.content + separator + symbol.rawDeclaration)
+                                onOpenEditor()
+                            }
+                        ) { Text(stringResource(R.string.api_reference_insert)) }
+                    }
+                }
+            }
+            if (result?.rawSource?.isNotBlank() == true) {
+                TextButton(onClick = {
+                    clipboard.setText(AnnotatedString(result!!.rawSource))
+                    vm.message = context.getString(R.string.api_reference_raw_copied)
+                }) { Text(stringResource(R.string.api_reference_copy_raw)) }
+            }
+        }
+    }
+}
+
 }
