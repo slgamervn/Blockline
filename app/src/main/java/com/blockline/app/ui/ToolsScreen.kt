@@ -688,7 +688,7 @@ private fun CreatorResourcesCard(vm: AppViewModel) {
         CreatorResource(R.string.resource_blockbench_title, R.string.resource_blockbench_desc, R.string.resource_category_editor, "https://blockbench.net/"),
         CreatorResource(R.string.resource_wiki_title, R.string.resource_wiki_desc, R.string.resource_category_docs, "https://wiki.bedrock.dev/"),
         CreatorResource(R.string.resource_microsoft_title, R.string.resource_microsoft_desc, R.string.resource_category_docs, "https://learn.microsoft.com/vi-vn/minecraft/creator/?view=minecraft-bedrock-stable"),
-        CreatorResource(R.string.resource_hg_title, R.string.resource_hg_desc, R.string.resource_category_docs, "https://hgvn23.github.io/"),
+        CreatorResource(R.string.resource_hg_title, R.string.resource_hg_desc, R.string.resource_category_docs, "https://minecraft.wiki/"),
         CreatorResource(R.string.resource_tweaks_title, R.string.resource_tweaks_desc, R.string.resource_category_templates, "https://bedrocktweaks.net/"),
         CreatorResource(R.string.resource_mctools_title, R.string.resource_mctools_desc, R.string.resource_category_utilities, "https://mctools.dev/"),
         CreatorResource(R.string.resource_mctools_net_title, R.string.resource_mctools_net_desc, R.string.resource_category_utilities, "https://mc-tools.net/"),
