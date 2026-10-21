@@ -19,6 +19,7 @@ data class ValidationIssue(
 
 object ProjectValidator {
     private val uuidPattern = Regex("(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    private val semanticVersionPattern = Regex("""^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$""")
     private val jsonExtensions = setOf("json", "mcmeta")
 
     fun validate(projectRoot: File): List<ValidationIssue> {
@@ -75,17 +76,23 @@ object ProjectValidator {
                 if (file !in jsonFiles) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Pack manifest is not valid JSON.")
                 return@forEach
             }
+            val formatNumber = (json.opt("format_version") as? Number)?.toDouble()
+            val formatVersion = formatNumber?.takeIf { it.isFinite() && it % 1.0 == 0.0 }?.toInt()
+            if (formatVersion == null || formatVersion !in setOf(1, 2, 3)) {
+                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "format_version is missing or is not a supported integer manifest format version.")
+            }
+
             val header = json.optJSONObject("header")
             if (header == null) {
                 issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Missing required object: header.")
             } else {
                 if (header.optString("name").isBlank()) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.name is missing or empty.")
-                if (header.optString("description").isBlank()) issues += ValidationIssue(IssueSeverity.WARNING, path, message = "header.description is missing or empty.")
+                if (formatVersion != 1 && header.optString("description").isBlank()) issues += ValidationIssue(IssueSeverity.WARNING, path, message = "header.description is missing or empty.")
                 val headerUuid = header.optString("uuid")
                 registerUuid(headerUuid, "$path · header.uuid", path, uuidOwners, issues)
-                val headerVersion = intVersion(header.opt("version"))
-                if (headerVersion == null) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.version must contain three non-negative integers.")
-                if (!headerUuid.isNullOrBlank() && uuidPattern.matches(headerUuid)) internalVersions[headerUuid.lowercase(Locale.ROOT)] = headerVersion.orEmpty()
+                val headerVersion = manifestVersion(header.opt("version"), formatVersion)
+                if (headerVersion == null) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.version must be a three-part integer array for format_version 1 or 2, or a semantic version string for format_version 3.")
+                if (uuidPattern.matches(headerUuid)) internalVersions[headerUuid.lowercase(Locale.ROOT)] = headerVersion.orEmpty()
             }
 
             val modules = json.optJSONArray("modules")
@@ -99,13 +106,13 @@ object ProjectValidator {
                         continue
                     }
                     val type = module.optString("type")
-                    if (type !in setOf("data", "resources", "script", "client_data", "interface", "world_template")) {
+                    if (type !in setOf("data", "resources", "script", "client_data", "interface", "world_template", "skin_pack", "persona_piece")) {
                         issues += ValidationIssue(IssueSeverity.WARNING, path, message = "modules[$i].type '$type' is not a commonly supported Bedrock module type.")
                     }
                     val uuid = module.optString("uuid")
                     registerUuid(uuid, "$path · modules[$i].uuid", path, uuidOwners, issues)
-                    val version = intVersion(module.opt("version"))
-                    if (version == null) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "modules[$i].version must contain three non-negative integers.")
+                    val version = manifestVersion(module.opt("version"), formatVersion)
+                    if (version == null) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "modules[$i].version must be a three-part integer array for format_version 1 or 2, or a semantic version string for format_version 3.")
                     if (uuidPattern.matches(uuid)) internalVersions[uuid.lowercase(Locale.ROOT)] = version.orEmpty()
                     if (type == "script" && module.optString("language") != "javascript") {
                         issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Script module should declare language: javascript.")
@@ -127,17 +134,21 @@ object ProjectValidator {
                     }
                 }
             }
-            val formatValue = json.opt("format_version")
-            val formatNumber = (formatValue as? Number)?.toDouble()
-            if (formatNumber == null || !formatNumber.isFinite() || formatNumber < 2.0 || formatNumber % 1.0 != 0.0) {
-                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "format_version is missing or is not a supported integer manifest format version.")
-            }
-
-            val engineValue = json.opt("min_engine_version")
+            val engineValue = header?.opt("min_engine_version")
             if (engineValue == null || engineValue == JSONObject.NULL) {
-                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "min_engine_version is not declared; compatibility with the target Minecraft version cannot be checked.")
-            } else if (intVersion(engineValue) == null) {
-                issues += ValidationIssue(IssueSeverity.ERROR, path, message = "min_engine_version must contain three non-negative integers, for example [1, 21, 0].")
+                if (header != null && formatVersion != 1) {
+                    issues += ValidationIssue(IssueSeverity.WARNING, path, message = "header.min_engine_version is not declared; compatibility with the target Minecraft version cannot be checked.")
+                }
+            } else {
+                val validEngineVersion = when (formatVersion) {
+                    3 -> engineValue is String && semanticVersionComponents(engineValue) != null
+                    1, 2 -> intVersion(engineValue) != null
+                    else -> intVersion(engineValue) != null || (engineValue is String && semanticVersionComponents(engineValue) != null)
+                }
+                if (!validEngineVersion) {
+                    val expected = if (formatVersion == 3) "a semantic version string" else "three non-negative integers, for example [1, 21, 0]"
+                    issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.min_engine_version must contain $expected.")
+                }
             }
 
             val packRoot = file.parentFile
@@ -201,10 +212,19 @@ object ProjectValidator {
                             issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid requests version ${required.joinToString(".")}, but this project contains ${localVersion.joinToString(".")}.")
                         }
                     }
-                    is String -> if (versionValue.isBlank()) {
-                        issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid has an empty version string.")
+                    is String -> {
+                        if (versionValue.isBlank()) {
+                            issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid has an empty version string.")
+                        } else {
+                            val required = semanticVersionComponents(versionValue)
+                            if (required == null) {
+                                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid has an invalid semantic version string.")
+                            } else if (localVersion != null && localVersion.isNotEmpty() && localVersion != required) {
+                                issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Internal dependency $uuid requests version ${required.joinToString(".")}, but this project contains ${localVersion.joinToString(".")}.")
+                            }
+                        }
                     }
-                    else -> issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid version must be a three-part integer array or a version string.")
+                    else -> issues += ValidationIssue(IssueSeverity.WARNING, path, message = "Dependency $uuid version must be a three-part integer array or a semantic version string.")
                 }
                 if (localVersion == null) {
                     issues += ValidationIssue(IssueSeverity.INFO, path, message = "External dependency $uuid was not found in this project; it may be supplied by another installed pack.")
@@ -394,6 +414,21 @@ object ProjectValidator {
             } ?: return null
         }
         return values.takeIf { it.all { n -> n >= 0 } }
+    }
+
+    private fun manifestVersion(value: Any?, formatVersion: Int?): List<Int>? = when (formatVersion) {
+        1, 2 -> intVersion(value)
+        3 -> (value as? String)?.let(::semanticVersionComponents)
+        else -> intVersion(value) ?: (value as? String)?.let(::semanticVersionComponents)
+    }
+
+    private fun semanticVersionComponents(value: String): List<Int>? {
+        if (!semanticVersionPattern.matches(value)) return null
+        val core = value.substringBefore("+").substringBefore("-").split(".")
+        val major = core.getOrNull(0)?.toIntOrNull() ?: return null
+        val minor = core.getOrNull(1)?.toIntOrNull() ?: return null
+        val patch = core.getOrNull(2)?.toIntOrNull() ?: return null
+        return listOf(major, minor, patch)
     }
 
     private fun relative(root: File, file: File): String =
