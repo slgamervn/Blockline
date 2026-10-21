@@ -529,3 +529,7 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 @media(prefers-reduced-motion:reduce){.resource-card{transition:none}}
 
 #resources .reveal{opacity:1;transform:none}
+
+#resources .resource-groups,#resources .resource-group,#resources .resource-grid,#resources .resource-card{display:grid;visibility:visible;opacity:1;transform:none}
+#resources .resource-group{display:block}
+#resources .resource-card{display:flex}
