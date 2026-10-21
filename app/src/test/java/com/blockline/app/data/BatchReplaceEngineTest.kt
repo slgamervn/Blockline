@@ -30,4 +30,20 @@ class BatchReplaceEngineTest {
         assertEquals("target on this line", BatchReplaceEngine.sampleLine("first\ntarget on this line\nsecond target", "target"))
         assertEquals(180, BatchReplaceEngine.sampleLine("x".repeat(240), "x").length)
     }
+    @Test
+    fun fingerprintsDetectAnyContentChangeEvenWhenMatchCountsStayEqual() {
+        val before = "name: alpha\\nname: beta"
+        val after = "name: gamma\\nname: beta"
+        assertEquals(2, BatchReplaceEngine.countOccurrences(before, "name"))
+        assertEquals(2, BatchReplaceEngine.countOccurrences(after, "name"))
+        org.junit.Assert.assertNotEquals(
+            BatchReplaceEngine.fingerprint(before),
+            BatchReplaceEngine.fingerprint(after)
+        )
+        assertEquals(
+            BatchReplaceEngine.fingerprint(before),
+            BatchReplaceEngine.fingerprint(before)
+        )
+    }
+
 }
