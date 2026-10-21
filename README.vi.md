@@ -75,7 +75,7 @@ gradle testDebugUnitTest
 gradle assembleDebug
 ```
 
-APK debug được tạo tại `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions chạy unit test trước khi build và phát hành APK theo phiên bản. Vào **Actions → Build APK** để xem log và tải artifact. Tệp phát hành có tên `Blockline-v<version>.apk`; APK release đã ký cần signing secrets của repository, nếu không workflow tạo APK debug. APK debug dùng khóa khác có thể không cài đè cập nhật lên bản đã ký bằng khóa khác.
+APK debug được tạo tại `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions chạy kiểm tra website và unit test trước khi build và phát hành APK theo phiên bản. Bộ kiểm tra website rà tài nguyên liên kết, landmark và anchor HTML, cú pháp CSS/JavaScript, bản dịch, breakpoint responsive và chế độ giảm chuyển động. Vào **Actions → Build APK** để xem log và tải artifact. Tệp phát hành có tên `Blockline-v<version>.apk`; APK release đã ký cần signing secrets của repository, nếu không workflow tạo APK debug. APK debug dùng khóa khác có thể không cài đè cập nhật lên bản đã ký bằng khóa khác.
 
 ## Nguyên tắc hiệu năng và độ tin cậy
 

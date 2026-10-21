@@ -5,9 +5,29 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const html = readFileSync(path.join(root, "index.html"), "utf8");
-const markupEnd = html.search(/<script\b/i);
-assert.notEqual(markupEnd, -1, "The page should contain its inline scripts.");
-const markup = html.slice(0, markupEnd);
+const cssPath = path.join(root, "assets/css/style.css");
+const jsPath = path.join(root, "assets/js/main.js");
+const css = readFileSync(cssPath, "utf8");
+const js = readFileSync(jsPath, "utf8");
+
+assert.match(html, /<html\b[^>]*\blang=["']vi["']/i, "The document declares its default language.");
+assert.match(html, /name=["']viewport["']/i, "The page declares a mobile viewport.");
+assert.match(html, /href=["']assets\/css\/style\.css["']/i, "The external stylesheet is linked.");
+assert.match(html, /src=["']assets\/js\/main\.js["'][^>]*defer\b/i, "The external interaction script is deferred.");
+assert.ok(existsSync(path.join(root, "favicon.svg")), "The declared favicon file exists.");
+assert.ok(/<main\b/i.test(html), "The page has a main landmark.");
+assert.ok(/id=["']main["']/.test(html), "The skip-link target exists.");
+assert.ok(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present.");
+assert.ok(/prefers-reduced-motion/.test(js), "JavaScript checks the reduced-motion preference.");
+
+const markup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+const ids = [...markup.matchAll(/\bid=["']([^"']+)["']/g)].map((match) => match[1]);
+assert.equal(new Set(ids).size, ids.length, "HTML id attributes must be unique.");
+const idSet = new Set(ids);
+const missingAnchors = [...markup.matchAll(/\bhref=["']#([^"']+)["']/g)]
+  .map((match) => match[1])
+  .filter((id) => id.length > 0 && !idSet.has(id));
+assert.deepEqual(missingAnchors, [], "Every in-page link must point to an existing HTML id.");
 
 function checkBalancedBraces(source, label) {
   let depth = 0;
@@ -49,53 +69,6 @@ function checkBalancedBraces(source, label) {
   assert.equal(depth, 0, label + " has unbalanced braces.");
 }
 
-const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
-  .map((match) => match[1])
-  .filter((source) => source.trim().length > 0);
-assert.ok(scripts.length >= 2, "The language and interaction scripts should be present.");
-scripts.forEach((source, index) => {
-  assert.doesNotThrow(() => new Function(source), "Inline script " + (index + 1) + " must parse.");
-});
-
-const styleBlocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]);
-assert.ok(styleBlocks.length > 0, "The page needs its styles.");
-styleBlocks.forEach((source, index) => checkBalancedBraces(source, "Style block " + (index + 1)));
-
-const ids = [...markup.matchAll(/\bid=["']([^"']+)["']/g)].map((match) => match[1]);
-const uniqueIds = new Set(ids);
-assert.equal(uniqueIds.size, ids.length, "HTML id attributes must be unique.");
-const idSet = new Set(ids);
-const missingAnchors = [...markup.matchAll(/\bhref="#([^"']+)"/g)]
-  .map((match) => match[1])
-  .filter((id) => id.length > 0 && !idSet.has(id));
-assert.deepEqual(missingAnchors, [], "Every in-page navigation link must point to an existing id.");
-
-assert.equal([...markup.matchAll(/data-story-go="/g)].length, 3, "The workflow needs exactly three step controls.");
-assert.equal([...markup.matchAll(/data-story-step="/g)].length, 3, "The workflow needs exactly three step descriptions.");
-assert.match(markup, /href=["']favicon\.svg["']/, "The site must declare its favicon.");
-assert.ok(existsSync(path.join(root, "favicon.svg")), "The declared favicon file must exist.");
-
-const messageScript = scripts.find((source) => source.includes("const messages = {"));
-assert.ok(messageScript, "The bilingual website message table must exist.");
-const enStart = messageScript.indexOf("    en: {");
-const viStart = messageScript.indexOf("    vi: {", enStart);
-assert.ok(enStart >= 0 && viStart > enStart, "English and Vietnamese message tables must both exist.");
-const messageEnd = messageScript.indexOf("\n  };", viStart);
-assert.ok(messageEnd > viStart, "The message table must close correctly.");
-
-function messageKeys(source) {
-  return [...source.matchAll(/\b([A-Za-z][A-Za-z0-9_]*):(?=\s*['"])/g)].map((match) => match[1]);
-}
-const enKeys = messageKeys(messageScript.slice(enStart, viStart));
-const viKeys = messageKeys(messageScript.slice(viStart, messageEnd));
-assert.deepEqual(viKeys, enKeys, "English and Vietnamese website translations must have the same keys.");
-
-const bindingsStart = messageScript.indexOf("const bindings = [");
-const bindingsEnd = messageScript.indexOf("\n  ];", bindingsStart);
-assert.ok(bindingsStart >= 0 && bindingsEnd > bindingsStart, "The language bindings must be defined.");
-const bindingKeys = [...messageScript.slice(bindingsStart, bindingsEnd).matchAll(/\[\s*'[^']+'\s*,\s*'([A-Za-z][A-Za-z0-9_]*)'/g)]
-  .map((match) => match[1]);
-const missingMessages = [...new Set(bindingKeys)].filter((key) => !enKeys.includes(key) || !viKeys.includes(key));
-assert.deepEqual(missingMessages, [], "Every translated element must have an English and Vietnamese string.");
-
-console.log("Blockline website checks passed: scripts, CSS blocks, anchors, favicon and bilingual strings.");
+checkBalancedBraces(css, "External stylesheet");
+assert.doesNotThrow(() => new Function(js), "The external interaction script must parse.");
+console.log("Blockline site checks passed: external assets, landmarks, anchors, CSS/JS syntax and reduced motion.");

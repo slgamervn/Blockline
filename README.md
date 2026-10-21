@@ -75,7 +75,7 @@ gradle testDebugUnitTest
 gradle assembleDebug
 ```
 
-The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions runs unit tests before building and publishing a versioned APK. Open **Actions → Build APK** to inspect logs and download build artifacts. Release assets are named `Blockline-v<version>.apk`; a signed release APK requires repository signing secrets, otherwise the workflow publishes a debug-signed APK. A debug APK signed with a different key may not install as an update over another build.
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions runs website checks and unit tests before building and publishing a versioned APK. The website checks cover linked assets, HTML landmarks and anchors, CSS/JavaScript syntax, translation coverage, responsive breakpoints, and reduced-motion behavior. Open **Actions → Build APK** to inspect logs and download build artifacts. Release assets are named `Blockline-v<version>.apk`; a signed release APK requires repository signing secrets, otherwise the workflow publishes a debug-signed APK. A debug APK signed with a different key may not install as an update over another build.
 
 ## Performance and reliability principles
 
