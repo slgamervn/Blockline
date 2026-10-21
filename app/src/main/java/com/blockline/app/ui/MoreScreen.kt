@@ -132,7 +132,7 @@ fun MoreScreen(vm: AppViewModel) {
                         Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(stringResource(R.string.update_available_status, info.version), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
                             if (info.releaseNotes.isNotBlank()) Text(info.releaseNotes.take(1_000), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
-                            Button(onClick = { vm.openUpdateDownload(context) }) { Text(stringResource(R.string.update_now)) }
+                            Button(onClick = { vm.openUpdateReleasePage(context) }) { Text(stringResource(R.string.update_now)) }
                         }
                     }
                 }
