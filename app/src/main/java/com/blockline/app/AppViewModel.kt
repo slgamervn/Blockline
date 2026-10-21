@@ -167,7 +167,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun setAutoCheckUpdates(enabled: Boolean) {
+    fun updateAutoCheckUpdates(enabled: Boolean) {
         autoCheckUpdates = enabled
         settingsPreferences.edit().putBoolean("auto_check_updates", enabled).apply()
         if (enabled) checkForUpdates(showUpToDateMessage = false, automatic = true)
