@@ -469,8 +469,8 @@
     <string name="resource_wiki_desc">Hướng dẫn cộng đồng về JSON, command, entity, block và scripting.</string>
     <string name="resource_microsoft_title">Tài liệu Creator của Microsoft</string>
     <string name="resource_microsoft_desc">Tài liệu tham chiếu chính thức về Creator API ổn định, schema và định dạng pack.</string>
-    <string name="resource_hg_title">MCBE Command Wiki VN by Hg</string>
-    <string name="resource_hg_desc">Ghi chú command từ cộng đồng Việt Nam; hãy đối chiếu ví dụ với phiên bản game đang dùng.</string>
+    <string name="resource_hg_title">Minecraft Wiki</string>
+    <string name="resource_hg_desc">Bách khoa toàn thư Minecraft do cộng đồng duy trì; hãy đối chiếu thông tin với phiên bản Minecraft Bedrock đang dùng.</string>
     <string name="resource_tweaks_title">Bedrock Tweaks</string>
     <string name="resource_tweaks_desc">Tham khảo resource pack, add-on và crafting tweak để lấy ý tưởng.</string>
     <string name="resource_mctools_title">Minecraft Creator Tools</string>
