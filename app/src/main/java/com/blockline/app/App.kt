@@ -1,6 +1,11 @@
 package com.blockline.app
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Dashboard
@@ -104,7 +109,27 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 }
             }
         ) { pad ->
-            NavHost(nav, startDestination = "projects", modifier = Modifier.padding(pad)) {
+            NavHost(
+                navController = nav,
+                startDestination = "projects",
+                modifier = Modifier.padding(pad),
+                enterTransition = {
+                    fadeIn(animationSpec = tween(220)) +
+                        slideInHorizontally(animationSpec = tween(220)) { width -> width / 14 }
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(160)) +
+                        slideOutHorizontally(animationSpec = tween(160)) { width -> -width / 24 }
+                },
+                popEnterTransition = {
+                    fadeIn(animationSpec = tween(220)) +
+                        slideInHorizontally(animationSpec = tween(220)) { width -> -width / 14 }
+                },
+                popExitTransition = {
+                    fadeOut(animationSpec = tween(160)) +
+                        slideOutHorizontally(animationSpec = tween(160)) { width -> width / 24 }
+                }
+            ) {
                 composable("projects") { ProjectsScreen(vm) { nav.navigate("overview") } }
                 composable("overview") { OverviewScreen(vm, onBack = { nav.popBackStack() }, onExplorer = { goTab(nav, "explorer") }) }
                 composable("explorer") { ExplorerScreen(vm) { nav.navigate("editor") } }
