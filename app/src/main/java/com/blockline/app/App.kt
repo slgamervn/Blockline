@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -23,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -58,6 +58,7 @@ private fun goTab(nav: NavController, route: String) {
 fun BlocklineRoot(vm: AppViewModel = viewModel()) {
     BlocklineTheme(vm.themeMode) {
         val nav = rememberNavController()
+        val context = LocalContext.current
         val snack = remember { SnackbarHostState() }
         val msg = vm.message
         val update = vm.updateInfo
@@ -81,7 +82,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                     }
                 },
                 confirmButton = {
-                    Button(onClick = { vm.openUpdateDownload(nav.context) }) { Text(stringResource(R.string.update_now)) }
+                    Button(onClick = { vm.openUpdateDownload(context) }) { Text(stringResource(R.string.update_now)) }
                 },
                 dismissButton = {
                     TextButton(onClick = { vm.dismissUpdate(update.version) }) { Text(stringResource(R.string.update_later)) }
