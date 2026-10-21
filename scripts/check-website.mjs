@@ -23,6 +23,7 @@ assert(/body\.menu-open\{overflow:hidden\}/.test(css) && !/body\.menu-open\{[^}]
 assert(/\.mobile-menu\{position:fixed;[^}]*padding:calc\(88px \+ env\(safe-area-inset-top\)\)/.test(css), "Mobile menu clears the fixed header and safe-area inset");
 assert(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present");
 assert(/IntersectionObserver/.test(js), "Scroll reveal uses IntersectionObserver");
+assert(js.includes("querySelectorAll('.reveal,") && /class="[^"]*\\breveal\\b/.test(html), "All pre-marked reveal sections are observed so content cannot remain permanently hidden");
 assert(/data-language-toggle/.test(html) && /const englishText = \{/.test(js), "Vietnamese and English language toggle is present");
 
 assert(/localStorage\.setItem\('blockline-language'/.test(js) && /localStorage\.getItem\('blockline-language'/.test(js), "Language choice persists between visits");
