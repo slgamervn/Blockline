@@ -29,6 +29,7 @@ import com.blockline.app.data.BatchReplaceFailure
 import com.blockline.app.data.BatchReplaceFilePreview
 import com.blockline.app.data.BatchReplaceScanResult
 import com.blockline.app.data.BatchRenameCandidate
+import com.blockline.app.data.AtomicFileWriter
 import com.blockline.app.data.BatchRenameEngine
 import com.blockline.app.data.EditorHistory
 import com.blockline.app.data.BatchRenameOutcome
@@ -862,37 +863,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
 
 
-    private fun writeAtomically(target: File, value: String, suffix: String) {
-        val parent = target.parentFile ?: error("Target file has no parent directory.")
-        check(parent.isDirectory || parent.mkdirs()) { "Could not create the target directory." }
-        val temp = File(parent, target.name + suffix)
-        try {
-            temp.writeText(value, Charsets.UTF_8)
-            try {
-                java.nio.file.Files.move(
-                    temp.toPath(),
-                    target.toPath(),
-                    java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                )
-            } catch (_: java.nio.file.AtomicMoveNotSupportedException) {
-                java.nio.file.Files.move(
-                    temp.toPath(),
-                    target.toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                )
-            }
-        } finally {
-            temp.delete()
-        }
-    }
-
     private fun writeSnapshot(projectId: String, path: String, value: String, suffix: String = ".saving") {
         val projectRoot = repo.projectDir(projectId).canonicalFile
         val target = repo.resolve(projectId, path).canonicalFile
         require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
         check(target.isFile) { text(R.string.file_not_found) }
-        writeAtomically(target, value, suffix)
+        AtomicFileWriter.write(target, value, suffix)
     }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
@@ -922,7 +898,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         val target = repo.resolve(projectId, path).canonicalFile
                         require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
                         check(target.isFile) { "File no longer exists." }
-                        writeAtomically(target, value, ".autosaving")
+                        AtomicFileWriter.write(target, value, ".autosaving")
                     }
                 }
                 Result.success(Unit)
