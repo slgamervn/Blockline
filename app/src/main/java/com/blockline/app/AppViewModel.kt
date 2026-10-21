@@ -459,7 +459,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 var changedCount = 0
                 try {
                     prepared.forEach { item ->
-                        BatchReplaceEngine.AtomicFileWriter.write(item.file, item.content)
+                        BatchReplaceEngine.writeAtomically(item.file, item.content)
                         changedCount++
                     }
                     com.blockline.app.data.BatchReplaceOutcome(
@@ -864,12 +864,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
 
 
+    private fun writeAtomically(target: File, value: String, suffix: String) {
+        val parent = target.parentFile ?: return
+        if (!parent.exists()) parent.mkdirs()
+        val temp = File(parent, target.name + suffix)
+        temp.writeText(value, Charsets.UTF_8)
+        try {
+            java.nio.file.Files.move(
+                temp.toPath(),
+                target.toPath(),
+                java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+            )
+        } catch (_: Exception) {
+            java.nio.file.Files.move(
+                temp.toPath(),
+                target.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+            )
+        } finally {
+            temp.delete()
+        }
+    }
+
     private fun writeSnapshot(projectId: String, path: String, value: String) {
         val projectRoot = repo.projectDir(projectId).canonicalFile
         val target = repo.resolve(projectId, path).canonicalFile
         require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
         check(target.isFile) { text(R.string.file_not_found) }
-        AtomicFileWriter.write(target, value, ".saving")
+        writeAtomically(target, value, ".saving")
     }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
@@ -907,7 +930,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 withContext(Dispatchers.IO) {
                     require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
                     check(target.isFile) { "File no longer exists." }
-                    AtomicFileWriter.write(target, value, ".autosaving")
+                    writeAtomically(target, value, ".autosaving")
                 }
             }
             if (result.isFailure && current?.id == projectId && activeFile == path) {
@@ -925,7 +948,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         autoSaveJob?.cancel()
         return runCatching {
             val f = repo.resolve(p.id, path)
-            AtomicFileWriter.write(f, content, ".saving")
+            writeAtomically(f, content, ".saving")
             if (showMessage) message = text(R.string.saved_path, path)
         }.onFailure { message = it.message ?: text(R.string.save_failed) }.isSuccess
     }
