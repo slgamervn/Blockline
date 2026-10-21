@@ -86,6 +86,7 @@ import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit) {
     val context = LocalContext.current
