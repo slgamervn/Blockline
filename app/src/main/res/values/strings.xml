@@ -113,10 +113,10 @@
     <string name="about_blockline">About Blockline</string>
     <string name="about_blurb">Tools for creating Minecraft Bedrock add-ons on Android.</string>
     <string name="version">Version</string>
-    <string name="version_phase">%1$s · Phase 1 and Phase 2 preview</string>
+    <string name="version_phase">%1$s · Active development</string>
     <string name="privacy">Privacy</string>
     <string name="privacy_detail">Project files and per-project activity logs stay in app-private storage. Script API online refresh requires internet; the app has no analytics or tracking.</string>
-    <string name="early_notice">Blockline is still in development. Some advanced tools will arrive in later releases.</string>
+    <string name="early_notice">Feature coverage is evolving. Back up projects before major edits and verify exported packs in Minecraft.</string>
     <string name="explorer_empty_hint">Open a project from Projects first</string>
     <string name="explorer_no_results_hint">Create a file or change the filter</string>
     <string name="actions">Actions</string>

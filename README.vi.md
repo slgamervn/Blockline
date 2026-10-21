@@ -21,7 +21,7 @@
 
 Blockline là ứng dụng Android-native để đọc, tổ chức và chỉnh sửa **add-on Minecraft Bedrock** trực tiếp trên điện thoại. Ứng dụng dùng Kotlin, Jetpack Compose, Material 3 và lưu bản sao dự án trong vùng lưu trữ riêng của ứng dụng; việc nhập/xuất dùng trình chọn tệp của Android.
 
-Repository hiện đã có các phần triển khai thuộc cả bốn phase ban đầu. Tuy nhiên, đây vẫn là dự án đang phát triển: CI thành công xác nhận các kiểm tra tự động và quy trình build của commit đó đã chạy qua, không thay thế việc thử nghiệm trên thiết bị thật hoặc xác thực mọi schema Bedrock.
+Lộ trình ban đầu đã được chuyển sang theo dõi theo từng nhóm tính năng. Website và danh sách tính năng mô tả những phần hiện đã triển khai; các mục ghi cần QA vẫn phải được kiểm tra trên thiết bị Android thật và pack Bedrock đại diện. CI thành công chỉ xác nhận các kiểm tra tự động đã cấu hình và quy trình build APK của commit đó chạy qua.
 
 ## Tính năng
 

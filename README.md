@@ -21,7 +21,7 @@
 
 Blockline is an Android-native workspace for inspecting and editing **Minecraft Bedrock add-on packs** on a phone. It uses Kotlin, Jetpack Compose, and Material 3, with local project storage and Android's Storage Access Framework for importing and exporting files.
 
-The repository has working implementations across the original four development phases. This is still an actively developed project: passing CI means the automated checks and APK build passed for that commit; it does not replace testing on real Android devices or validating every possible Bedrock schema.
+The original roadmap has evolved into a feature-by-feature implementation. The website roadmap and feature list describe what is currently implemented; items marked as needing QA still require checks on real Android devices and representative Bedrock packs. Passing CI confirms only that the configured automated checks and APK build passed for that commit.
 
 ## Features
 
