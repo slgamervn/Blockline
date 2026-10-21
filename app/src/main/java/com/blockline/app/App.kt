@@ -8,6 +8,10 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -19,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,9 +60,34 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
         val nav = rememberNavController()
         val snack = remember { SnackbarHostState() }
         val msg = vm.message
+        val update = vm.updateInfo
         LaunchedEffect(msg) { if (msg != null) { snack.showSnackbar(msg); vm.message = null } }
         val backStack by nav.currentBackStackEntryAsState()
         val route = backStack?.destination?.route
+        if (update != null) {
+            AlertDialog(
+                onDismissRequest = { vm.dismissUpdate(update.version) },
+                title = { Text(stringResource(R.string.update_dialog_title)) },
+                text = {
+                    androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.update_dialog_versions, BuildConfig.VERSION_NAME, update.version))
+                        Text(update.releaseName, style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                        if (update.releaseNotes.isNotBlank()) {
+                            Text(update.releaseNotes.take(2_400), style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                        } else {
+                            Text(stringResource(R.string.update_no_notes))
+                        }
+                        if (update.apkSizeBytes > 0L) Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f", update.apkSizeBytes / 1_048_576.0)))
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { vm.openUpdateDownload(nav.context) }) { Text(stringResource(R.string.update_now)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { vm.dismissUpdate(update.version) }) { Text(stringResource(R.string.update_later)) }
+                }
+            )
+        }
         Scaffold(
             snackbarHost = { SnackbarHost(snack) },
             bottomBar = {

@@ -1,6 +1,8 @@
 package com.blockline.app
 
 import android.app.Application
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +16,8 @@ import com.blockline.app.data.Project
 import com.blockline.app.data.ProjectRepository
 import com.blockline.app.data.OperationLogEntry
 import com.blockline.app.data.OperationLogRepository
+import com.blockline.app.data.AppUpdate
+import com.blockline.app.data.AppUpdateRepository
 import com.blockline.app.data.ResourcePreview
 import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
@@ -52,8 +56,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var isIndexingProjectFiles by mutableStateOf(false)
         private set
     var message by mutableStateOf<String?>(null)
-    var themeMode by mutableStateOf(ThemeMode.DARK)
-    var fontSize by mutableStateOf(14)
+    private val settingsPreferences = app.getSharedPreferences("blockline_settings", Application.MODE_PRIVATE)
+    private val updateRepository = AppUpdateRepository()
+    private val themeState = mutableStateOf(
+        runCatching { ThemeMode.valueOf(settingsPreferences.getString("theme_mode", ThemeMode.DARK.name) ?: ThemeMode.DARK.name) }.getOrDefault(ThemeMode.DARK)
+    )
+    var themeMode: ThemeMode
+        get() = themeState.value
+        set(value) {
+            themeState.value = value
+            settingsPreferences.edit().putString("theme_mode", value.name).apply()
+        }
+    private val fontSizeState = mutableStateOf(settingsPreferences.getInt("editor_font_size", 14).coerceIn(10, 24))
+    var fontSize: Int
+        get() = fontSizeState.value
+        set(value) {
+            fontSizeState.value = value.coerceIn(10, 24)
+            settingsPreferences.edit().putInt("editor_font_size", fontSizeState.value).apply()
+        }
+    var autoCheckUpdates by mutableStateOf(settingsPreferences.getBoolean("auto_check_updates", true))
+        private set
+    var isCheckingUpdates by mutableStateOf(false)
+        private set
+    var updateInfo by mutableStateOf<AppUpdate?>(null)
+        private set
+    var lastUpdateCheck by mutableStateOf(settingsPreferences.getString("last_update_check", null))
+        private set
+    var updateCheckResult by mutableStateOf<String?>(null)
+        private set
+    private var updateCheckRequestId = 0
     var activeFile by mutableStateOf<String?>(null)
         private set
     var generatedFileToOpen by mutableStateOf<String?>(null)
@@ -126,7 +157,70 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var fileIndexRequestId = 0
     private var autoSaveJob: Job? = null
 
-    init { refresh() }
+    init {
+        refresh()
+        if (autoCheckUpdates) {
+            viewModelScope.launch {
+                delay(1_500)
+                checkForUpdates(showUpToDateMessage = false, automatic = true)
+            }
+        }
+    }
+
+    fun setAutoCheckUpdates(enabled: Boolean) {
+        autoCheckUpdates = enabled
+        settingsPreferences.edit().putBoolean("auto_check_updates", enabled).apply()
+        if (enabled) checkForUpdates(showUpToDateMessage = false, automatic = true)
+    }
+
+    fun checkForUpdates(showUpToDateMessage: Boolean = true, automatic: Boolean = false) {
+        if (isCheckingUpdates) return
+        val requestId = ++updateCheckRequestId
+        isCheckingUpdates = true
+        updateCheckResult = null
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    updateRepository.checkLatest(BuildConfig.VERSION_NAME)
+                }
+            }
+            if (requestId != updateCheckRequestId) return@launch
+            isCheckingUpdates = false
+            lastUpdateCheck = java.time.Instant.now().toString()
+            settingsPreferences.edit().putString("last_update_check", lastUpdateCheck).apply()
+            result.onSuccess { available ->
+                val ignoredVersion = settingsPreferences.getString("dismissed_update_version", null)
+                updateInfo = if (available != null && (ignoredVersion != available.version || !automatic)) available else null
+                updateCheckResult = when {
+                    available != null -> text(R.string.update_available_status, available.version)
+                    else -> text(R.string.update_up_to_date)
+                }
+                if (available == null && showUpToDateMessage) message = text(R.string.update_up_to_date)
+            }.onFailure { error ->
+                updateInfo = null
+                updateCheckResult = text(R.string.update_check_failed)
+                if (showUpToDateMessage) message = text(R.string.update_check_failed_detail, error.message ?: text(R.string.unknown_value))
+            }
+        }
+    }
+
+    fun dismissUpdate(version: String) {
+        settingsPreferences.edit().putString("dismissed_update_version", version).apply()
+        updateInfo = null
+    }
+
+    fun openUpdateDownload(context: android.content.Context) {
+        val info = updateInfo ?: return
+        runCatching {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(info.apkUrl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.onSuccess {
+            settingsPreferences.edit().putString("dismissed_update_version", info.version).apply()
+            updateInfo = null
+        }.onFailure {
+            message = text(R.string.update_open_failed)
+        }
+    }
+
 
     fun refresh() { projects = repo.list() }
     fun refreshOperationLog() {

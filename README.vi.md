@@ -51,7 +51,7 @@ Repository hiện đã có các phần triển khai thuộc cả bốn phase ban
 - Dùng sample pack đi kèm làm điểm khởi đầu.
 
 ### Workflow nâng cao và Script API Reference
-- So sánh nội dung bằng line-diff engine và xem nhật ký hoạt động cục bộ theo từng dự án.
+- So sánh nội dung bằng line-diff engine và xem nhật ký hoạt động cục bộ theo từng dự án. Kiểm tra bản cập nhật APK ổn định từ trang GitHub Releases chính thức.
 - Xem trước đổi tên tệp và thay thế văn bản hàng loạt trước khi áp dụng, có kiểm tra xung đột, backup và khôi phục khi thao tác lỗi.
 - Kiểm tra dependency trong manifest, nguồn/đích, sai khác phiên bản và UUID bên ngoài chưa được phân giải trong project.
 - Tra cứu TypeScript declaration của các npm package được hỗ trợ. Repository tra cứu có thể lấy metadata phiên bản từ npm, lấy declaration từ jsDelivr, cache phiên bản/mã nguồn để dùng lại khi offline và fallback sang snapshot đi kèm. Các declaration chưa parse được vẫn được giữ ở dạng raw thay vì bị loại bỏ.

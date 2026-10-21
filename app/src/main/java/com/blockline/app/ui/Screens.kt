@@ -722,6 +722,48 @@ fun MoreScreen(vm: AppViewModel) {
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.updates_title), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.updates_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.auto_check_updates), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.auto_check_updates_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = vm.autoCheckUpdates,
+                        onCheckedChange = { vm.setAutoCheckUpdates(it) }
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Button(onClick = { vm.checkForUpdates(showUpToDateMessage = true) }, enabled = !vm.isCheckingUpdates) {
+                        if (vm.isCheckingUpdates) androidx.compose.material3.CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                        else Text(stringResource(R.string.check_updates))
+                    }
+                    TextButton(onClick = { runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(com.blockline.app.data.AppUpdateRepository.RELEASES_URL))) } }) {
+                        Text(stringResource(R.string.view_releases))
+                    }
+                }
+                vm.updateCheckResult?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
+                Text(stringResource(R.string.current_version_value, BuildConfig.VERSION_NAME), style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                vm.lastUpdateCheck?.let {
+                    Text(stringResource(R.string.last_update_check, it.replace('T', ' ').substringBefore('.').removeSuffix("Z")), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                vm.updateInfo?.let { info ->
+                    androidx.compose.material3.Surface(
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(stringResource(R.string.update_available_status, info.version), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                            if (info.releaseNotes.isNotBlank()) Text(info.releaseNotes.take(1_000), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                            Button(onClick = { vm.openUpdateDownload(context) }) { Text(stringResource(R.string.update_now)) }
+                        }
+                    }
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     androidx.compose.material3.Surface(color = com.blockline.app.ui.theme.Emerald.copy(alpha = .16f), shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)) {
                         Text("◐", Modifier.padding(12.dp), color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.titleLarge)

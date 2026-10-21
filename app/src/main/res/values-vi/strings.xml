@@ -428,4 +428,24 @@
     <string name="operation_detail_replace_count">%1$d vị trí thay thế trong %2$d tệp</string>
     <string name="operation_detail_export_mode">Chế độ xuất: %1$s</string>
     <string name="operation_detail_validation_counts">%1$d lỗi · %2$d cảnh báo</string>
+
+    <string name="updates_title">Cập nhật ứng dụng</string>
+    <string name="updates_hint">Kiểm tra bản phát hành ổn định mới nhất từ repository GitHub chính thức của Blockline.</string>
+    <string name="auto_check_updates">Tự động kiểm tra</string>
+    <string name="auto_check_updates_hint">Kiểm tra phiên bản mới khi mở Blockline.</string>
+    <string name="check_updates">Kiểm tra cập nhật</string>
+    <string name="view_releases">Lịch sử phát hành</string>
+    <string name="current_version_value">Phiên bản đang cài: %1$s</string>
+    <string name="last_update_check">Lần kiểm tra gần nhất: %1$s</string>
+    <string name="update_dialog_title">Đã có phiên bản Blockline mới</string>
+    <string name="update_dialog_versions">Đang cài: %1$s\nMới nhất: %2$s</string>
+    <string name="update_no_notes">Bản phát hành chưa có ghi chú.</string>
+    <string name="update_download_size">Dung lượng tải: %1$s MB</string>
+    <string name="update_now">Tải bản cập nhật</string>
+    <string name="update_later">Để sau</string>
+    <string name="update_available_status">Có bản cập nhật: v%1$s</string>
+    <string name="update_up_to_date">Blockline đang ở phiên bản mới nhất.</string>
+    <string name="update_check_failed">Không thể kiểm tra cập nhật.</string>
+    <string name="update_check_failed_detail">Kiểm tra cập nhật thất bại: %1$s</string>
+    <string name="update_open_failed">Không thể mở liên kết tải APK chính thức.</string>
 </resources>

@@ -428,4 +428,24 @@
     <string name="operation_detail_replace_count">%1$d replacements across %2$d files</string>
     <string name="operation_detail_export_mode">Export mode: %1$s</string>
     <string name="operation_detail_validation_counts">%1$d errors · %2$d warnings</string>
+
+    <string name="updates_title">App updates</string>
+    <string name="updates_hint">Check the latest stable release from the official Blockline GitHub repository.</string>
+    <string name="auto_check_updates">Check automatically</string>
+    <string name="auto_check_updates_hint">Check for a newer release when Blockline starts.</string>
+    <string name="check_updates">Check for updates</string>
+    <string name="view_releases">Release history</string>
+    <string name="current_version_value">Installed version: %1$s</string>
+    <string name="last_update_check">Last check: %1$s</string>
+    <string name="update_dialog_title">A new Blockline version is available</string>
+    <string name="update_dialog_versions">Installed: %1$s\nLatest: %2$s</string>
+    <string name="update_no_notes">No release notes were provided.</string>
+    <string name="update_download_size">Download size: %1$s MB</string>
+    <string name="update_now">Download update</string>
+    <string name="update_later">Later</string>
+    <string name="update_available_status">Update available: v%1$s</string>
+    <string name="update_up_to_date">Blockline is up to date.</string>
+    <string name="update_check_failed">Could not check for updates.</string>
+    <string name="update_check_failed_detail">Update check failed: %1$s</string>
+    <string name="update_open_failed">Could not open the official APK download link.</string>
 </resources>
