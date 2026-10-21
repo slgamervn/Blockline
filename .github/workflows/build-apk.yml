@@ -102,6 +102,10 @@ jobs:
             printf '%s\n' "- Download \`Blockline-v${VERSION_NAME}.apk\` from the Assets section."
             echo "- If this is a debug build, installing over an APK signed with a different key may require uninstalling the older app first. Back up project files before doing so."
           } > RELEASE_NOTES.md
+          if grep -Fq "## Blockline v${VERSION_NAME}" RELEASE_NOTES.md || grep -Fq "# Blockline v${VERSION_NAME}" RELEASE_NOTES.md; then
+            echo "Release notes must not repeat the GitHub Release title." >&2
+            exit 1
+          fi
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v6

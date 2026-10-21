@@ -379,4 +379,9 @@
     <string name="api_reference_copy_raw">Copy raw declaration source</string>
     <string name="api_reference_raw_copied">Copied raw TypeScript declarations.</string>
     <string name="api_reference_load_failed">Could not load the Script API reference.</string>
+
+    <string name="project_id_copied">Copied project ID.</string>
+    <string name="uuid_copied">Copied manifest UUID.</string>
+    <string name="copy_uuid_cd">Copy UUID</string>
+    <string name="api_reference_share">Share declaration</string>
 </resources>

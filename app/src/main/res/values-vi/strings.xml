@@ -379,4 +379,9 @@
     <string name="api_reference_copy_raw">Sao chép toàn bộ mã declaration</string>
     <string name="api_reference_raw_copied">Đã sao chép mã TypeScript gốc.</string>
     <string name="api_reference_load_failed">Không thể tải tài liệu Script API.</string>
+
+    <string name="project_id_copied">Đã sao chép ID dự án.</string>
+    <string name="uuid_copied">Đã sao chép UUID trong manifest.</string>
+    <string name="copy_uuid_cd">Sao chép UUID</string>
+    <string name="api_reference_share">Chia sẻ declaration</string>
 </resources>

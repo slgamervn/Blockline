@@ -1,5 +1,6 @@
 package com.blockline.app.ui
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -133,6 +135,8 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
     val p = vm.current
     var showSwitcher by remember { mutableStateOf(false) }
     var exportMode by remember { mutableStateOf(ExportMode.BOTH) }
@@ -155,7 +159,14 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                             androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
                                 Text(if (vm.isIndexingProjectFiles) stringResource(R.string.scanning_files) else stringResource(R.string.files_count, projectFiles.size), Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                             }
-                            androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)) {
+                            androidx.compose.material3.Surface(
+                                modifier = Modifier.clickable {
+                                    clipboard.setText(AnnotatedString(p.id))
+                                    vm.message = context.getString(R.string.project_id_copied)
+                                },
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
+                            ) {
                                 Text("ID · ${p.id.take(8)}", Modifier.padding(horizontal = 11.dp, vertical = 7.dp), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                             }
                         }
@@ -203,7 +214,18 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                 }
             }
             items(manifestFiles, key = { it.absolutePath }) { file ->
-                val json = runCatching { org.json.JSONObject(com.blockline.app.data.JsonTools.stripComments(file.readText())) }.getOrNull()
+                val json by produceState<org.json.JSONObject?>(
+                    initialValue = null,
+                    key1 = file.absolutePath,
+                    key2 = file.lastModified(),
+                    key3 = file.length()
+                ) {
+                    value = withContext(Dispatchers.IO) {
+                        runCatching {
+                            org.json.JSONObject(com.blockline.app.data.JsonTools.stripComments(file.readText(Charsets.UTF_8)))
+                        }.getOrNull()
+                    }
+                }
                 val header = json?.optJSONObject("header")
                 val modules = json?.optJSONArray("modules")
                 val dependencies = json?.optJSONArray("dependencies")
@@ -212,7 +234,17 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                     Text(stringResource(R.string.manifest_title, file.parentFile?.name ?: stringResource(R.string.pack)), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
                     Text(header?.optString("name", stringResource(R.string.unknown_pack)) ?: stringResource(R.string.manifest_parse_failed), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
                     Text(header?.optString("description", stringResource(R.string.no_description)) ?: stringResource(R.string.check_manifest_json))
-                    Text(stringResource(R.string.uuid_value, header?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)))
+                    val uuidValue = header?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Text(stringResource(R.string.uuid_value, uuidValue), Modifier.weight(1f))
+                        IconButton(
+                            onClick = {
+                                clipboard.setText(AnnotatedString(uuidValue))
+                                vm.message = context.getString(R.string.uuid_copied)
+                            },
+                            enabled = uuidValue.isNotBlank() && uuidValue != context.getString(R.string.missing_value) && uuidValue != context.getString(R.string.invalid_value)
+                        ) { Icon(Icons.Default.ContentCopy, stringResource(R.string.copy_uuid_cd)) }
+                    }
                     Text(stringResource(R.string.version_value, header?.opt("version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
                     Text(stringResource(R.string.manifest_format_value, json?.opt("format_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
                     Text(stringResource(R.string.manifest_engine_value, json?.opt("min_engine_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
@@ -979,6 +1011,14 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                             clipboard.setText(AnnotatedString(symbol.rawDeclaration))
                             vm.message = context.getString(R.string.api_reference_copied, symbol.name)
                         }) { Icon(Icons.Default.ContentCopy, null); Text(stringResource(R.string.api_reference_copy)) }
+                        TextButton(onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, symbol.name)
+                                putExtra(Intent.EXTRA_TEXT, symbol.rawDeclaration)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.api_reference_share)))
+                        }) { Text(stringResource(R.string.api_reference_share)) }
                         TextButton(
                             enabled = vm.activeFile?.substringAfterLast('.') == "ts" && !vm.readOnly,
                             onClick = {
