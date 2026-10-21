@@ -115,7 +115,7 @@ Blockline áp dụng các hướng dẫn Compose phù hợp với ứng dụng: 
 - [MC-Tools](https://mc-tools.net/) — các tiện ích web cho quy trình Minecraft.
 - [MakeBead Pixel Art Generator](https://makebead.com/minecraft-pixel-art-generator/) — tạo mẫu pixel art và danh sách vật liệu từ ảnh.
 
-Dịch vụ bên ngoài có thể thay đổi độc lập. Hãy kiểm tra tính tương thích, điều khoản giấy phép và nguồn tải trước khi áp dụng ví dụ hoặc sử dụng lại nội dung bên thứ ba.
+Dịch vụ bên ngoài có thể thay đổi độc lập. Hãy kiểm tra tính tương thích, điều khoản giấy phép và nguồn tải trước khi áp dụng ví dụ hoặc sử dụng lại nội dung bên thứ ba. Xem thêm [chính sách nguồn kỹ thuật, giới hạn kiểm tra và giấy phép template](docs/technical-validation-policy.md).
 
 ## Đóng góp và báo lỗi
 
