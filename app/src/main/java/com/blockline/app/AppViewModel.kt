@@ -20,6 +20,7 @@ import com.blockline.app.data.PackDependencyResolver
 import com.blockline.app.data.BatchReplaceEngine
 import com.blockline.app.data.BatchReplaceFailure
 import com.blockline.app.data.BatchReplaceFilePreview
+import com.blockline.app.data.BatchReplaceScanResult
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
