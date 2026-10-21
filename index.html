@@ -182,12 +182,12 @@
 
     <section class="roadmap-section section-pad" id="roadmap" aria-labelledby="roadmap-title">
       <div class="wrap roadmap-layout">
-        <div class="section-intro reveal"><p class="eyebrow">TIẾP THEO LÀ GÌ?</p><h2 id="roadmap-title">Đang phát triển.</h2><p>Những hạng mục dưới đây chưa được giới thiệu là tính năng đã phát hành.</p></div>
+        <div class="section-intro reveal"><p class="eyebrow">TRẠNG THÁI SẢN PHẨM</p><h2 id="roadmap-title">Từ nền tảng đến workflow nâng cao.</h2><p>Các nhóm tính năng dưới đây đã có phần triển khai trong mã nguồn. Mức độ tương thích thực tế vẫn cần được kiểm chứng với thiết bị và pack cụ thể.</p></div>
         <ol class="roadmap-list">
-          <li class="roadmap-item reveal"><span class="roadmap-number">01</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Tìm kiếm và kiểm tra</h3><p>Tìm kiếm trên toàn dự án và kiểm tra pack.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
-          <li class="roadmap-item reveal"><span class="roadmap-number">02</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Tạo tài nguyên nhanh hơn</h3><p>Trình tạo entity, item và block.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
-          <li class="roadmap-item reveal"><span class="roadmap-number">03</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Kiểm soát thay đổi</h3><p>So sánh nội dung bằng diff và đổi tên hàng loạt.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
-          <li class="roadmap-item reveal"><span class="roadmap-number">04</span><div><span class="roadmap-status">ĐANG PHÁT TRIỂN</span><h3>Tra cứu Script API</h3><p>Tra cứu Script API ngay trong quy trình làm việc.</p></div><span class="roadmap-symbol" aria-hidden="true">↗</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">01</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Quản lý dự án và chỉnh sửa</h3><p>Nhập/xuất pack, explorer, nhiều tab editor, tự lưu, backup/restore và xử lý archive an toàn hơn.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">02</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Tìm kiếm và kiểm tra pack</h3><p>Tìm đường dẫn/nội dung, kiểm tra JSON và manifest, UUID, script entry, dependency cùng một số tham chiếu tài nguyên.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">03</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Generator và snippet</h3><p>Tạo manifest với UUID mới, sao chép snippet JavaScript/Script API và Minecraft function.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item reveal"><span class="roadmap-number">04</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Diff, dependency và Script API</h3><p>So sánh văn bản, xem trước thay thế hàng loạt, phân tích dependency và tra cứu declaration có cache/offline fallback.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
         </ol>
       </div>
     </section>
@@ -207,7 +207,7 @@
           <details><summary>Blockline hỗ trợ thiết bị nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Blockline là ứng dụng Android, yêu cầu Android 8.0 trở lên. Liên kết tải xuống luôn trỏ tới APK của bản phát hành mới nhất trên GitHub.</p></div></details>
           <details><summary>Có cần kết nối mạng để chỉnh sửa pack không?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Các công cụ chính được mô tả có thể dùng ngoại tuyến. Trang web chỉ là trang giới thiệu và cung cấp liên kết tải APK.</p></div></details>
           <details><summary>Blockline có thể mở những loại tệp nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Ứng dụng nhận .mcpack và .mcaddon; editor hỗ trợ tệp văn bản JSON, JavaScript và .mcfunction. Tệp trên 1 MB chỉ mở ở chế độ đọc; tệp trên 5 MB không mở được.</p></div></details>
-          <details><summary>Blockline đã kiểm tra pack tự động chưa?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Kiểm tra pack đang phát triển. Phiên bản hiện tại có thể đọc thông tin manifest như UUID, module và dependency, nhưng việc đọc đó không đồng nghĩa xác thực toàn bộ pack.</p></div></details>
+          <details><summary>Blockline đã kiểm tra pack tự động chưa?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Có kiểm tra tĩnh cho cú pháp JSON, một số trường manifest, UUID, script entry, dependency và một số tham chiếu tài nguyên. Đây không phải schema validator đầy đủ của Mojang và không bảo đảm pack sẽ chạy đúng trong game.</p></div></details>
           <details><summary>Tải APK ở đâu?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Nút tải trên trang dẫn đến tệp APK của bản phát hành mới nhất trên GitHub. Hãy kiểm tra tên dự án và nguồn phát hành trước khi cài đặt.</p></div></details>
         </div>
       </div>
