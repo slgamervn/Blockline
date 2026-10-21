@@ -24,6 +24,7 @@ assert(/\.mobile-menu\{position:fixed;[^}]*padding:calc\(88px \+ env\(safe-area-
 assert(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present");
 assert(/IntersectionObserver/.test(js), "Scroll reveal uses IntersectionObserver");
 assert(js.includes("querySelectorAll('.reveal,") && html.includes('class="resource-group reveal"'), "All pre-marked reveal sections are observed so content cannot remain permanently hidden");
+assert(/#resources\s+\.reveal\s*\{\s*opacity:\s*1\s*;\s*transform:\s*none\s*\}/.test(css), "Resource reference content remains visible even if scroll-reveal JavaScript does not run");
 assert(/data-language-toggle/.test(html) && /const englishText = \{/.test(js), "Vietnamese and English language toggle is present");
 
 assert(/localStorage\.setItem\('blockline-language'/.test(js) && /localStorage\.getItem\('blockline-language'/.test(js), "Language choice persists between visits");
