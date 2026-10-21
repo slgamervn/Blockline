@@ -755,8 +755,10 @@ private fun DiffToolCard(vm: AppViewModel) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     LaunchedEffect(project?.id, files) {
-        if (beforePath !in files) beforePath = files.getOrNull(0).orEmpty()
-        if (afterPath !in files || afterPath == beforePath) afterPath = files.firstOrNull { it != beforePath }.orEmpty()
+        val firstPath = files.firstOrNull().orEmpty()
+        val secondPath = files.firstOrNull { it != firstPath }.orEmpty()
+        if (beforePath !in files) beforePath = firstPath
+        if (afterPath !in files || afterPath == firstPath) afterPath = secondPath
         diff = null
         error = null
     }
@@ -809,6 +811,9 @@ private fun DiffToolCard(vm: AppViewModel) {
                                 val before = vm.repo.resolve(selectedProject.id, beforePath)
                                 val after = vm.repo.resolve(selectedProject.id, afterPath)
                                 require(before.isFile && after.isFile) { "A selected file no longer exists." }
+                                require(before.length() <= 1024L * 1024L && after.length() <= 1024L * 1024L) {
+                                    "A selected file exceeded the 1 MB comparison limit."
+                                }
                                 LineDiffEngine.compare(before.readText(Charsets.UTF_8), after.readText(Charsets.UTF_8))
                             }
                         }
@@ -906,6 +911,7 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                 listOf("@minecraft/server", "@minecraft/server-ui", "@minecraft/common").forEach { candidate ->
                     androidx.compose.material3.FilterChip(
                         selected = packageName == candidate,
+                        enabled = !loading,
                         onClick = {
                             if (packageName != candidate) {
                                 packageName = candidate
@@ -933,7 +939,7 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                     modifier = Modifier.weight(1f)
                 ) { Text(stringResource(R.string.api_reference_load)) }
                 TextButton(
-                    onClick = { loadReference(packageName, version.takeIf { it.isNotBlank() }, true) },
+                    onClick = { version = ""; loadReference(packageName, null, true) },
                     enabled = !loading
                 ) { Text(stringResource(R.string.api_reference_refresh)) }
             }
