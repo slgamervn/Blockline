@@ -91,7 +91,7 @@ object ProjectValidator {
                 if (header.has("pack_scope")) {
                     val scope = header.opt("pack_scope")
                     if (scope !is String || scope !in setOf("global", "world", "any")) {
-                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.pack_scope must be 'global', 'world', or 'any'.")
+                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.pack_scope must be one of global, world, or any.")
                     }
                 }
                 val headerUuid = header.optString("uuid")

@@ -17,7 +17,7 @@ internal fun localizeValidationMessage(context: Context, message: String): Strin
         message == "Missing required object: header." -> text(R.string.validation_msg_header_missing)
         message == "header.name is missing or empty." -> text(R.string.validation_msg_header_name)
         message == "header.description is missing or empty." -> text(R.string.validation_msg_header_description)
-        message == "header.pack_scope must be 'global', 'world', or 'any'." -> text(R.string.validation_msg_pack_scope)
+        message == "header.pack_scope must be one of global, world, or any." -> text(R.string.validation_msg_pack_scope)
         message == "A manifest may contain at most one world_template module." -> text(R.string.validation_msg_multiple_world_templates)
         message == "header.version must contain three non-negative integers." -> text(R.string.validation_msg_header_version)
         message == "modules must be a non-empty array." -> text(R.string.validation_msg_modules_empty)

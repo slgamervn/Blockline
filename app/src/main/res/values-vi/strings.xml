@@ -208,7 +208,7 @@
     <string name="validation_msg_header_missing">Thiếu object bắt buộc: header.</string>
     <string name="validation_msg_header_name">Thiếu hoặc để trống header.name.</string>
     <string name="validation_msg_header_description">Thiếu hoặc để trống header.description.</string>
-    <string name="validation_msg_pack_scope">header.pack_scope phải là &apos;global&apos;, &apos;world&apos; hoặc &apos;any&apos;.</string>
+    <string name="validation_msg_pack_scope">header.pack_scope phải là một trong các giá trị: global, world hoặc any.</string>
     <string name="validation_msg_multiple_world_templates">Mỗi manifest chỉ được có tối đa một module world_template.</string>
     <string name="validation_msg_header_version">header.version phải gồm ba số nguyên không âm.</string>
     <string name="validation_msg_modules_empty">modules phải là một array không rỗng.</string>

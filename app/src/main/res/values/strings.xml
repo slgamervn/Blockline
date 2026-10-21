@@ -208,7 +208,7 @@
     <string name="validation_msg_header_missing">Missing required object: header.</string>
     <string name="validation_msg_header_name">header.name is missing or empty.</string>
     <string name="validation_msg_header_description">header.description is missing or empty.</string>
-    <string name="validation_msg_pack_scope">header.pack_scope must be &apos;global&apos;, &apos;world&apos;, or &apos;any&apos;.</string>
+    <string name="validation_msg_pack_scope">header.pack_scope must be one of global, world, or any.</string>
     <string name="validation_msg_multiple_world_templates">A manifest may contain at most one world_template module.</string>
     <string name="validation_msg_header_version">header.version must contain three non-negative integers.</string>
     <string name="validation_msg_modules_empty">modules must be a non-empty array.</string>
