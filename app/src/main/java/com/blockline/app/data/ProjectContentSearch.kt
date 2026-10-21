@@ -23,7 +23,7 @@ object ProjectContentSearch {
                         if (line.contains(query, ignoreCase = true)) {
                             ContentSearchResult(path, index + 1, line.trim().take(200))
                         } else null
-                    }.toList().asSequence()
+                    }.take(500).toList().asSequence()
                 }
             }
             .take(500)
