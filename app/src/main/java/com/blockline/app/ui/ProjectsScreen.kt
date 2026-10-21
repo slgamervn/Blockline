@@ -142,5 +142,3 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
             dismissButton = { TextButton(onClick = { actionProject = null }) { Text(stringResource(R.string.cancel)) } })
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
