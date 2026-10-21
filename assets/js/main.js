@@ -383,7 +383,7 @@
     navigationSections.forEach((section) => navigationObserver.observe(section));
   }
 
-  const revealTargets = [...document.querySelectorAll('.section-intro, .feature-row, .demo-layout, .comparison-wrap, .roadmap-item, .setup-step, .faq-list, .download-panel')];
+  const revealTargets = [...document.querySelectorAll('.reveal, .section-intro, .feature-row, .demo-layout, .comparison-wrap, .roadmap-item, .setup-step, .faq-list, .download-panel')];
   if (!reducedMotion.matches && 'IntersectionObserver' in window) {
     const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
