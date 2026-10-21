@@ -826,7 +826,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val requestId = ++openFileRequestId
         val previousPath = activeFile
         val previousReadOnly = readOnly
-        if (previousPath != null && !previousReadOnly) openTabs[previousPath] = previousContent
         val buffered = openTabs[path]
         isOpeningFile = true
 
