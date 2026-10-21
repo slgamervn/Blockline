@@ -36,9 +36,12 @@ import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -157,6 +160,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var batchReplaceFilter = SearchFileFilter.ALL
     private var fileIndexRequestId = 0
     private var autoSaveJob: Job? = null
+    private val fileWriteMutex = Mutex()
+    private var projectSelectionRequestId = 0
 
     init {
         refresh()
@@ -343,12 +348,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         if (isFileOperationRunning || isApplyingBatchReplace) return
-        if (!saveCurrent(showMessage = false)) return
         clearBatchReplacePreview()
         val requestId = ++batchReplaceRequestId
         val projectId = project.id
         isPreviewingBatchReplace = true
         viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) {
+                isPreviewingBatchReplace = false
+                return@launch
+            }
+            if (requestId != batchReplaceRequestId || current?.id != projectId) {
+                isPreviewingBatchReplace = false
+                return@launch
+            }
             val result = runCatching {
                 withContext(Dispatchers.IO) {
                     val eligible = repo.allFiles(projectId).asSequence().filter { file ->
@@ -409,7 +421,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         if (isFileOperationRunning || isApplyingBatchReplace) return
-        if (!saveCurrent(showMessage = false)) return
 
         val projectId = project.id
         val query = batchReplaceQuery
@@ -420,6 +431,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         autoSaveJob?.cancel()
 
         viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) {
+                isApplyingBatchReplace = false
+                isFileOperationRunning = false
+                return@launch
+            }
             val outcome = withContext(Dispatchers.IO) {
                 try {
                     repo.backup(projectId)
@@ -523,12 +539,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun applyBatchRename(candidates: List<BatchRenameCandidate>) {
         val project = current ?: return
         if (candidates.isEmpty() || isFileOperationRunning) return
-        if (!saveCurrent(showMessage = false)) return
 
         val projectId = project.id
         isFileOperationRunning = true
         autoSaveJob?.cancel()
         viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) {
+                isFileOperationRunning = false
+                return@launch
+            }
             val outcome = withContext(Dispatchers.IO) {
                 try {
                     repo.backup(projectId)
@@ -685,6 +704,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun searchProjectContent(projectId: String, query: String, filter: SearchFileFilter): List<ContentSearchResult> =
         ProjectContentSearch.search(repo, projectId, query, filter)
     fun selectProject(p: Project) {
+        val requestId = ++projectSelectionRequestId
         openFileRequestId++
         isOpeningFile = false
         clearResourcePreview()
@@ -694,31 +714,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             refreshProjectEntries(p.id)
             return
         }
-        if (!saveCurrent(showMessage = false)) return
-        current = p
-        refreshOperationLog()
-        clearBatchReplacePreview()
-        dependencyRequestId++
-        dependencies = emptyList()
-        isLoadingDependencies = false
-        dependencyAnalysisCompleted = false
-        clearContentSearch()
-        validationRequestId++
-        isValidating = false
-        validationIssues = emptyList()
-        validationCompleted = false
-        repo.touch(p.id)
-        refresh()
-        refreshProjectEntries(p.id)
-        activeFile = null
-        content = ""
-        openTabs.clear()
-        undo.clear()
-        redo.clear()
-        lastEditAt.clear()
-        validationIssues = emptyList()
-        validationCompleted = false
-        contentSearchResults = emptyList()
+        viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) return@launch
+            if (requestId != projectSelectionRequestId) return@launch
+            current = p
+            refreshOperationLog()
+            clearBatchReplacePreview()
+            dependencyRequestId++
+            dependencies = emptyList()
+            isLoadingDependencies = false
+            dependencyAnalysisCompleted = false
+            clearContentSearch()
+            validationRequestId++
+            isValidating = false
+            validationIssues = emptyList()
+            validationCompleted = false
+            repo.touch(p.id)
+            refresh()
+            refreshProjectEntries(p.id)
+            activeFile = null
+            content = ""
+            openTabs.clear()
+            undo.clear()
+            redo.clear()
+            lastEditAt.clear()
+            validationIssues = emptyList()
+            validationCompleted = false
+            contentSearchResults = emptyList()
+        }
     }
     fun createSample() = runCatching { repo.createSample() }.onSuccess {
         refresh(); selectProject(it); message = text(R.string.sample_created)
@@ -749,9 +772,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (isFileOperationRunning) return
         openFileRequestId++
         isOpeningFile = false
-        if (current?.id == p.id && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
+            if (current?.id == p.id && !saveCurrent(showMessage = false)) {
+                isFileOperationRunning = false
+                return@launch
+            }
             val result = runCatching { withContext(Dispatchers.IO) { repo.delete(p.id) } }
             isFileOperationRunning = false
             result.onSuccess {
@@ -806,11 +832,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         isOpeningFile = true
 
         viewModelScope.launch {
+            if (requestId != openFileRequestId || current?.id != project.id) return@launch
+            if (previousPath != null && previousPath != path && !previousReadOnly) {
+                if (!saveCurrent(showMessage = false)) {
+                    if (requestId == openFileRequestId && current?.id == project.id) {
+                        isOpeningFile = false
+                        pendingEditorLine = null
+                        activeFile = previousPath
+                        content = previousContent
+                        readOnly = previousReadOnly
+                    }
+                    return@launch
+                }
+            }
+            if (requestId != openFileRequestId || current?.id != project.id) return@launch
             val result = runCatching {
                 withContext(Dispatchers.IO) {
-                    if (previousPath != null && previousPath != path && !previousReadOnly) {
-                        writeSnapshot(project.id, previousPath, previousContent)
-                    }
                     val file = repo.resolve(project.id, path)
                     require(file.isFile) { text(R.string.file_not_found) }
                     val size = file.length()
@@ -847,37 +884,44 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
 
     private fun writeAtomically(target: File, value: String, suffix: String) {
-        val parent = target.parentFile ?: return
-        if (!parent.exists()) parent.mkdirs()
+        val parent = target.parentFile ?: error("Target file has no parent directory.")
+        check(parent.isDirectory || parent.mkdirs()) { "Could not create the target directory." }
         val temp = File(parent, target.name + suffix)
-        temp.writeText(value, Charsets.UTF_8)
         try {
-            java.nio.file.Files.move(
-                temp.toPath(),
-                target.toPath(),
-                java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING
-            )
-        } catch (_: Exception) {
-            java.nio.file.Files.move(
-                temp.toPath(),
-                target.toPath(),
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING
-            )
+            temp.writeText(value, Charsets.UTF_8)
+            try {
+                java.nio.file.Files.move(
+                    temp.toPath(),
+                    target.toPath(),
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                )
+            } catch (_: java.nio.file.AtomicMoveNotSupportedException) {
+                java.nio.file.Files.move(
+                    temp.toPath(),
+                    target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                )
+            }
         } finally {
             temp.delete()
         }
     }
 
-    private fun writeSnapshot(projectId: String, path: String, value: String) {
+    private fun writeSnapshot(projectId: String, path: String, value: String, suffix: String = ".saving") {
         val projectRoot = repo.projectDir(projectId).canonicalFile
         val target = repo.resolve(projectId, path).canonicalFile
         require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
         check(target.isFile) { text(R.string.file_not_found) }
-        writeAtomically(target, value, ".saving")
+        writeAtomically(target, value, suffix)
     }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
+    }
+
+    private fun pushHistory(stack: MutableList<String>, value: String) {
+        stack.add(value)
+        if (stack.size > 80) stack.removeAt(0)
     }
 
     fun updateContent(value: String) {
@@ -888,8 +932,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val history = undo.getOrPut(path) { mutableListOf() }
             val lastEdit = lastEditAt[path] ?: 0L
             if (lastEdit == 0L || now - lastEdit > 700L) {
-                history.add(content)
-                if (history.size > 80) history.removeAt(0)
+                pushHistory(history, content)
             }
             redo.getOrPut(path) { mutableListOf() }.clear()
             content = value
@@ -903,42 +946,76 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         autoSaveJob?.cancel()
         autoSaveJob = viewModelScope.launch {
             delay(850)
-            val paths = runCatching {
-                repo.projectDir(projectId).canonicalFile to repo.resolve(projectId, path).canonicalFile
-            }.getOrNull() ?: return@launch
-            val (projectRoot, target) = paths
             if (current?.id != projectId || activeFile != path || readOnly || openTabs[path] != value) return@launch
-            val result = runCatching {
+            val result = try {
                 withContext(Dispatchers.IO) {
-                    require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
-                    check(target.isFile) { "File no longer exists." }
-                    writeAtomically(target, value, ".autosaving")
+                    fileWriteMutex.withLock {
+                        val projectRoot = repo.projectDir(projectId).canonicalFile
+                        val target = repo.resolve(projectId, path).canonicalFile
+                        require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
+                        check(target.isFile) { "File no longer exists." }
+                        writeAtomically(target, value, ".autosaving")
+                    }
                 }
+                Result.success(Unit)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Result.failure(error)
             }
             if (result.isFailure && current?.id == projectId && activeFile == path) {
                 message = result.exceptionOrNull()?.message ?: text(R.string.save_failed)
             }
         }
     }
-    fun saveCurrent(showMessage: Boolean = true): Boolean {
-        val p = current ?: return true
+    suspend fun saveCurrent(showMessage: Boolean = true): Boolean {
+        val project = current ?: return true
         val path = activeFile ?: return true
         if (readOnly) {
             if (showMessage) message = text(R.string.save_readonly)
             return true
         }
-        autoSaveJob?.cancel()
-        return runCatching {
-            val f = repo.resolve(p.id, path)
-            writeAtomically(f, content, ".saving")
-            if (showMessage) message = text(R.string.saved_path, path)
-        }.onFailure { message = it.message ?: text(R.string.save_failed) }.isSuccess
+        autoSaveJob?.cancelAndJoin()
+        var snapshot = content
+        while (true) {
+            try {
+                withContext(Dispatchers.IO) {
+                    fileWriteMutex.withLock {
+                        writeSnapshot(project.id, path, snapshot)
+                    }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                message = error.message ?: text(R.string.save_failed)
+                return false
+            }
+            val latest = when {
+                current?.id != project.id -> null
+                activeFile == path -> content
+                else -> openTabs[path]
+            }
+            if (latest == null || latest == snapshot) {
+                if (showMessage && current?.id == project.id && activeFile == path) {
+                    message = text(R.string.saved_path, path)
+                }
+                return true
+            }
+            snapshot = latest
+            autoSaveJob?.cancelAndJoin()
+        }
+    }
+
+    private suspend fun saveCurrentIfPathAffected(projectId: String, path: String): Boolean {
+        val affected = current?.id == projectId &&
+            (activeFile == path || activeFile?.startsWith("$path/") == true)
+        return !affected || saveCurrent(showMessage = false)
     }
     fun undo() {
         val path = activeFile ?: return
         val stack = undo[path] ?: return
         if (stack.isNotEmpty()) {
-            redo.getOrPut(path) { mutableListOf() }.add(content)
+            pushHistory(redo.getOrPut(path) { mutableListOf() }, content)
             content = stack.removeAt(stack.lastIndex)
             openTabs[path] = content
             lastEditAt[path] = 0L
@@ -949,7 +1026,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val path = activeFile ?: return
         val stack = redo[path] ?: return
         if (stack.isNotEmpty()) {
-            undo.getOrPut(path) { mutableListOf() }.add(content)
+            pushHistory(undo.getOrPut(path) { mutableListOf() }, content)
             val next = stack.removeAt(stack.lastIndex)
             content = next
             openTabs[path] = content
@@ -958,18 +1035,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun closeTab(path: String) {
-        val wasActive = activeFile == path
-        if (wasActive && !saveCurrent(showMessage = false)) return
-        openTabs.remove(path)
-        undo.remove(path)
-        redo.remove(path)
-        lastEditAt.remove(path)
-        if (wasActive) {
-            activeFile = null
-            content = ""
-            readOnly = false
-            val nextTab = openTabs.keys.lastOrNull()
-            if (nextTab != null) openFile(nextTab)
+        viewModelScope.launch {
+            if (activeFile == path && !saveCurrent(showMessage = false)) return@launch
+            openTabs.remove(path)
+            undo.remove(path)
+            redo.remove(path)
+            lastEditAt.remove(path)
+            if (activeFile == path) {
+                activeFile = null
+                content = ""
+                readOnly = false
+                val nextTab = openTabs.keys.lastOrNull()
+                if (nextTab != null) openFile(nextTab)
+            }
         }
     }
     fun consumeGeneratedFileToOpen() {
@@ -1041,9 +1119,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun renameFile(path: String, name: String) {
         val p = current ?: return
         if (isFileOperationRunning) return
-        if ((activeFile == path || activeFile?.startsWith("$path/") == true) && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
+            if (!saveCurrentIfPathAffected(p.id, path)) {
+                isFileOperationRunning = false
+                return@launch
+            }
             val result = runCatching {
                 withContext(Dispatchers.IO) {
                     val file = repo.resolve(p.id, path)
@@ -1066,9 +1147,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteFile(path: String) {
         val p = current ?: return
         if (isFileOperationRunning) return
-        if ((activeFile == path || activeFile?.startsWith("$path/") == true) && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
+            if (!saveCurrentIfPathAffected(p.id, path)) {
+                isFileOperationRunning = false
+                return@launch
+            }
             val result = runCatching {
                 withContext(Dispatchers.IO) {
                     val file = repo.resolve(p.id, path)
@@ -1095,9 +1179,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun moveFile(path: String, destination: String) {
         val p = current ?: return
         if (isFileOperationRunning) return
-        if ((activeFile == path || activeFile?.startsWith("$path/") == true) && !saveCurrent(showMessage = false)) return
         isFileOperationRunning = true
         viewModelScope.launch {
+            if (!saveCurrentIfPathAffected(p.id, path)) {
+                isFileOperationRunning = false
+                return@launch
+            }
             val result = runCatching {
                 withContext(Dispatchers.IO) {
                     val source = repo.resolve(p.id, path)
@@ -1135,10 +1222,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun exportProject(uri: android.net.Uri, mode: ExportMode) {
         val project = current ?: return
         if (isExporting) return
-        if (!saveCurrent(showMessage = false)) return
         val projectId = project.id
         isExporting = true
         viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) {
+                isExporting = false
+                return@launch
+            }
             val result = try {
                 withContext(Dispatchers.IO) {
                     repo.backup(projectId)
@@ -1163,21 +1253,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun backup() {
-        val p = current ?: return
-        if (!saveCurrent(showMessage = false)) return
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = runCatching { repo.backup(p.id) }
-            withContext(Dispatchers.Main) {
-                message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) })
-                if (result.isSuccess) recordOperation(text(R.string.operation_action_backup), "")
-            }
+        val project = current ?: return
+        viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) return@launch
+            if (current?.id != project.id) return@launch
+            val result = runCatching { withContext(Dispatchers.IO) { repo.backup(project.id) } }
+            message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) })
+            if (result.isSuccess) recordOperation(text(R.string.operation_action_backup), "")
         }
     }
     fun restore() {
         val p = current ?: return
-        if (!saveCurrent(showMessage = false)) return
-        val activePathBeforeRestore = activeFile
         viewModelScope.launch {
+            if (!saveCurrent(showMessage = false)) return@launch
+            if (current?.id != p.id) return@launch
+            val activePathBeforeRestore = activeFile
             val result = runCatching { withContext(Dispatchers.IO) { repo.restoreLatest(p.id) } }
             val restoredFileStillExists = if (result.getOrDefault(false) && activePathBeforeRestore != null) {
                 withContext(Dispatchers.IO) {
