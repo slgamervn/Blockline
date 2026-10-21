@@ -1,0 +1,236 @@
+package com.blockline.app.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.blockline.app.AppViewModel
+import com.blockline.app.BuildConfig
+import com.blockline.app.R
+import com.blockline.app.data.ExportMode
+import com.blockline.app.data.SearchFileFilter
+import com.blockline.app.data.GeneratedPackType
+import com.blockline.app.data.PackManifestGenerator
+import com.blockline.app.data.DependencyKind
+import com.blockline.app.data.BatchRenameCandidate
+import com.blockline.app.data.BatchRenameEngine
+import com.blockline.app.data.BatchRenamePreview
+import com.blockline.app.data.LineDiffEngine
+import com.blockline.app.data.DiffLineKind
+import com.blockline.app.data.ScriptApiReferenceRepository
+import com.blockline.app.data.ScriptApiLoadResult
+import com.blockline.app.data.ScriptApiSource
+import com.blockline.app.data.TEXT_EXT
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.blockline.app.ui.theme.ThemeMode
+import java.io.OutputStream
+
+@Composable
+fun MoreScreen(vm: AppViewModel) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    LaunchedEffect(vm.current?.id) { vm.refreshOperationLog() }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(stringResource(R.string.nav_more), style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.more_subtitle), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.updates_title), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.updates_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.auto_check_updates), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.auto_check_updates_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = vm.autoCheckUpdates,
+                        onCheckedChange = { vm.updateAutoCheckUpdates(it) }
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Button(onClick = { vm.checkForUpdates(showUpToDateMessage = true) }, enabled = !vm.isCheckingUpdates) {
+                        if (vm.isCheckingUpdates) androidx.compose.material3.CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                        else Text(stringResource(R.string.check_updates))
+                    }
+                    TextButton(onClick = { runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(com.blockline.app.data.AppUpdateRepository.RELEASES_URL))) } }) {
+                        Text(stringResource(R.string.view_releases))
+                    }
+                }
+                vm.updateCheckResult?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
+                Text(stringResource(R.string.current_version_value, BuildConfig.VERSION_NAME), style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                vm.lastUpdateCheck?.let {
+                    Text(stringResource(R.string.last_update_check, it.replace('T', ' ').substringBefore('.').removeSuffix("Z")), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                vm.updateInfo?.let { info ->
+                    androidx.compose.material3.Surface(
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(stringResource(R.string.update_available_status, info.version), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                            if (info.releaseNotes.isNotBlank()) Text(info.releaseNotes.take(1_000), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                            Button(onClick = { vm.openUpdateDownload(context) }) { Text(stringResource(R.string.update_now)) }
+                        }
+                    }
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    androidx.compose.material3.Surface(color = com.blockline.app.ui.theme.Emerald.copy(alpha = .16f), shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)) {
+                        Text("◐", Modifier.padding(12.dp), color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    }
+                    Column {
+                        Text(stringResource(R.string.appearance), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.appearance_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text(stringResource(R.string.dark)) })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text(stringResource(R.string.light)) })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.SYSTEM, onClick = { vm.themeMode = ThemeMode.SYSTEM }, label = { Text(stringResource(R.string.system)) })
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)) {
+                        Text("Aa", Modifier.padding(10.dp), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                    }
+                    Column {
+                        Text(stringResource(R.string.editor_typography), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.editor_font_size, vm.fontSize), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.OutlinedButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }, enabled = vm.fontSize > 10) { Text(stringResource(R.string.smaller_text)) }
+                    Button(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }, enabled = vm.fontSize < 24) { Text(stringResource(R.string.larger_text)) }
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.operation_log_title), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.operation_log_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = { vm.clearOperationLog() },
+                        enabled = vm.current != null && vm.operationLog.isNotEmpty()
+                    ) { Text(stringResource(R.string.operation_log_clear)) }
+                    TextButton(
+                        onClick = {
+                            val copiedText = vm.operationLog.takeLast(100).joinToString("\n") { entry ->
+                                val time = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(entry.timestamp))
+                                "$time · ${entry.action}${if (entry.detail.isBlank()) "" else " — ${entry.detail}"}"
+                            }
+                            clipboard.setText(AnnotatedString(copiedText))
+                            vm.message = context.getString(R.string.operation_log_copied)
+                        },
+                        enabled = vm.operationLog.isNotEmpty()
+                    ) { Text(stringResource(R.string.operation_log_copy)) }
+                }
+                if (vm.current == null) {
+                    Text(stringResource(R.string.operation_log_select_project))
+                } else if (vm.operationLog.isEmpty()) {
+                    Text(stringResource(R.string.operation_log_empty), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    vm.operationLog.takeLast(20).asReversed().forEach { entry ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(entry.action, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+                            if (entry.detail.isNotBlank()) Text(entry.detail, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                            Text(
+                                android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(entry.timestamp)),
+                                style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        androidx.compose.material3.HorizontalDivider()
+                    }
+                    if (vm.operationLog.size > 20) {
+                        Text(stringResource(R.string.operation_log_more, vm.operationLog.size - 20), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.about_blockline), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.about_blurb), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(stringResource(R.string.version), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                    androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                    Text(stringResource(R.string.version_phase, BuildConfig.VERSION_NAME))
+                }
+                androidx.compose.material3.HorizontalDivider()
+                Text(stringResource(R.string.privacy), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.privacy_detail), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Text(stringResource(R.string.early_notice), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}

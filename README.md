@@ -101,7 +101,7 @@ When reporting a bug, include the Blockline version, Android version/device, rep
 
 ## License
 
-A license file is not currently included. Do not assume that public visibility grants permission to redistribute or reuse the source until the project adds a license.
+Blockline source code is licensed under the [MIT License](LICENSE). Third-party dependencies and assets may be subject to their own licenses.
 
 ---
 

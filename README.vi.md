@@ -101,7 +101,7 @@ Khi báo lỗi, hãy cung cấp phiên bản Blockline, phiên bản Android/thi
 
 ## License
 
-Repository hiện chưa có tệp license. Không nên mặc định rằng mã nguồn công khai đồng nghĩa với quyền tái sử dụng hoặc phân phối lại cho đến khi dự án bổ sung license.
+Mã nguồn Blockline được cấp phép theo [MIT License](LICENSE). Các dependency và tài nguyên của bên thứ ba có thể chịu giấy phép riêng.
 
 ---
 
