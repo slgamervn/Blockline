@@ -213,10 +213,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         updateInfo = null
     }
 
-    fun openUpdateDownload(context: android.content.Context) {
+    fun openUpdateReleasePage(context: android.content.Context) {
         val info = updateInfo ?: return
         runCatching {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(info.apkUrl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AppUpdateRepository.LATEST_RELEASE_PAGE_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }.onSuccess {
             settingsPreferences.edit().putString("dismissed_update_version", info.version).apply()
             updateInfo = null
