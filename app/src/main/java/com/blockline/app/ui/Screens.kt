@@ -86,64 +86,6 @@ import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
-    var actionProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
-    var renameProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
-    var renameValue by remember { mutableStateOf("") }
-    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let(vm::importPack) }
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }, actions = {
-        IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, stringResource(R.string.import_pack_cd)) }
-    }) }, floatingActionButton = {
-        FloatingActionButton(onClick = { vm.createSample(); onOpen() }) { Icon(Icons.Default.Add, stringResource(R.string.create_sample_cd)) }
-    }) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().padding(horizontal = 16.dp)) {
-            Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column { Text(stringResource(R.string.nav_projects), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall); Text(stringResource(R.string.projects_subtitle)) }
-                Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text(stringResource(R.string.import_pack)) }
-            }
-            if (vm.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_projects), stringResource(R.string.no_projects_hint), Modifier.weight(1f))
-            else LazyColumn(Modifier.weight(1f)) {
-                items(vm.projects, key = { it.id }) { p ->
-                    var menu by remember(p.id) { mutableStateOf(false) }
-                    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                        ListItem(
-                            headlineContent = { Text(p.name) },
-                            supportingContent = { Text(if (p.id == vm.current?.id) stringResource(R.string.current_open) else stringResource(R.string.last_opened_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened)))) },
-                            leadingContent = { Icon(Icons.Default.Archive, null) },
-                            trailingContent = {
-                                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
-                                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
-                                }
-                            },
-                            modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
-                        )
-                    }
-                }
-            }
-        }
-    }
-    renameProject?.let { p ->
-        AlertDialog(onDismissRequest = { renameProject = null }, title = { Text(stringResource(R.string.rename_project_title)) },
-            text = { OutlinedTextField(value = renameValue, onValueChange = { renameValue = it }, label = { Text(stringResource(R.string.project_name)) }) },
-            confirmButton = { TextButton(onClick = { vm.renameProject(p, renameValue); renameProject = null }) { Text(stringResource(R.string.save)) } },
-            dismissButton = { TextButton(onClick = { renameProject = null }) { Text(stringResource(R.string.cancel)) } })
-    }
-    actionProject?.let { p ->
-        AlertDialog(onDismissRequest = { actionProject = null }, title = { Text(stringResource(R.string.delete_project_title)) },
-            text = { Text(stringResource(R.string.delete_project_confirm, p.name)) },
-            confirmButton = { TextButton(onClick = { vm.deleteProject(p); actionProject = null }) { Text(stringResource(R.string.delete)) } },
-            dismissButton = { TextButton(onClick = { actionProject = null }) { Text(stringResource(R.string.cancel)) } })
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit) {
     val context = LocalContext.current
