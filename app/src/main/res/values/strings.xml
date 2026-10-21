@@ -444,13 +444,13 @@
     <string name="update_dialog_versions">Installed: %1$s\nLatest: %2$s</string>
     <string name="update_no_notes">No release notes were provided.</string>
     <string name="update_download_size">Download size: %1$s MB</string>
-    <string name="update_now">Download update</string>
+    <string name="update_now">View latest download</string>
     <string name="update_later">Later</string>
     <string name="update_available_status">Update available: v%1$s</string>
     <string name="update_up_to_date">Blockline is up to date.</string>
     <string name="update_check_failed">Could not check for updates.</string>
     <string name="update_check_failed_detail">Update check failed: %1$s</string>
-    <string name="update_open_failed">Could not open the official APK download link.</string>
+    <string name="update_open_failed">Could not open the official latest release page.</string>
     <string name="loading">Loading…</string>
 
     <string name="creator_resources_title">Creator resources</string>
