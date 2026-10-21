@@ -108,7 +108,7 @@ Blockline áp dụng các hướng dẫn Compose phù hợp với ứng dụng: 
 - [VS Code Web](https://vscode.dev/) — trình biên tập mã trên trình duyệt; khả năng truy cập tệp tùy workspace.
 - [Blockbench](https://blockbench.net/) — tạo mô hình, texture và animation.
 - [Bedrock Wiki](https://wiki.bedrock.dev/) — tài liệu kỹ thuật Bedrock do cộng đồng duy trì.
-- [HgVN Bedrock Command Wiki](https://hgvn23.github.io/) — tham khảo lệnh bằng tiếng Việt; hãy đối chiếu ví dụ với phiên bản Minecraft đang dùng.
+- [Minecraft Wiki](https://minecraft.wiki/) — bách khoa toàn thư Minecraft do cộng đồng duy trì; hãy đối chiếu thông tin với phiên bản Minecraft Bedrock đang dùng.
 
 ### Template và tiện ích
 - [Bedrock Tweaks](https://bedrocktweaks.net/) — tham khảo resource pack và tweak; cần kiểm tra giấy phép trước khi phân phối hoặc đóng gói lại nội dung.
