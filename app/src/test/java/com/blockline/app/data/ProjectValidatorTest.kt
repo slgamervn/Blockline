@@ -3,6 +3,7 @@ package com.blockline.app.data
 import java.io.File
 import java.nio.file.Files
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -141,7 +142,7 @@ class ProjectValidatorTest {
         try {
             val pack = File(root, "BP").apply { mkdirs() }
             File(pack, "manifest.json").writeText(
-                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"min_engine_version":[1,21]}"""
+                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,21]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}]}"""
             )
 
             val issues = ProjectValidator.validate(root)
@@ -159,12 +160,56 @@ class ProjectValidatorTest {
         try {
             val pack = File(root, "BP").apply { mkdirs() }
             File(pack, "manifest.json").writeText(
-                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"min_engine_version":[1,21,0]}"""
+                """{"format_version":2,"header":{"name":"Test","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,21,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}]}"""
             )
 
             val issues = ProjectValidator.validate(root)
 
             assertTrue(issues.none { it.severity == IssueSeverity.ERROR && it.message.contains("min_engine_version") })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun acceptsFormatVersionOneSkinPackWithoutVersionTwoHeaderFields() {
+        val root = Files.createTempDirectory("blockline-skin-manifest-").toFile()
+        try {
+            val pack = File(root, "SkinPack").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":1,"header":{"name":"Skin Pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0]},"modules":[{"type":"skin_pack","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}]}"""
+            )
+            File(pack, "pack_icon.png").writeBytes(byteArrayOf(0))
+
+            val issues = ProjectValidator.validate(root)
+
+            assertFalse(issues.any { it.severity == IssueSeverity.ERROR })
+            assertTrue(issues.none { it.message.contains("format_version is missing or is not a supported") })
+            assertTrue(issues.none { it.message.contains("header.description is missing") })
+            assertTrue(issues.none { it.message.contains("header.min_engine_version is not declared") })
+            assertTrue(issues.none { it.message.contains("not a commonly supported Bedrock module type") })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun acceptsFormatVersionThreeSemanticVersionStrings() {
+        val root = Files.createTempDirectory("blockline-format-v3-").toFile()
+        try {
+            val pack = File(root, "RP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":3,"header":{"name":"Resource Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":"1.2.3-beta.1+build.7","min_engine_version":"1.21.0"},"modules":[{"type":"resources","uuid":"12345678-1234-1234-1234-123456789abd","version":"1.2.3"}]}"""
+            )
+            File(pack, "pack_icon.png").writeBytes(byteArrayOf(0))
+
+            val issues = ProjectValidator.validate(root)
+
+            assertFalse("Unexpected errors: $issues", issues.any { it.severity == IssueSeverity.ERROR })
+            assertTrue(issues.none { it.message.contains("format_version is missing or is not a supported") })
+            assertTrue(issues.none { it.message.contains("header.version must") })
+            assertTrue(issues.none { it.message.contains("modules[0].version must") })
+            assertTrue(issues.none { it.message.contains("header.min_engine_version must") })
         } finally {
             root.deleteRecursively()
         }
