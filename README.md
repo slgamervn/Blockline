@@ -4,7 +4,7 @@
 
 ### A mobile-first workspace for Minecraft Bedrock creators.
 
-**Import · Explore · Edit · Back up · Export**
+**Import · Explore · Edit · Validate · Generate · Compare · Export**
 
 [![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
 [![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
@@ -19,124 +19,89 @@
 
 ## Overview
 
-Blockline is an Android-native studio for working with **Minecraft Bedrock add-on files** directly on your phone. It is designed around a simple principle: your packs stay on your device, while the tools you need to inspect and edit them stay close at hand.
+Blockline is an Android-native workspace for inspecting and editing **Minecraft Bedrock add-on packs** on a phone. It uses Kotlin, Jetpack Compose, and Material 3, with local project storage and Android's Storage Access Framework for importing and exporting files.
 
-The project is in active development. The current build focuses on a reliable local project workflow and a practical editor foundation. Phase 2 is being implemented incrementally, including strict JSON syntax checks, manifest and UUID validation, script-entry checks, dependency review, and project text search. Generators and Script API reference browsing remain planned for later phases.
+The repository has working implementations across the original four development phases. This is still an actively developed project: passing CI means the automated checks and APK build passed for that commit; it does not replace testing on real Android devices or validating every possible Bedrock schema.
 
-## Highlights
+## Features
 
-- **Local-first workflow** — imported pack contents are copied to app-private storage; Phase 1 does not require an account or network access.
-- **Pack import** — open `.mcpack` and `.mcaddon` archives through Android's system file picker.
-- **Project management** — create a sample project, open, rename, duplicate, and delete local projects.
-- **Pack overview** — inspect manifest metadata and jump to a manifest for editing.
-- **File explorer** — browse folders, create, rename, move, and delete files; mark favorites, browse up to 30 recent files, and open a read-only resource preview for JSON, scripts, functions, and language files.
-- **Editor foundation** — multi-tab editing, basic syntax coloring, undo/redo, JSON formatting that preserves line and block comments, find, and autosave.
-- **Safer archive handling** — archive extraction checks paths against the extraction root to guard against ZIP-slip.
-- **Backup and restore** — create a local project backup, restore the latest backup, and automatically back up before export (retaining the five newest backups).
-- **Export choices** — export a behavior pack, resource pack, or combined add-on when the project contains the corresponding packs.
-- **Mobile-friendly themes** — dark, light, and system theme options with adjustable editor text size.
-- **Bundled sample pack** — a small BP/RP template under `app/src/main/assets/sample-pack/`; the app generates fresh UUIDs for new sample projects.
+### Project workflow
+- Import `.mcpack`, `.mcaddon`, and ZIP-compatible pack archives through Android's document picker.
+- Keep project copies in app-private storage; create sample projects, switch projects, rename, duplicate, and delete them.
+- Browse pack manifests and metadata, and create local backups or restore the latest backup.
+- Export a Behavior Pack, Resource Pack, or combined add-on, with a backup before export.
+- ZIP extraction validates destination paths to mitigate ZIP-slip and handles archive failures without trusting archive paths.
 
-## Project status
+### Explorer and editor
+- Browse and manage project files and folders; create, rename, move, delete, favorite, and revisit recent files.
+- Preview recognized Bedrock resources and source files without pretending to render them in-game.
+- Edit JSON, JavaScript, and `.mcfunction` files with multiple tabs, undo/redo, autosave, search, and comment-preserving JSON formatting.
+- Large-file safeguards: files above 1 MiB are opened read-only; files above the app's configured hard limit are not loaded into the editor.
+- The editor uses lightweight syntax coloring, not a complete language server or full IDE parser.
 
-Blockline is being built in phases. The table below describes the current scope and roadmap; it does not mean every planned feature is already available.
+### Search, validation, and pack health
+- Search project paths and text contents with file-type filters; inspect matching lines and open results in the editor.
+- Validate JSON syntax, manifest fields, UUID shape and duplication, script entry paths, dependency metadata, and selected resource references.
+- Review localized issue reports and a heuristic pack-health score. This score is a triage aid, not a guarantee that Minecraft will load a pack.
+- Dependency analysis distinguishes references found inside the current project from external dependencies that may be provided by Minecraft or another installed pack.
 
-| Phase | Scope | Status |
-| --- | --- | --- |
-| **1 — Foundation** | Local projects, import/export, explorer, editor, backup, core navigation | In progress |
-| **2 — Search & validation** | JSON and manifest checks, UUID uniqueness, script-entry validation, dependency review, and text-content search | In progress |
-| **3 — Generators & snippets** | Pack resource generators, reusable snippets, templates | Planned |
-| **4 — Advanced workflow** | Diff, batch replace, dependency viewer, Script API reference | Planned |
+### Generators and snippets
+- Generate a Behavior Pack or Resource Pack manifest with fresh UUIDs; existing manifest files are not overwritten by the generator.
+- Browse and copy built-in JavaScript Script API and `.mcfunction` snippets.
+- Use the bundled sample pack as a starting point.
 
-### Known limitations
+### Advanced workflow and Script API reference
+- Compare text using a line-diff engine.
+- Preview batch text replacement before applying it, with confirmation and backup-aware project operations.
+- Inspect manifest dependencies, their source and target, version mismatches, and unresolved external UUIDs.
+- Browse Script API TypeScript declarations for supported npm packages. The reference repository can fetch package metadata from npm and declarations from jsDelivr, cache versions and source for offline reuse, and fall back to bundled snapshots. Parsed symbols and members retain raw declarations for constructs the lightweight parser does not recognize.
 
-- Project metadata currently uses a private JSON index and preferences; Room, Hilt, and the full Clean Architecture separation are not yet implemented.
-- Syntax highlighting is a lightweight first pass, not a full language parser or viewport-only renderer.
-- Content search scans supported text files up to 1 MB each and shows matching line numbers. Validation findings can open the affected file; precise cursor placement and identifier/UUID indexing remain future work.
-- Resource preview currently summarizes recognized JSON metadata and shows source text for entities, items, blocks, recipes, loot tables, manifests, functions, scripts, and language files. It is a read-only source/metadata preview, not an in-game renderer; exhaustive reference resolution remains incomplete. JSON diagnostics preserve comment-aware source positions, but the validator is not a complete Mojang schema validator.
-- Validation is an initial static analysis pass, not a complete Mojang schema validator. Automated tests and device-level verification are still needed before treating this as a production release.
+## Navigation
 
-## Download and install
+The app uses five main destinations: **Projects, Explorer, Search, Tools, and More**. Theme and editor-size settings are available in the app. Most pack editing tasks work locally; Script API online refresh requires an internet connection, while cached and bundled reference data can be used offline.
 
-1. Open the [latest release](https://github.com/slgamervn/Blockline/releases/latest).
-2. Download the versioned APK, for example **Blockline-v0.1.123.apk**.
-3. Open the downloaded APK on your Android device and follow the system installation prompts. Android may ask you to allow installation from the app used to download the file.
-4. If you prefer not to install an APK, build the app from source using Android Studio.
+## Build and test
 
-**Release note:** GitHub Actions names each APK with its build version (for example `Blockline-v0.1.123.apk`) and writes release notes for that build from the actual commit history. A signed release APK is produced when repository signing secrets are configured; otherwise the workflow publishes a debug APK. Debug builds may not install as an update over an APK signed with a different key. This is an early-access build, not a Play Store release.
-
-## Build from source
-
-### Requirements
-
+Requirements:
 - Android Studio with Android SDK Platform 35
 - JDK 17
-- Gradle 8.14.6 (the GitHub Actions workflow provisions this version)
-- Android 8.0 (API 26) or newer to run on a device
-
-### Build
-
-Clone the repository:
+- Gradle 8.14.6
+- Android 8.0 (API 26) or newer to run the app
 
 ```bash
 git clone https://github.com/slgamervn/Blockline.git
 cd Blockline
-```
-
-Open the project in Android Studio, sync Gradle, and run the `app` configuration.
-
-To build a debug APK from a terminal with Gradle 8.14.6 installed:
-
-```bash
+gradle testDebugUnitTest
 gradle assembleDebug
 ```
 
-The APK is written to:
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions runs unit tests before building and publishing a versioned APK. Open **Actions → Build APK** to inspect logs and download build artifacts. Release assets are named `Blockline-v<version>.apk`; a signed release APK requires repository signing secrets, otherwise the workflow publishes a debug-signed APK. A debug APK signed with a different key may not install as an update over another build.
 
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
+## Performance and reliability principles
 
-You can also open **Actions → Build APK** on GitHub to inspect build logs and download the generated artifact.
-
-## Technology
-
-- Kotlin
-- Jetpack Compose
-- Material 3
-- Navigation Compose
-- Kotlin Coroutines
-- Android Storage Access Framework (SAF)
-- Android private app storage
-
-The dependency set is intentionally small while the foundation is being stabilized.
+Blockline follows Android Compose guidance where it fits the app: lazy layouts for potentially large lists, stable keys for mutable collections, moving expensive work away from frequently recomposed UI, and explicit limits for large editor files. These practices reduce avoidable work but are not a substitute for profiling on representative devices.
 
 ## Privacy and security
 
-- Pack contents are kept in app-private storage after import.
-- Phase 1 does not request the `INTERNET` permission and does not upload project files.
-- There are no analytics or tracking integrations.
-- Archive extraction validates destination paths to help prevent ZIP-slip.
-- Export creates an archive from the selected local pack content.
+- Imported project contents are copied to app-private storage and are not uploaded as part of normal pack editing.
+- Script API refresh is an explicit network feature for npm metadata and declaration files.
+- Archive extraction checks destination paths to mitigate ZIP-slip.
+- Do not share private packs or sensitive logs in public bug reports.
 
-When reporting a security concern, avoid posting sensitive details or private pack contents in a public issue.
+## Current limitations
 
-## Contributing
+- Static validation is not a complete Mojang schema validator and cannot guarantee in-game compatibility.
+- The resource preview is a metadata/source preview, not an in-game renderer.
+- Script API declaration parsing is intentionally tolerant rather than a full TypeScript compiler; raw declarations are retained when the parser cannot interpret a construct.
+- Device-level QA, performance profiling, and regression testing across a broad range of Android versions and pack samples remain important before treating any build as production-ready.
 
-Bug reports, reproducible test cases, and focused pull requests are welcome.
+## Contributing and bug reports
 
-When reporting a bug, include:
-- Android version and device model
-- Blockline build or release tag
-- Steps to reproduce
-- Expected behavior and actual behavior
-- Relevant logs or a minimal sample pack, after removing private information
-
-For feature requests, describe the problem first and the smallest workflow that would solve it.
+When reporting a bug, include the Blockline version, Android version/device, reproduction steps, expected behavior, actual behavior, and relevant logs. Remove private pack contents and credentials before sharing.
 
 ## License
 
-A license file is not currently included. Until the maintainer adds one, do not assume that public visibility grants permission to redistribute or reuse the source.
+A license file is not currently included. Do not assume that public visibility grants permission to redistribute or reuse the source until the project adds a license.
 
 ---
 
