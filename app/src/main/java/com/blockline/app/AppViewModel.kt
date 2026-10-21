@@ -30,6 +30,7 @@ import com.blockline.app.data.BatchReplaceFilePreview
 import com.blockline.app.data.BatchReplaceScanResult
 import com.blockline.app.data.BatchRenameCandidate
 import com.blockline.app.data.BatchRenameEngine
+import com.blockline.app.data.EditorHistory
 import com.blockline.app.data.BatchRenameOutcome
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
@@ -147,9 +148,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var contentSearchResults by mutableStateOf<List<ContentSearchResult>>(emptyList())
         private set
     val openTabs = mutableStateMapOf<String, String>()
-    private val undo = mutableStateMapOf<String, MutableList<String>>()
-    private val redo = mutableStateMapOf<String, MutableList<String>>()
-    private val lastEditAt = mutableMapOf<String, Long>()
+    private val editorHistory = EditorHistory()
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
     private var dependencyRequestId = 0
@@ -500,9 +499,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (outcome.failure == null) {
                 outcome.changedContents.forEach { (path, value) ->
                     if (openTabs.containsKey(path)) openTabs[path] = value
-                    undo.remove(path)
-                    redo.remove(path)
-                    lastEditAt.remove(path)
+                    editorHistory.reset(path)
                     if (activeFile == path) content = value
                 }
                 autoSaveJob?.cancel()
@@ -523,9 +520,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 ) {
                     autoSaveJob?.cancel()
                     openTabs.clear()
-                    undo.clear()
-                    redo.clear()
-                    lastEditAt.clear()
+                    editorHistory.clear()
                     activeFile = null
                     content = ""
                     readOnly = false
@@ -591,9 +586,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             } else {
                 autoSaveJob?.cancel()
                 openTabs.clear()
-                undo.clear()
-                redo.clear()
-                lastEditAt.clear()
+                editorHistory.clear()
                 activeFile = null
                 content = ""
                 readOnly = false
@@ -735,9 +728,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             activeFile = null
             content = ""
             openTabs.clear()
-            undo.clear()
-            redo.clear()
-            lastEditAt.clear()
+            editorHistory.clear()
             validationIssues = emptyList()
             validationCompleted = false
             contentSearchResults = emptyList()
@@ -788,9 +779,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     activeFile = null
                     content = ""
                     openTabs.clear()
-                    undo.clear()
-                    redo.clear()
-                    lastEditAt.clear()
+                    editorHistory.clear()
                     validationIssues = emptyList()
                     validationCompleted = false
                     contentSearchResults = emptyList()
@@ -861,9 +850,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 content = opened.text
                 openTabs[path] = opened.text
                 if (buffered == null) {
-                    undo[path] = mutableListOf()
-                    redo[path] = mutableListOf()
-                    lastEditAt.remove(path)
+                    editorHistory.reset(path)
                 }
                 pendingEditorLine = line?.coerceAtLeast(1)
             }.onFailure {
@@ -911,25 +898,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         pendingEditorLine = null
     }
 
-    private fun pushHistory(stack: MutableList<String>, value: String) {
-        stack.add(value)
-        if (stack.size > 80) stack.removeAt(0)
-    }
-
     fun updateContent(value: String) {
         val path = activeFile ?: return
         if (readOnly) return
         if (value != content) {
             val now = System.currentTimeMillis()
-            val history = undo.getOrPut(path) { mutableListOf() }
-            val lastEdit = lastEditAt[path] ?: 0L
-            if (lastEdit == 0L || now - lastEdit > 700L) {
-                pushHistory(history, content)
-            }
-            redo.getOrPut(path) { mutableListOf() }.clear()
+            editorHistory.recordEdit(path, content, now)
             content = value
             openTabs[path] = value
-            lastEditAt[path] = now
             scheduleAutoSave(current?.id, path, value)
         }
     }
@@ -1009,34 +985,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun undo() {
         val path = activeFile ?: return
-        val stack = undo[path] ?: return
-        if (stack.isNotEmpty()) {
-            pushHistory(redo.getOrPut(path) { mutableListOf() }, content)
-            content = stack.removeAt(stack.lastIndex)
-            openTabs[path] = content
-            lastEditAt[path] = 0L
-            scheduleAutoSave(current?.id, path, content)
-        }
+        val previous = editorHistory.undo(path, content) ?: return
+        content = previous
+        openTabs[path] = previous
+        scheduleAutoSave(current?.id, path, previous)
     }
     fun redo() {
         val path = activeFile ?: return
-        val stack = redo[path] ?: return
-        if (stack.isNotEmpty()) {
-            pushHistory(undo.getOrPut(path) { mutableListOf() }, content)
-            val next = stack.removeAt(stack.lastIndex)
-            content = next
-            openTabs[path] = content
-            lastEditAt[path] = 0L
-            scheduleAutoSave(current?.id, path, content)
-        }
+        val next = editorHistory.redo(path, content) ?: return
+        content = next
+        openTabs[path] = next
+        scheduleAutoSave(current?.id, path, next)
     }
     fun closeTab(path: String) {
         viewModelScope.launch {
             if (activeFile == path && !saveCurrentAndWait(showMessage = false)) return@launch
             openTabs.remove(path)
-            undo.remove(path)
-            redo.remove(path)
-            lastEditAt.remove(path)
+            editorHistory.reset(path)
             if (activeFile == path) {
                 activeFile = null
                 content = ""
@@ -1161,9 +1126,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val affectedTabs = openTabs.keys.filter { it == path || it.startsWith("$path/") }
                 affectedTabs.forEach { tab ->
                     openTabs.remove(tab)
-                    undo.remove(tab)
-                    redo.remove(tab)
-                    lastEditAt.remove(tab)
+                    editorHistory.reset(tab)
                     if (activeFile == tab) { activeFile = null; content = ""; autoSaveJob?.cancel() }
                 }
                 refreshProjectEntries(p.id)
@@ -1206,9 +1169,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         affected.forEach { oldTab ->
             val newTab = newPath + oldTab.removePrefix(oldPath)
             openTabs.remove(oldTab)?.let { openTabs[newTab] = it }
-            undo.remove(oldTab)?.let { undo[newTab] = it }
-            redo.remove(oldTab)?.let { redo[newTab] = it }
-            lastEditAt.remove(oldTab)?.let { lastEditAt[newTab] = it }
+            editorHistory.remap(oldTab, newTab)
             if (activeFile == oldTab) activeFile = newTab
         }
     }
@@ -1284,9 +1245,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     readOnly = false
                     pendingEditorLine = null
                     openTabs.clear()
-                    undo.clear()
-                    redo.clear()
-                    lastEditAt.clear()
+                    editorHistory.clear()
                     refreshProjectEntries(p.id)
                     if (activePathBeforeRestore != null && restoredFileStillExists) {
                         openFile(activePathBeforeRestore)
