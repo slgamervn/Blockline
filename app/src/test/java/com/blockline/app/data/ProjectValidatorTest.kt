@@ -231,6 +231,25 @@ class ProjectValidatorTest {
     }
 
     @Test
+    fun acceptsAllSupportedPackScopeValues() {
+        listOf("global", "world", "any").forEach { scope ->
+            val root = Files.createTempDirectory("blockline-pack-scope-valid-").toFile()
+            try {
+                val pack = File(root, "RP").apply { mkdirs() }
+                File(pack, "manifest.json").writeText(
+                    """{"format_version":2,"header":{"name":"Resource Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0],"pack_scope":"$scope"},"modules":[{"type":"resources","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}]}"""
+                )
+
+                val issues = ProjectValidator.validate(root)
+
+                assertTrue("Supported pack_scope '$scope' was rejected: $issues", issues.none { it.message.contains("header.pack_scope") })
+            } finally {
+                root.deleteRecursively()
+            }
+        }
+    }
+
+    @Test
     fun rejectsMultipleWorldTemplateModules() {
         val root = Files.createTempDirectory("blockline-world-template-").toFile()
         try {
