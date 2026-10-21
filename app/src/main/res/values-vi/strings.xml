@@ -444,13 +444,13 @@
     <string name="update_dialog_versions">Đang cài: %1$s\nMới nhất: %2$s</string>
     <string name="update_no_notes">Bản phát hành chưa có ghi chú.</string>
     <string name="update_download_size">Dung lượng tải: %1$s MB</string>
-    <string name="update_now">Tải bản cập nhật</string>
+    <string name="update_now">Xem trang tải bản mới nhất</string>
     <string name="update_later">Để sau</string>
     <string name="update_available_status">Có bản cập nhật: v%1$s</string>
     <string name="update_up_to_date">Blockline đang ở phiên bản mới nhất.</string>
     <string name="update_check_failed">Không thể kiểm tra cập nhật.</string>
     <string name="update_check_failed_detail">Kiểm tra cập nhật thất bại: %1$s</string>
-    <string name="update_open_failed">Không thể mở liên kết tải APK chính thức.</string>
+    <string name="update_open_failed">Không thể mở trang phát hành mới nhất chính thức.</string>
     <string name="loading">Đang tải…</string>
 
     <string name="creator_resources_title">Tài nguyên dành cho nhà sáng tạo</string>
