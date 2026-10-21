@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.blockline.app.data.ExportMode
 import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.data.ContentSearchResult
+import com.blockline.app.data.ProjectContentSearch
 import com.blockline.app.data.Project
 import com.blockline.app.data.ProjectRepository
 import com.blockline.app.data.OperationLogEntry
@@ -681,27 +682,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return searchProjectContent(project.id, query, filter)
     }
 
-    private fun searchProjectContent(projectId: String, query: String, filter: SearchFileFilter): List<ContentSearchResult> {
-        if (query.isBlank()) return emptyList()
-        return repo.allFiles(projectId).asSequence()
-            .filter { file ->
-                file.length() <= 1024L * 1024L &&
-                    file.extension.lowercase(java.util.Locale.ROOT) in com.blockline.app.data.TEXT_EXT &&
-                    filter.matches(file, repo.relative(projectId, file))
-            }
-            .flatMap { file ->
-                val path = repo.relative(projectId, file)
-                file.useLines(Charsets.UTF_8) { lines ->
-                    lines.mapIndexedNotNull { index, line ->
-                        if (line.contains(query, ignoreCase = true)) {
-                            ContentSearchResult(path, index + 1, line.trim().take(200))
-                        } else null
-                    }.toList().asSequence()
-                }
-            }
-            .take(500)
-            .toList()
-    }
+    private fun searchProjectContent(projectId: String, query: String, filter: SearchFileFilter): List<ContentSearchResult> =
+        ProjectContentSearch.search(repo, projectId, query, filter)
     fun selectProject(p: Project) {
         openFileRequestId++
         isOpeningFile = false
