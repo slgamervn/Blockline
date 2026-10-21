@@ -469,8 +469,8 @@
     <string name="resource_wiki_desc">Community guides for JSON, commands, entities, blocks and scripting.</string>
     <string name="resource_microsoft_title">Microsoft Creator Documentation</string>
     <string name="resource_microsoft_desc">Primary reference for stable Creator APIs, schemas and pack formats.</string>
-    <string name="resource_hg_title">MCBE Command Wiki VN by Hg</string>
-    <string name="resource_hg_desc">Vietnamese community command notes; verify examples against your game version.</string>
+    <string name="resource_hg_title">Minecraft Wiki</string>
+    <string name="resource_hg_desc">Community-maintained Minecraft reference; verify details against your Minecraft Bedrock version.</string>
     <string name="resource_tweaks_title">Bedrock Tweaks</string>
     <string name="resource_tweaks_desc">Browse resource packs, add-ons and crafting tweaks for inspiration.</string>
     <string name="resource_mctools_title">Minecraft Creator Tools</string>
