@@ -353,7 +353,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val projectId = project.id
         isPreviewingBatchReplace = true
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) {
+            if (!saveCurrentAndWait(showMessage = false)) {
                 isPreviewingBatchReplace = false
                 return@launch
             }
@@ -431,7 +431,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         autoSaveJob?.cancel()
 
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) {
+            if (!saveCurrentAndWait(showMessage = false)) {
                 isApplyingBatchReplace = false
                 isFileOperationRunning = false
                 return@launch
@@ -544,7 +544,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         isFileOperationRunning = true
         autoSaveJob?.cancel()
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) {
+            if (!saveCurrentAndWait(showMessage = false)) {
                 isFileOperationRunning = false
                 return@launch
             }
@@ -715,7 +715,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) return@launch
+            if (!saveCurrentAndWait(showMessage = false)) return@launch
             if (requestId != projectSelectionRequestId) return@launch
             current = p
             refreshOperationLog()
@@ -774,7 +774,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         isOpeningFile = false
         isFileOperationRunning = true
         viewModelScope.launch {
-            if (current?.id == p.id && !saveCurrent(showMessage = false)) {
+            if (current?.id == p.id && !saveCurrentAndWait(showMessage = false)) {
                 isFileOperationRunning = false
                 return@launch
             }
@@ -825,7 +825,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
         val requestId = ++openFileRequestId
         val previousPath = activeFile
-        val previousContent = content
         val previousReadOnly = readOnly
         if (previousPath != null && !previousReadOnly) openTabs[previousPath] = previousContent
         val buffered = openTabs[path]
@@ -834,13 +833,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             if (requestId != openFileRequestId || current?.id != project.id) return@launch
             if (previousPath != null && previousPath != path && !previousReadOnly) {
-                if (!saveCurrent(showMessage = false)) {
+                if (!saveCurrentAndWait(showMessage = false)) {
                     if (requestId == openFileRequestId && current?.id == project.id) {
                         isOpeningFile = false
                         pendingEditorLine = null
-                        activeFile = previousPath
-                        content = previousContent
-                        readOnly = previousReadOnly
                     }
                     return@launch
                 }
@@ -873,9 +869,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 pendingEditorLine = line?.coerceAtLeast(1)
             }.onFailure {
                 pendingEditorLine = null
-                activeFile = previousPath
-                content = previousContent
-                readOnly = previousReadOnly
                 message = it.message ?: text(R.string.cannot_open_file)
             }
         }
@@ -968,7 +961,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
-    suspend fun saveCurrent(showMessage: Boolean = true): Boolean {
+    fun saveCurrent(showMessage: Boolean = true) {
+        viewModelScope.launch { saveCurrentAndWait(showMessage) }
+    }
+
+    private suspend fun saveCurrentAndWait(showMessage: Boolean = true): Boolean {
         val project = current ?: return true
         val path = activeFile ?: return true
         if (readOnly) {
@@ -1009,7 +1006,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun saveCurrentIfPathAffected(projectId: String, path: String): Boolean {
         val affected = current?.id == projectId &&
             (activeFile == path || activeFile?.startsWith("$path/") == true)
-        return !affected || saveCurrent(showMessage = false)
+        return !affected || saveCurrentAndWait(showMessage = false)
     }
     fun undo() {
         val path = activeFile ?: return
@@ -1036,7 +1033,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun closeTab(path: String) {
         viewModelScope.launch {
-            if (activeFile == path && !saveCurrent(showMessage = false)) return@launch
+            if (activeFile == path && !saveCurrentAndWait(showMessage = false)) return@launch
             openTabs.remove(path)
             undo.remove(path)
             redo.remove(path)
@@ -1225,7 +1222,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val projectId = project.id
         isExporting = true
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) {
+            if (!saveCurrentAndWait(showMessage = false)) {
                 isExporting = false
                 return@launch
             }
@@ -1255,7 +1252,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun backup() {
         val project = current ?: return
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) return@launch
+            if (!saveCurrentAndWait(showMessage = false)) return@launch
             if (current?.id != project.id) return@launch
             val result = runCatching { withContext(Dispatchers.IO) { repo.backup(project.id) } }
             message = result.fold({ text(R.string.backup_saved) }, { it.message ?: text(R.string.backup_failed) })
@@ -1265,7 +1262,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restore() {
         val p = current ?: return
         viewModelScope.launch {
-            if (!saveCurrent(showMessage = false)) return@launch
+            if (!saveCurrentAndWait(showMessage = false)) return@launch
             if (current?.id != p.id) return@launch
             val activePathBeforeRestore = activeFile
             val result = runCatching { withContext(Dispatchers.IO) { repo.restoreLatest(p.id) } }
