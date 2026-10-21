@@ -95,6 +95,28 @@ Blockline áp dụng các hướng dẫn Compose phù hợp với ứng dụng: 
 - Bộ phân tích Script API declaration ưu tiên khả năng chịu lỗi, không phải TypeScript compiler đầy đủ; declaration thô được giữ lại khi không phân tích được cấu trúc.
 - Vẫn cần QA trên thiết bị thật, profiling hiệu năng và kiểm thử hồi quy trên nhiều phiên bản Android cùng các pack mẫu trước khi coi bất kỳ build nào là bản production.
 
+## Tài nguyên bên ngoài dành cho người tạo pack
+
+Đây là liên kết tới công cụ và tài liệu do bên thứ ba duy trì. Chúng **không được đóng gói cùng hoặc tích hợp trực tiếp vào Blockline**.
+
+### Tài liệu và công cụ chính thức
+- [Microsoft Minecraft Creator Docs](https://learn.microsoft.com/vi-vn/minecraft/creator/?view=minecraft-bedrock-stable) — nguồn ưu tiên để tra cứu tính năng creator, Script API, schema và định dạng pack.
+- [Minecraft Creator Tools](https://mctools.dev/) — bộ công cụ creator cho quy trình trên web và dòng lệnh.
+
+### Trình biên tập và tài liệu kỹ thuật
+- [bridge. Editor](https://editor.bridge-core.app/) — biên tập add-on trên trình duyệt.
+- [VS Code Web](https://vscode.dev/) — trình biên tập mã trên trình duyệt; khả năng truy cập tệp tùy workspace.
+- [Blockbench](https://blockbench.net/) — tạo mô hình, texture và animation.
+- [Bedrock Wiki](https://wiki.bedrock.dev/) — tài liệu kỹ thuật Bedrock do cộng đồng duy trì.
+- [HgVN Bedrock Command Wiki](https://hgvn23.github.io/) — tham khảo lệnh bằng tiếng Việt; hãy đối chiếu ví dụ với phiên bản Minecraft đang dùng.
+
+### Template và tiện ích
+- [Bedrock Tweaks](https://bedrocktweaks.net/) — tham khảo resource pack và tweak; cần kiểm tra giấy phép trước khi phân phối hoặc đóng gói lại nội dung.
+- [MC-Tools](https://mc-tools.net/) — các tiện ích web cho quy trình Minecraft.
+- [MakeBead Pixel Art Generator](https://makebead.com/minecraft-pixel-art-generator/) — tạo mẫu pixel art và danh sách vật liệu từ ảnh.
+
+Dịch vụ bên ngoài có thể thay đổi độc lập. Hãy kiểm tra tính tương thích, điều khoản giấy phép và nguồn tải trước khi áp dụng ví dụ hoặc sử dụng lại nội dung bên thứ ba.
+
 ## Đóng góp và báo lỗi
 
 Khi báo lỗi, hãy cung cấp phiên bản Blockline, phiên bản Android/thiết bị, các bước tái hiện, hành vi mong đợi và thực tế cùng log liên quan. Xóa nội dung pack riêng tư và thông tin xác thực trước khi chia sẻ.

@@ -95,6 +95,28 @@ Blockline follows Android Compose guidance where it fits the app: lazy layouts f
 - Script API declaration parsing is intentionally tolerant rather than a full TypeScript compiler; raw declarations are retained when the parser cannot interpret a construct.
 - Device-level QA, performance profiling, and regression testing across a broad range of Android versions and pack samples remain important before treating any build as production-ready.
 
+## External creator resources
+
+These links are references to independently maintained tools and documentation. They are **not bundled with or integrated directly into Blockline**.
+
+### Official documentation and tools
+- [Microsoft Minecraft Creator Docs](https://learn.microsoft.com/vi-vn/minecraft/creator/?view=minecraft-bedrock-stable) — primary reference for creator features, Script API, schemas, and pack formats.
+- [Minecraft Creator Tools](https://mctools.dev/) — Minecraft creator tooling for web and command-line workflows.
+
+### Editors and technical references
+- [bridge. Editor](https://editor.bridge-core.app/) — browser-based add-on editing.
+- [VS Code Web](https://vscode.dev/) — browser-based code editor; available file access depends on the workspace.
+- [Blockbench](https://blockbench.net/) — model, texture, and animation authoring.
+- [Bedrock Wiki](https://wiki.bedrock.dev/) — community-maintained Bedrock technical documentation.
+- [HgVN Bedrock Command Wiki](https://hgvn23.github.io/) — Vietnamese command reference; verify examples against your Minecraft version.
+
+### Templates and utilities
+- [Bedrock Tweaks](https://bedrocktweaks.net/) — browse resource-pack tweaks and templates; do not redistribute or bundle content without checking its license.
+- [MC-Tools](https://mc-tools.net/) — browser utilities for Minecraft workflows.
+- [MakeBead Pixel Art Generator](https://makebead.com/minecraft-pixel-art-generator/) — image-to-pixel-art pattern and material-list generation.
+
+External services can change independently. Verify compatibility, license terms, and download sources before applying examples or reusing third-party content.
+
 ## Contributing and bug reports
 
 When reporting a bug, include the Blockline version, Android version/device, reproduction steps, expected behavior, actual behavior, and relevant logs. Remove private pack contents and credentials before sharing.
