@@ -108,7 +108,7 @@ These links are references to independently maintained tools and documentation. 
 - [VS Code Web](https://vscode.dev/) — browser-based code editor; available file access depends on the workspace.
 - [Blockbench](https://blockbench.net/) — model, texture, and animation authoring.
 - [Bedrock Wiki](https://wiki.bedrock.dev/) — community-maintained Bedrock technical documentation.
-- [HgVN Bedrock Command Wiki](https://hgvn23.github.io/) — Vietnamese command reference; verify examples against your Minecraft version.
+- [Minecraft Wiki](https://minecraft.wiki/) — community-maintained Minecraft reference; verify details against your Minecraft Bedrock version.
 
 ### Templates and utilities
 - [Bedrock Tweaks](https://bedrocktweaks.net/) — browse resource-pack tweaks and templates; do not redistribute or bundle content without checking its license.
