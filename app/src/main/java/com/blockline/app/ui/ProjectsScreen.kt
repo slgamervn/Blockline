@@ -147,7 +147,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                                     IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
                                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                         DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
-                                        DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false }) { }
+                                        DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false })
                                         DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
                                         DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
                                     }
