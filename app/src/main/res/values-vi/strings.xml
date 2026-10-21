@@ -350,4 +350,33 @@
     <string name="batch_replace_rolled_back">Thay thế thất bại; dự án đã được khôi phục từ bản sao lưu. %1$s</string>
     <string name="batch_replace_rollback_failed">Thay thế thất bại và không thể tự động khôi phục hoàn toàn. Bản sao lưu vẫn được giữ lại. %1$s</string>
     <string name="batch_replace_done">Đã thay %1$d vị trí trong %2$d tệp.</string>
+
+    <string name="diff_tool_title">So sánh mã (diff)</string>
+    <string name="diff_tool_hint">So sánh hai tệp văn bản trong dự án. So sánh quá lớn sẽ bị giới hạn để bảo vệ bộ nhớ.</string>
+    <string name="diff_choose_before">Chọn tệp gốc</string>
+    <string name="diff_choose_after">Chọn tệp đã sửa</string>
+    <string name="diff_compare">So sánh tệp</string>
+    <string name="diff_comparing">Đang so sánh…</string>
+    <string name="diff_limit_reached">So sánh vượt quá giới hạn an toàn. Hãy chọn tệp nhỏ hơn.</string>
+    <string name="diff_summary">+%1$d dòng thêm · −%2$d dòng xóa</string>
+    <string name="diff_more_lines">Đã ẩn %1$d dòng còn lại trong phần xem trước.</string>
+    <string name="api_reference_title">Tra cứu Script API</string>
+    <string name="api_reference_hint">Tìm declaration của Minecraft Script API được hỗ trợ. Dữ liệu cache và snapshot đi kèm dùng được offline; cập nhật phiên bản cần Internet.</string>
+    <string name="api_reference_version">Phiên bản package (không bắt buộc)</string>
+    <string name="api_reference_latest_hint">Để trống để dùng phiên bản mặc định</string>
+    <string name="api_reference_load">Tải từ cache</string>
+    <string name="api_reference_refresh">Cập nhật online</string>
+    <string name="api_reference_status">%1$s · %2$s · Nguồn: %3$s</string>
+    <string name="api_reference_versions_cached">Số phiên bản đã biết: %1$d</string>
+    <string name="api_source_live">trực tuyến</string>
+    <string name="api_source_cache">bộ nhớ đệm</string>
+    <string name="api_source_bundled">snapshot đi kèm</string>
+    <string name="api_reference_search">Tìm symbol và tài liệu</string>
+    <string name="api_reference_no_symbols">Không tìm thấy symbol phù hợp. Hãy thử từ khóa ngắn hơn hoặc cập nhật package.</string>
+    <string name="api_reference_copy">Sao chép declaration</string>
+    <string name="api_reference_insert">Chèn vào editor TypeScript</string>
+    <string name="api_reference_copied">Đã sao chép declaration của %1$s.</string>
+    <string name="api_reference_copy_raw">Sao chép toàn bộ mã declaration</string>
+    <string name="api_reference_raw_copied">Đã sao chép mã TypeScript gốc.</string>
+    <string name="api_reference_load_failed">Không thể tải tài liệu Script API.</string>
 </resources>
