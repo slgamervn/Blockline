@@ -1,6 +1,8 @@
 package com.blockline.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -51,6 +53,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +66,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.blockline.app.AppViewModel
 import com.blockline.app.BuildConfig
 import com.blockline.app.R
@@ -89,6 +93,7 @@ import java.io.OutputStream
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
+    val animationsEnabled = rememberSystemAnimationsEnabled()
     var actionProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameValue by remember { mutableStateOf("") }
@@ -103,27 +108,53 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                 Column { Text(stringResource(R.string.nav_projects), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall); Text(stringResource(R.string.projects_subtitle)) }
                 Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text(stringResource(R.string.import_pack)) }
             }
-            if (vm.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (animationsEnabled) {
+                AnimatedVisibility(
+                    visible = vm.isLoading,
+                    enter = fadeIn(animationSpec = tween(120)),
+                    exit = fadeOut(animationSpec = tween(100))
+                ) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+            } else if (vm.isLoading) {
+                Text(
+                    stringResource(R.string.loading),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
             if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_projects), stringResource(R.string.no_projects_hint), Modifier.weight(1f))
             else LazyColumn(Modifier.weight(1f)) {
                 items(vm.projects, key = { it.id }) { p ->
-                    var menu by remember(p.id) { mutableStateOf(false) }
-                    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                        ListItem(
-                            headlineContent = { Text(p.name) },
-                            supportingContent = { Text(if (p.id == vm.current?.id) stringResource(R.string.current_open) else stringResource(R.string.last_opened_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened)))) },
-                            leadingContent = { Icon(Icons.Default.Archive, null) },
-                            trailingContent = {
-                                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
-                                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
-                                }
-                            },
-                            modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
-                        )
+                    var itemVisible by remember(p.id) { mutableStateOf(false) }
+                    LaunchedEffect(p.id) { itemVisible = true }
+                    AnimatedVisibility(
+                        visible = itemVisible,
+                        enter = if (animationsEnabled) {
+                            fadeIn(animationSpec = tween(150)) +
+                                slideInVertically(animationSpec = tween(150)) { height -> height / 28 }
+                        } else EnterTransition.None,
+                        exit = ExitTransition.None
+                    ) {
+                        var menu by remember(p.id) { mutableStateOf(false) }
+                        Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+                            ListItem(
+                                headlineContent = { Text(p.name) },
+                                supportingContent = { Text(if (p.id == vm.current?.id) stringResource(R.string.current_open) else stringResource(R.string.last_opened_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened)))) },
+                                leadingContent = { Icon(Icons.Default.Archive, null) },
+                                trailingContent = {
+                                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
+                                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                                        DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
+                                        DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false }) { }
+                                        DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
+                                        DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
+                                    }
+                                },
+                                modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
+                            )
+                        }
                     }
                 }
             }

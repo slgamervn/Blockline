@@ -1,10 +1,14 @@
 package com.blockline.app
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -27,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -45,6 +50,7 @@ import com.blockline.app.ui.OverviewScreen
 import com.blockline.app.ui.ProjectsScreen
 import com.blockline.app.ui.SearchScreen
 import com.blockline.app.ui.ToolsScreen
+import com.blockline.app.ui.rememberSystemAnimationsEnabled
 import com.blockline.app.ui.theme.BlocklineTheme
 
 private class TabDef(val route: String, val label: Int, val icon: ImageVector)
@@ -64,6 +70,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
     BlocklineTheme(vm.themeMode) {
         val nav = rememberNavController()
         val context = LocalContext.current
+        val animationsEnabled = rememberSystemAnimationsEnabled()
         val snack = remember { SnackbarHostState() }
         val msg = vm.message
         val update = vm.updateInfo
@@ -99,10 +106,25 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
             bottomBar = {
                 if (route != "editor") NavigationBar {
                     TABS.forEach { t ->
+                        val selected = route == t.route
                         NavigationBarItem(
-                            selected = route == t.route || (t.route == "overview" && t.route == route),
+                            selected = selected,
                             onClick = { goTab(nav, t.route) },
-                            icon = { Icon(t.icon, null) },
+                            icon = {
+                                val scale by animateFloatAsState(
+                                    targetValue = if (selected) 1.08f else 1f,
+                                    animationSpec = if (animationsEnabled) tween(150) else snap(),
+                                    label = "navigation-icon-${t.route}"
+                                )
+                                Icon(
+                                    t.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                )
+                            },
                             label = { Text(stringResource(t.label)) }
                         )
                     }
@@ -114,20 +136,28 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 startDestination = "projects",
                 modifier = Modifier.padding(pad),
                 enterTransition = {
-                    fadeIn(animationSpec = tween(220)) +
-                        slideInHorizontally(animationSpec = tween(220)) { width -> width / 14 }
+                    if (animationsEnabled) {
+                        fadeIn(animationSpec = tween(220)) +
+                            slideInHorizontally(animationSpec = tween(220)) { width -> width / 14 }
+                    } else EnterTransition.None
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(160)) +
-                        slideOutHorizontally(animationSpec = tween(160)) { width -> -width / 24 }
+                    if (animationsEnabled) {
+                        fadeOut(animationSpec = tween(160)) +
+                            slideOutHorizontally(animationSpec = tween(160)) { width -> -width / 24 }
+                    } else ExitTransition.None
                 },
                 popEnterTransition = {
-                    fadeIn(animationSpec = tween(220)) +
-                        slideInHorizontally(animationSpec = tween(220)) { width -> -width / 14 }
+                    if (animationsEnabled) {
+                        fadeIn(animationSpec = tween(220)) +
+                            slideInHorizontally(animationSpec = tween(220)) { width -> -width / 14 }
+                    } else EnterTransition.None
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(160)) +
-                        slideOutHorizontally(animationSpec = tween(160)) { width -> width / 24 }
+                    if (animationsEnabled) {
+                        fadeOut(animationSpec = tween(160)) +
+                            slideOutHorizontally(animationSpec = tween(160)) { width -> width / 24 }
+                    } else ExitTransition.None
                 }
             ) {
                 composable("projects") { ProjectsScreen(vm) { nav.navigate("overview") } }
