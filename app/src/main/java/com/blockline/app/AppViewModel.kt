@@ -29,7 +29,7 @@ import com.blockline.app.data.BatchReplaceFailure
 import com.blockline.app.data.BatchReplaceFilePreview
 import com.blockline.app.data.BatchReplaceScanResult
 import com.blockline.app.data.BatchRenameCandidate
-import com.blockline.app.data.AtomicFileWriter
+import com.blockline.app.data.EditorSaveCoordinator
 import com.blockline.app.data.BatchRenameEngine
 import com.blockline.app.data.EditorHistory
 import com.blockline.app.data.BatchRenameOutcome
@@ -42,8 +42,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -160,7 +158,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var batchReplaceFilter = SearchFileFilter.ALL
     private var fileIndexRequestId = 0
     private var autoSaveJob: Job? = null
-    private val fileWriteMutex = Mutex()
+    private val editorSaveCoordinator = EditorSaveCoordinator()
     private var projectSelectionRequestId = 0
 
     init {
@@ -863,13 +861,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
 
 
-    private fun writeSnapshot(projectId: String, path: String, value: String, suffix: String = ".saving") {
-        val projectRoot = repo.projectDir(projectId).canonicalFile
-        val target = repo.resolve(projectId, path).canonicalFile
-        require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
-        check(target.isFile) { text(R.string.file_not_found) }
-        AtomicFileWriter.write(target, value, suffix)
-    }
     fun consumePendingEditorLine() {
         pendingEditorLine = null
     }
@@ -892,15 +883,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             delay(850)
             if (current?.id != projectId || activeFile != path || readOnly || openTabs[path] != value) return@launch
             val result = try {
-                withContext(Dispatchers.IO) {
-                    fileWriteMutex.withLock {
-                        val projectRoot = repo.projectDir(projectId).canonicalFile
-                        val target = repo.resolve(projectId, path).canonicalFile
-                        require(target.toPath().startsWith(projectRoot.toPath())) { "Unsafe file path." }
-                        check(target.isFile) { "File no longer exists." }
-                        AtomicFileWriter.write(target, value, ".autosaving")
-                    }
-                }
+                editorSaveCoordinator.write(
+                    projectRoot = repo.projectDir(projectId),
+                    target = repo.resolve(projectId, path),
+                    value = value,
+                    suffix = ".autosaving"
+                )
                 Result.success(Unit)
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -927,11 +915,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         var snapshot = content
         while (true) {
             try {
-                withContext(Dispatchers.IO) {
-                    fileWriteMutex.withLock {
-                        writeSnapshot(project.id, path, snapshot)
-                    }
-                }
+                editorSaveCoordinator.write(
+                    projectRoot = repo.projectDir(project.id),
+                    target = repo.resolve(project.id, path),
+                    value = snapshot
+                )
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
