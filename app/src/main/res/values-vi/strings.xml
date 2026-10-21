@@ -384,4 +384,21 @@
     <string name="uuid_copied">Đã sao chép UUID trong manifest.</string>
     <string name="copy_uuid_cd">Sao chép UUID</string>
     <string name="api_reference_share">Chia sẻ declaration</string>
+
+    <string name="batch_rename_title">Đổi tên tệp hàng loạt</string>
+    <string name="batch_rename_hint">Thay văn bản khớp chính xác trong tên tệp, không đổi tên thư mục. Hãy xem trước toàn bộ đích đến trước khi áp dụng.</string>
+    <string name="batch_rename_find">Văn bản cần tìm trong tên tệp</string>
+    <string name="batch_rename_replace">Thay bằng</string>
+    <string name="batch_rename_preview">Xem trước đổi tên</string>
+    <string name="batch_rename_preview_count">Xem trước: %1$d tệp · %2$d xung đột</string>
+    <string name="batch_rename_more">Còn %1$d mục đổi tên chưa hiển thị.</string>
+    <string name="batch_rename_more_conflicts">Còn %1$d xung đột chưa hiển thị.</string>
+    <string name="batch_rename_no_matches">Không có tên tệp nào khớp văn bản này.</string>
+    <string name="batch_rename_apply">Áp dụng đổi tên hàng loạt</string>
+    <string name="batch_rename_applying">Đang đổi tên tệp…</string>
+    <string name="batch_rename_done">Đã đổi tên %1$d tệp. Tab đang mở và metadata tệp gần đây đã được cập nhật.</string>
+    <string name="batch_rename_backup_failed">Không thể tạo backup; chưa có tệp nào được đổi tên. %1$s</string>
+    <string name="batch_rename_restored">Đổi tên hàng loạt thất bại; dự án đã được khôi phục từ backup. %1$s</string>
+    <string name="batch_rename_restore_failed">Đổi tên hàng loạt thất bại và không thể tự khôi phục hoàn toàn. Backup vẫn được giữ lại. %1$s</string>
+    <string name="batch_rename_preview_failed">Không thể chuẩn bị bản xem trước đổi tên.</string>
 </resources>

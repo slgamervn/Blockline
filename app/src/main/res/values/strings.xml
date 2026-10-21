@@ -384,4 +384,21 @@
     <string name="uuid_copied">Copied manifest UUID.</string>
     <string name="copy_uuid_cd">Copy UUID</string>
     <string name="api_reference_share">Share declaration</string>
+
+    <string name="batch_rename_title">Batch rename files</string>
+    <string name="batch_rename_hint">Replace literal text in file names only. Review every destination before applying; folders are not renamed.</string>
+    <string name="batch_rename_find">Text to find in file names</string>
+    <string name="batch_rename_replace">Replace with</string>
+    <string name="batch_rename_preview">Preview renames</string>
+    <string name="batch_rename_preview_count">Preview: %1$d files · %2$d conflicts</string>
+    <string name="batch_rename_more">%1$d more rename entries not shown.</string>
+    <string name="batch_rename_more_conflicts">%1$d more conflicts not shown.</string>
+    <string name="batch_rename_no_matches">No file names match this text.</string>
+    <string name="batch_rename_apply">Apply batch rename</string>
+    <string name="batch_rename_applying">Renaming files…</string>
+    <string name="batch_rename_done">Renamed %1$d files. Open tabs and recent-file metadata were updated.</string>
+    <string name="batch_rename_backup_failed">Could not create a backup; no files were renamed. %1$s</string>
+    <string name="batch_rename_restored">Batch rename failed; the project was restored from backup. %1$s</string>
+    <string name="batch_rename_restore_failed">Batch rename failed and automatic restore could not finish. Your backup is retained. %1$s</string>
+    <string name="batch_rename_preview_failed">Could not prepare the rename preview.</string>
 </resources>

@@ -21,6 +21,9 @@ import com.blockline.app.data.BatchReplaceEngine
 import com.blockline.app.data.BatchReplaceFailure
 import com.blockline.app.data.BatchReplaceFilePreview
 import com.blockline.app.data.BatchReplaceScanResult
+import com.blockline.app.data.BatchRenameCandidate
+import com.blockline.app.data.BatchRenameEngine
+import com.blockline.app.data.BatchRenameOutcome
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
@@ -361,6 +364,74 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     readOnly = false
                     pendingEditorLine = null
                     refreshProjectEntries(projectId)
+                }
+            }
+        }
+    }
+
+    fun applyBatchRename(candidates: List<BatchRenameCandidate>) {
+        val project = current ?: return
+        if (candidates.isEmpty() || isFileOperationRunning) return
+        if (!saveCurrent(showMessage = false)) return
+
+        val projectId = project.id
+        isFileOperationRunning = true
+        autoSaveJob?.cancel()
+        viewModelScope.launch {
+            val outcome = withContext(Dispatchers.IO) {
+                try {
+                    repo.backup(projectId)
+                } catch (error: Exception) {
+                    return@withContext BatchRenameOutcome(backupFailed = true, details = error.message)
+                }
+
+                val renamed = mutableListOf<Pair<String, String>>()
+                try {
+                    candidates.forEach { candidate ->
+                        check(candidate.oldPath != candidate.newPath) { "A rename target is unchanged." }
+                        val source = repo.resolve(projectId, candidate.oldPath)
+                        check(source.isFile) { "A previewed file no longer exists: ${candidate.oldPath}" }
+                        val target = repo.resolve(projectId, candidate.newPath)
+                        check(!target.exists()) { "A rename target now exists: ${candidate.newPath}" }
+                        val newFile = com.blockline.app.data.FileOps.rename(source, candidate.newPath.substringAfterLast('/'))
+                            ?: error("Could not rename ${candidate.oldPath}")
+                        val newPath = repo.relative(projectId, newFile)
+                        renamed += candidate.oldPath to newPath
+                        repo.remapPathMetadata(projectId, candidate.oldPath, newPath)
+                    }
+                    BatchRenameOutcome(changedCount = renamed.size)
+                } catch (error: Exception) {
+                    renamed.asReversed().forEach { (oldPath, newPath) ->
+                        runCatching { repo.remapPathMetadata(projectId, newPath, oldPath) }
+                    }
+                    val restored = runCatching { repo.restoreLatest(projectId) }.getOrDefault(false)
+                    BatchRenameOutcome(restored = restored, details = error.message)
+                }
+            }
+
+            isFileOperationRunning = false
+            if (current?.id != projectId) return@launch
+            if (outcome.changedCount > 0) {
+                candidates.forEach { remapOpenPaths(it.oldPath, it.newPath) }
+                refreshProjectEntries(projectId)
+                message = text(R.string.batch_rename_done, outcome.changedCount)
+            } else if (outcome.backupFailed) {
+                message = text(R.string.batch_rename_backup_failed, outcome.details.orEmpty())
+            } else {
+                autoSaveJob?.cancel()
+                openTabs.clear()
+                undo.clear()
+                redo.clear()
+                lastEditAt.clear()
+                activeFile = null
+                content = ""
+                readOnly = false
+                pendingEditorLine = null
+                refreshProjectEntries(projectId)
+                message = if (outcome.restored) {
+                    text(R.string.batch_rename_restored, outcome.details.orEmpty())
+                } else {
+                    text(R.string.batch_rename_restore_failed, outcome.details.orEmpty())
                 }
             }
         }

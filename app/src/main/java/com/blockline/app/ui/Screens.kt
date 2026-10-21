@@ -63,6 +63,9 @@ import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.data.GeneratedPackType
 import com.blockline.app.data.PackManifestGenerator
 import com.blockline.app.data.DependencyKind
+import com.blockline.app.data.BatchRenameCandidate
+import com.blockline.app.data.BatchRenameEngine
+import com.blockline.app.data.BatchRenamePreview
 import com.blockline.app.data.LineDiffEngine
 import com.blockline.app.data.DiffLineKind
 import com.blockline.app.data.ScriptApiReferenceRepository
@@ -505,6 +508,7 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.project_tools), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall) }
         item { Text(stringResource(R.string.local_project_tools_hint)) }
+        item { BatchRenameToolCard(vm) }
         item { DiffToolCard(vm) }
         item { ScriptApiReferenceCard(vm, onOpenEditor) }
         item {
@@ -763,6 +767,86 @@ private fun manifestValueText(value: Any): String = when (value) {
     is org.json.JSONArray -> (0 until value.length()).joinToString(".") { value.optString(it) }
     is org.json.JSONObject -> "Object (${value.length()} fields)"
     else -> value.toString()
+}
+
+@Composable
+private fun BatchRenameToolCard(vm: AppViewModel) {
+    val project = vm.current
+    val entries = project?.let { vm.projectEntries[it.id] }.orEmpty()
+    val allPaths = remember(project?.id, entries) {
+        project?.let { selected -> entries.map { vm.repo.relative(selected.id, it) } }.orEmpty()
+    }
+    val filePaths = remember(project?.id, entries) {
+        project?.let { selected -> entries.filter { it.isFile }.map { vm.repo.relative(selected.id, it) } }.orEmpty()
+    }
+    var query by remember(project?.id) { mutableStateOf("") }
+    var replacement by remember(project?.id) { mutableStateOf("") }
+    var preview by remember(project?.id) { mutableStateOf<BatchRenamePreview?>(null) }
+    var error by remember(project?.id) { mutableStateOf<String?>(null) }
+    val previewFailedText = stringResource(R.string.batch_rename_preview_failed)
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.batch_rename_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.batch_rename_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it; preview = null; error = null },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.batch_rename_find)) },
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = replacement,
+                onValueChange = { replacement = it; preview = null; error = null },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.batch_rename_replace)) },
+                singleLine = true
+            )
+            Button(
+                onClick = {
+                    runCatching {
+                        BatchRenameEngine.preview(filePaths, allPaths.toSet(), query, replacement)
+                    }.onSuccess {
+                        preview = it
+                        error = null
+                    }.onFailure {
+                        preview = null
+                        error = it.message ?: previewFailedText
+                    }
+                },
+                enabled = project != null && query.isNotBlank() && !vm.isFileOperationRunning,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.batch_rename_preview)) }
+            error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
+            preview?.let { plan ->
+                Text(stringResource(R.string.batch_rename_preview_count, plan.candidates.size, plan.conflicts.size))
+                plan.candidates.take(30).forEach { candidate ->
+                    Text(
+                        "${candidate.oldPath}  →  ${candidate.newPath}",
+                        fontFamily = FontFamily.Monospace,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                    )
+                }
+                if (plan.candidates.size > 30) {
+                    Text(stringResource(R.string.batch_rename_more, plan.candidates.size - 30), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                }
+                if (plan.conflicts.isNotEmpty()) {
+                    plan.conflicts.take(5).forEach { conflict ->
+                        Text(conflict, color = androidx.compose.material3.MaterialTheme.colorScheme.error, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    if (plan.conflicts.size > 5) Text(stringResource(R.string.batch_rename_more_conflicts, plan.conflicts.size - 5), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                } else if (plan.candidates.isEmpty()) {
+                    Text(stringResource(R.string.batch_rename_no_matches))
+                }
+                Button(
+                    onClick = { vm.applyBatchRename(plan.candidates); preview = null },
+                    enabled = plan.candidates.isNotEmpty() && plan.conflicts.isEmpty() && !vm.isFileOperationRunning,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(if (vm.isFileOperationRunning) R.string.batch_rename_applying else R.string.batch_rename_apply)) }
+            }
+        }
+    }
 }
 
 @Composable
