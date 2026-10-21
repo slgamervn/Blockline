@@ -732,7 +732,7 @@ fun MoreScreen(vm: AppViewModel) {
                     }
                     androidx.compose.material3.Switch(
                         checked = vm.autoCheckUpdates,
-                        onCheckedChange = { vm.setAutoCheckUpdates(it) }
+                        onCheckedChange = { vm.updateAutoCheckUpdates(it) }
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
