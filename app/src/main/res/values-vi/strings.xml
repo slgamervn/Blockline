@@ -208,6 +208,8 @@
     <string name="validation_msg_header_missing">Thiếu object bắt buộc: header.</string>
     <string name="validation_msg_header_name">Thiếu hoặc để trống header.name.</string>
     <string name="validation_msg_header_description">Thiếu hoặc để trống header.description.</string>
+    <string name="validation_msg_pack_scope">header.pack_scope phải là &apos;global&apos;, &apos;world&apos; hoặc &apos;any&apos;.</string>
+    <string name="validation_msg_multiple_world_templates">Mỗi manifest chỉ được có tối đa một module world_template.</string>
     <string name="validation_msg_header_version">header.version phải gồm ba số nguyên không âm.</string>
     <string name="validation_msg_modules_empty">modules phải là một array không rỗng.</string>
     <string name="validation_msg_module_object">modules[%1$d] phải là một object.</string>
@@ -220,6 +222,7 @@
     <string name="validation_msg_dependencies_array">dependencies phải là một array.</string>
     <string name="validation_msg_dependency_object">dependencies[%1$d] phải là một object.</string>
     <string name="validation_msg_dependency_identity">dependencies[%1$d] phải khai báo uuid hoặc module_name.</string>
+    <string name="validation_msg_dependency_both_ids">dependencies[%1$d] không được khai báo đồng thời uuid và module_name; chỉ dùng một định danh.</string>
     <string name="validation_msg_dependency_version_required">dependencies[%1$d].version là bắt buộc khi dùng module_name.</string>
     <string name="validation_msg_dependency_version_string">dependencies[%1$d].version phải là chuỗi không rỗng khi dùng module_name.</string>
     <string name="validation_msg_module_dependency">Đã khai báo dependency module %1$s; khả năng đáp ứng phụ thuộc vào Minecraft khi chạy.</string>

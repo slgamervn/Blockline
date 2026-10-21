@@ -70,6 +70,10 @@ internal object PackDependencyResolver {
                 val moduleName = entry.optString("module_name").trim()
                 val rawVersion = entry.opt("version")
                 val version = versionText(rawVersion)
+                if (uuid.isNotBlank() && moduleName.isNotBlank()) {
+                    result += PackDependency(path, sourceName, "Dependency #\${i + 1}", version, DependencyKind.INVALID)
+                    continue
+                }
                 if (uuid.isBlank()) {
                     when {
                         moduleName.isBlank() -> result += PackDependency(path, sourceName, "Dependency #${i + 1}", version, DependencyKind.INVALID)

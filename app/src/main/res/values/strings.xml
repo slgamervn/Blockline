@@ -208,6 +208,8 @@
     <string name="validation_msg_header_missing">Missing required object: header.</string>
     <string name="validation_msg_header_name">header.name is missing or empty.</string>
     <string name="validation_msg_header_description">header.description is missing or empty.</string>
+    <string name="validation_msg_pack_scope">header.pack_scope must be &apos;global&apos;, &apos;world&apos;, or &apos;any&apos;.</string>
+    <string name="validation_msg_multiple_world_templates">A manifest may contain at most one world_template module.</string>
     <string name="validation_msg_header_version">header.version must contain three non-negative integers.</string>
     <string name="validation_msg_modules_empty">modules must be a non-empty array.</string>
     <string name="validation_msg_module_object">modules[%1$d] must be an object.</string>
@@ -220,6 +222,7 @@
     <string name="validation_msg_dependencies_array">dependencies must be an array.</string>
     <string name="validation_msg_dependency_object">dependencies[%1$d] must be an object.</string>
     <string name="validation_msg_dependency_identity">dependencies[%1$d] must specify either uuid or module_name.</string>
+    <string name="validation_msg_dependency_both_ids">dependencies[%1$d] cannot specify both uuid and module_name; use only one identifier.</string>
     <string name="validation_msg_dependency_version_required">dependencies[%1$d].version is required when module_name is used.</string>
     <string name="validation_msg_dependency_version_string">dependencies[%1$d].version must be a non-empty string when module_name is used.</string>
     <string name="validation_msg_module_dependency">Module dependency %1$s is declared; its availability is determined by the Minecraft runtime.</string>

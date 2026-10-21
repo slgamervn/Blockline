@@ -88,6 +88,12 @@ object ProjectValidator {
             } else {
                 if (header.optString("name").isBlank()) issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.name is missing or empty.")
                 if (formatVersion != 1 && header.optString("description").isBlank()) issues += ValidationIssue(IssueSeverity.WARNING, path, message = "header.description is missing or empty.")
+                if (header.has("pack_scope")) {
+                    val scope = header.opt("pack_scope")
+                    if (scope !is String || scope !in setOf("global", "world", "any")) {
+                        issues += ValidationIssue(IssueSeverity.ERROR, path, message = "header.pack_scope must be 'global', 'world', or 'any'.")
+                    }
+                }
                 val headerUuid = header.optString("uuid")
                 registerUuid(headerUuid, "$path · header.uuid", path, uuidOwners, issues)
                 val headerVersion = manifestVersion(header.opt("version"), formatVersion)
@@ -99,6 +105,10 @@ object ProjectValidator {
             if (modules == null || modules.length() == 0) {
                 issues += ValidationIssue(IssueSeverity.ERROR, path, message = "modules must be a non-empty array.")
             } else {
+                val worldTemplateCount = (0 until modules.length()).count { modules.optJSONObject(it)?.optString("type") == "world_template" }
+                if (worldTemplateCount > 1) {
+                    issues += ValidationIssue(IssueSeverity.ERROR, path, message = "A manifest may contain at most one world_template module.")
+                }
                 for (i in 0 until modules.length()) {
                     val module = modules.optJSONObject(i)
                     if (module == null) {
@@ -177,6 +187,10 @@ object ProjectValidator {
                 }
                 val uuid = dependency.optString("uuid").trim()
                 val moduleName = dependency.optString("module_name").trim()
+                if (uuid.isNotBlank() && moduleName.isNotBlank()) {
+                    issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i] cannot specify both uuid and module_name; use only one identifier.")
+                    continue
+                }
                 if (uuid.isBlank()) {
                     if (moduleName.isBlank()) {
                         issues += ValidationIssue(IssueSeverity.ERROR, path, message = "dependencies[$i] must specify either uuid or module_name.")

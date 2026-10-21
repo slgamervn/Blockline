@@ -79,4 +79,19 @@ class PackDependencyResolverTest {
         }
     }
 
+    @Test
+    fun classifiesDependencyWithBothIdentifiersAsInvalid() {
+        val root = Files.createTempDirectory("blockline-both-dependency-identifiers-").toFile()
+        try {
+            val manifest = File(root, "BP/manifest.json").apply {
+                parentFile?.mkdirs()
+                writeText("""{"header":{"name":"Behavior","uuid":"11111111-1111-4111-8111-111111111111","version":[1,0,0]},"modules":[{"type":"data","uuid":"22222222-2222-4222-8222-222222222222","version":[1,0,0]}],"dependencies":[{"uuid":"33333333-3333-4333-8333-333333333333","module_name":"@minecraft/server","version":"2.0.0"}]}""")
+            }
+            val dependency = PackDependencyResolver.resolve(root, listOf(manifest)).single()
+            assertEquals(DependencyKind.INVALID, dependency.kind)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
 }

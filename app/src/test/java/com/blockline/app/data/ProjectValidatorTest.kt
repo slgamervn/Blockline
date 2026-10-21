@@ -215,4 +215,49 @@ class ProjectValidatorTest {
         }
     }
 
+    @Test
+    fun rejectsInvalidPackScopeAgainstCreatorToolsRules() {
+        val root = Files.createTempDirectory("blockline-pack-scope-").toFile()
+        try {
+            val pack = File(root, "RP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Resource Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0],"pack_scope":"local"},"modules":[{"type":"resources","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}]}"""
+            )
+            val issue = ProjectValidator.validate(root).single { it.message.contains("header.pack_scope") }
+            assertEquals(IssueSeverity.ERROR, issue.severity)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun rejectsMultipleWorldTemplateModules() {
+        val root = Files.createTempDirectory("blockline-world-template-").toFile()
+        try {
+            val pack = File(root, "WorldTemplate").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Template","description":"Test template","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0]},"modules":[{"type":"world_template","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]},{"type":"world_template","uuid":"12345678-1234-1234-1234-123456789abe","version":[1,0,0]}]}"""
+            )
+            val issue = ProjectValidator.validate(root).single { it.message.contains("at most one world_template") }
+            assertEquals(IssueSeverity.ERROR, issue.severity)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun rejectsDependencyWithBothUuidAndModuleName() {
+        val root = Files.createTempDirectory("blockline-dependency-identifiers-").toFile()
+        try {
+            val pack = File(root, "BP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Behavior Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"dependencies":[{"uuid":"12345678-1234-1234-1234-123456789abe","module_name":"@minecraft/server","version":"2.0.0"}]}"""
+            )
+            val issue = ProjectValidator.validate(root).single { it.message.contains("cannot specify both uuid and module_name") }
+            assertEquals(IssueSeverity.ERROR, issue.severity)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
 }
