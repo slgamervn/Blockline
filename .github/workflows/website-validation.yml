@@ -16,6 +16,11 @@ on:
     branches: [main]
     paths:
       - "index.html"
+      - "assets/**"
+      - "favicon.svg"
+      - "README.md"
+      - "README.vi.md"
+      - "scripts/check-site.mjs"
       - "scripts/check-website.mjs"
       - ".github/workflows/website-validation.yml"
   workflow_dispatch:
