@@ -15,6 +15,23 @@ assert.match(html, /name=["']viewport["']/i, "The page declares a mobile viewpor
 assert.match(html, /href=["']assets\/css\/style\.css(?:\?[^"']*)?["']/i, "The external stylesheet is linked, optionally with a cache-busting query.");
 assert.match(html, /src=["']assets\/js\/main\.js["'][^>]*defer\b/i, "The external interaction script is deferred.");
 assert.ok(existsSync(path.join(root, "favicon.svg")), "The declared favicon file exists.");
+
+const localResources = [...html.matchAll(/\\b(?:href|src)=["']([^"']+)["']/gi)]
+  .map((match) => match[1].trim())
+  .filter((value) => value && !/^(?:[a-z][a-z0-9+.-]*:|\\/\\/|#)/i.test(value));
+for (const resource of new Set(localResources)) {
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(resource, "https://blockline.local/").pathname);
+  } catch {
+    assert.fail(`A local resource URL is malformed: ${resource}`);
+  }
+  const resolved = path.resolve(root, `.${pathname.startsWith("/") ? pathname : `/${pathname}`}`);
+  assert.ok(
+    resolved.startsWith(root + path.sep) && existsSync(resolved),
+    `The local HTML resource exists and stays inside the site root: ${resource}`
+  );
+}
 assert.ok(/<main\b/i.test(html), "The page has a main landmark.");
 assert.ok(/id=["']main["']/.test(html), "The skip-link target exists.");
 assert.ok(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present.");
