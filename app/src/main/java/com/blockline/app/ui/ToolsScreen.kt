@@ -398,13 +398,14 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
 private fun DiffToolCard(vm: AppViewModel) {
     val project = vm.current
     val entries = project?.let { vm.projectEntries[it.id] }.orEmpty()
-    val files = remember(project?.id, entries) {
-        project?.let { selected ->
+    val files by produceState(emptyList<String>(), project?.id, entries) {
+        val selected = project
+        value = if (selected == null) emptyList() else withContext(Dispatchers.IO) {
             entries.asSequence()
                 .filter { it.isFile && it.length() <= 1024L * 1024L && it.extension.lowercase(java.util.Locale.ROOT) in TEXT_EXT }
                 .map { vm.repo.relative(selected.id, it) }
                 .toList()
-        }.orEmpty()
+        }
     }
     var beforePath by remember(project?.id) { mutableStateOf("") }
     var afterPath by remember(project?.id) { mutableStateOf("") }
