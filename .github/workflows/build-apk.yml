@@ -46,6 +46,10 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
+      - name: Validate GitHub Actions workflow YAML
+        run: |
+          ruby -e 'require "yaml"; ARGV.each { |file| YAML.parse_file(file); puts "Valid YAML: #{file}" }' .github/workflows/*.yml
+
       - name: Validate website and Android translation resources
         run: |
           node scripts/check-site.mjs
