@@ -87,7 +87,7 @@ class AddonCompletionEngine private constructor(
                 val values = fileSchema.optJSONObject("values")
                 when {
                     isManifest && isCurrentStringValueForKey(before, "uuid") ->
-                        add(listOf(uuidSuggestion), "Generated UUID")
+                        add(listOf(uuidFor(request.path, before)), "Generated UUID")
                     isManifest && isCurrentNumericValueForKey(before, "format_version") ->
                         add(values?.optJSONArray("format_version").asStrings(), "Manifest format version")
                     isManifest && isCurrentStringValueForKey(before, "type") ->
@@ -138,6 +138,18 @@ class AddonCompletionEngine private constructor(
         return keys.lastOrNull() == "components" ||
             (keys.size >= 2 && keys.lastOrNull() != null &&
                 keys[keys.lastIndex - 1] == "component_groups")
+    }
+
+    private val uuidSuggestions = mutableMapOf<String, String>()
+
+    private fun uuidFor(path: String, before: String): String {
+        val keyStart = before.lastIndexOf("\\"uuid\\"")
+        val identity = path.replace('\\\\', '/').lowercase(java.util.Locale.ROOT) + "\\u0000" + before.substring(0, keyStart.coerceAtLeast(0))
+        return synchronized(uuidSuggestions) {
+            uuidSuggestions.getOrPut(identity) {
+                if (uuidSuggestions.isEmpty()) uuidSuggestion else UUID.randomUUID().toString()
+            }
+        }
     }
 
     private fun isCurrentNumericValueForKey(before: String, key: String): Boolean =
