@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "javascriptKeywords": ["import", "export", "const", "let", "var", "function", "async", "await", "if", "else", "for", "while", "try", "catch", "return", "new", "class", "extends", "throw"],
+  "files": {
+    "manifest.json": {
+      "keys": ["format_version", "header", "modules", "dependencies", "metadata", "capabilities", "subpacks", "name", "description", "uuid", "version", "min_engine_version", "type", "language"],
+      "values": {
+        "format_version": ["2"],
+        "module_type": ["data", "resources", "script", "world_template"],
+        "type": ["data", "resources", "script", "world_template"]
+      }
+    },
+    "entities/": {
+      "keys": ["format_version", "minecraft:entity", "description", "components", "component_groups", "events", "identifier", "is_spawnable", "is_summonable", "is_experimental"],
+      "values": {
+        "format_version": ["1.20.0", "1.21.0", "1.21.40"],
+        "components": ["minecraft:health", "minecraft:movement", "minecraft:collision_box", "minecraft:physics", "minecraft:pushable", "minecraft:loot", "minecraft:damage_sensor", "minecraft:behavior.nearest_attackable_target", "minecraft:behavior.melee_attack", "minecraft:behavior.random_stroll", "minecraft:behavior.look_at_player", "minecraft:movement.basic", "minecraft:rideable", "minecraft:scale", "minecraft:nameable"]
+      }
+    },
+    "items/": {
+      "keys": ["format_version", "minecraft:item", "description", "components", "identifier", "menu_category", "category", "tags", "damage", "durability", "food", "icon", "max_stack_size", "use_animation", "use_duration"],
+      "values": {
+        "format_version": ["1.20.0", "1.21.0", "1.21.40"]
+      }
+    },
+    "blocks/": {
+      "keys": ["format_version", "minecraft:block", "description", "components", "identifier", "menu_category", "geometry", "material_instances", "collision_box", "selection_box", "loot", "light_emission", "light_dampening", "destructible_by_mining", "destructible_by_explosion", "friction", "map_color", "flammable"],
+      "values": {
+        "format_version": ["1.20.0", "1.21.0", "1.21.40"]
+      }
+    }
+  },
+  "js": {
+    "globals": ["world", "system", "Player", "Entity", "EntityType", "ItemStack", "ItemTypes", "Block", "BlockPermutation", "Dimension", "EquipmentSlot", "GameMode", "MinecraftEffectTypes", "MinecraftItemTypes", "MolangVariableMap", "Vector3", "World", "WorldAfterEvents", "WorldBeforeEvents"],
+    "world": ["getDimension", "getAllPlayers", "afterEvents", "beforeEvents", "scoreboard", "gameRules", "sendMessage", "getPlayers", "getEntity", "getDynamicProperty", "setDynamicProperty", "clearDynamicProperties", "structureManager"],
+    "system": ["run", "runTimeout", "runInterval", "clearRun", "runJob", "clearJob", "afterEvents", "beforeEvents", "currentTick", "waitTicks"],
+    "Player": ["name", "id", "location", "dimension", "velocity", "isSneaking", "isSprinting", "isJumping", "selectedSlotIndex", "getComponent", "getItemCooldown", "startItemCooldown", "sendMessage", "runCommand", "teleport", "applyImpulse", "addEffect", "removeEffect", "getBlockFromViewDirection", "getEntitiesFromViewDirection", "onScreenDisplay", "inputInfo", "camera"],
+    "Dimension": ["id", "heightRange", "runCommand", "runCommandAsync", "getBlock", "getEntities", "getPlayers", "spawnEntity", "spawnItem", "playSound", "createExplosion"]
+  }
+}
