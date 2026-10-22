@@ -36,7 +36,6 @@ class ProjectRepository(private val ctx: Context) {
             runCatching { indexFile.copyTo(damagedCopy, overwrite = false) }
         }
         val recovered = ProjectMetadataRecovery.recover(root)
-        if (recovered.isEmpty()) return emptyList()
         runCatching { save(recovered) }
         return recovered
     }
