@@ -118,14 +118,7 @@ internal object PackDependencyResolver {
     }
 
     private fun intVersion(value: Any?): List<Int>? {
-        if (value is String) {
-            if (!semanticVersionPattern.matches(value)) return null
-            val core = value.substringBefore("+").substringBefore("-").split(".")
-            val major = core.getOrNull(0)?.toIntOrNull() ?: return null
-            val minor = core.getOrNull(1)?.toIntOrNull() ?: return null
-            val patch = core.getOrNull(2)?.toIntOrNull() ?: return null
-            return listOf(major, minor, patch)
-        }
+        if (value is String) return SemanticVersion.coreComponents(value)
         val array = value as? JSONArray ?: return null
         if (array.length() != 3) return null
         val values = (0..2).map { i ->
@@ -138,7 +131,6 @@ internal object PackDependencyResolver {
         return values.takeIf { it.all { n -> n >= 0 } }
     }
 
-    private val semanticVersionPattern = Regex("""^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$""")
 
     private fun relative(root: File, file: File): String =
         file.relativeTo(root).path.replace(File.separatorChar, '/')
