@@ -83,8 +83,8 @@ class AddonCompletionEngine private constructor(
                 when {
                     before.contains("\"components\"") || before.contains("\"component_groups\"") ->
                         add(values?.optJSONArray("components").asStrings(), "Entity component")
-                    before.contains("\"module_type\"") ->
-                        add(values?.optJSONArray("module_type").asStrings(), "Manifest module type")
+                    before.contains("\"module_type\"") || before.contains("\"type\"") ->
+                        add((values?.optJSONArray("module_type").asStrings().orEmpty() + values?.optJSONArray("type").asStrings().orEmpty()).distinct(), "Manifest module type")
                     before.contains("\"format_version\"") ->
                         add(values?.optJSONArray("format_version").asStrings(), "Supported format version")
                     normalizedPath.endsWith("manifest.json") &&
