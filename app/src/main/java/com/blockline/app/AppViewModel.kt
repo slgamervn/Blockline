@@ -952,12 +952,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             delay(850)
             if (current?.id != projectId || activeFile != path || readOnly || openTabs[path] != value) return@launch
             val result = try {
-                editorSaveCoordinator.write(
-                    projectRoot = repo.projectDir(projectId),
-                    target = repo.resolve(projectId, path),
-                    value = value,
-                    suffix = ".autosaving"
-                )
+                withContext(Dispatchers.IO) {
+                    editorSaveCoordinator.write(
+                        projectRoot = repo.projectDir(projectId),
+                        target = repo.resolve(projectId, path),
+                        value = value,
+                        suffix = ".autosaving"
+                    )
+                }
                 Result.success(Unit)
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -984,11 +986,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         var snapshot = content
         while (true) {
             try {
-                editorSaveCoordinator.write(
-                    projectRoot = repo.projectDir(project.id),
-                    target = repo.resolve(project.id, path),
-                    value = snapshot
-                )
+                withContext(Dispatchers.IO) {
+                    editorSaveCoordinator.write(
+                        projectRoot = repo.projectDir(project.id),
+                        target = repo.resolve(project.id, path),
+                        value = snapshot
+                    )
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
