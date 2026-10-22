@@ -143,8 +143,8 @@ class AddonCompletionEngine private constructor(
     private val uuidSuggestions = mutableMapOf<String, String>()
 
     private fun uuidFor(path: String, before: String): String {
-        val keyStart = before.lastIndexOf("\\"uuid\\"")
-        val identity = path.replace('\\\\', '/').lowercase(java.util.Locale.ROOT) + "\\u0000" + before.substring(0, keyStart.coerceAtLeast(0))
+        val keyStart = before.lastIndexOf("\"uuid\"")
+        val identity = path.replace('\\', '/').lowercase(java.util.Locale.ROOT) + "\u0000" + before.substring(0, keyStart.coerceAtLeast(0))
         return synchronized(uuidSuggestions) {
             uuidSuggestions.getOrPut(identity) {
                 if (uuidSuggestions.isEmpty()) uuidSuggestion else UUID.randomUUID().toString()
