@@ -53,6 +53,14 @@ class AddonCompletionEngineTest {
         assertTrue(stackResult.items.any { it.label == "getLore" })
     }
 
+
+    @Test fun doesNotSuggestJsonKeysInsideStringValues() {
+        val text = "{\"description\":\"vers"
+        val result = engine.suggest(AddonCompletionEngine.Request("manifest.json", text, text.length))
+        assertTrue(result.items.none { it.detail == "Bedrock JSON key" })
+        assertTrue(result.items.none { it.label == "version" })
+    }
+
     @Test fun detectsEntityPathAndFiltersPrefix() {
         val text = "{\"minecraft:en"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))

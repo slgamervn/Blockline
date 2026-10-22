@@ -112,21 +112,21 @@ class AddonCompletionEngine private constructor(
     private fun isJsonKeyContext(before: String): Boolean {
         var inString = false
         var escaped = false
-        var lastColonOutsideString = -1
-        var lastQuoteStart = -1
+        var stringStart = -1
         before.forEachIndexed { index, ch ->
             if (escaped) {
                 escaped = false
             } else if (ch.code == 92 && inString) {
                 escaped = true
             } else if (ch == '"') {
-                if (!inString) lastQuoteStart = index
+                if (!inString) stringStart = index
                 inString = !inString
-            } else if (ch == ':' && !inString) {
-                lastColonOutsideString = index
             }
         }
-        if (inString) return lastColonOutsideString < lastQuoteStart
+        if (inString) {
+            val prefix = before.substring(0, stringStart).trimEnd()
+            return prefix.endsWith("{") || prefix.endsWith(",")
+        }
         val trimmed = before.trimEnd()
         return trimmed.endsWith("{") || trimmed.endsWith(",")
     }
