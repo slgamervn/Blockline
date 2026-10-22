@@ -324,6 +324,8 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
     var replacement by remember(project?.id) { mutableStateOf("") }
     var preview by remember(project?.id) { mutableStateOf<BatchRenamePreview?>(null) }
     var error by remember(project?.id) { mutableStateOf<String?>(null) }
+    var isPreviewing by remember(project?.id) { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val previewFailedText = stringResource(R.string.batch_rename_preview_failed)
 
     Card(Modifier.fillMaxWidth()) {
@@ -346,17 +348,33 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
             )
             Button(
                 onClick = {
-                    runCatching {
-                        BatchRenameEngine.preview(filePaths, allPaths.toSet(), query, replacement)
-                    }.onSuccess {
-                        preview = it
-                        error = null
-                    }.onFailure {
-                        preview = null
-                        error = previewFailedText
+                    if (isPreviewing) return@Button
+                    val projectId = project?.id
+                    val querySnapshot = query
+                    val replacementSnapshot = replacement
+                    val filesSnapshot = filePaths
+                    val pathsSnapshot = allPaths.toSet()
+                    isPreviewing = true
+                    scope.launch {
+                        val result = runCatching {
+                            withContext(Dispatchers.Default) {
+                                BatchRenameEngine.preview(filesSnapshot, pathsSnapshot, querySnapshot, replacementSnapshot)
+                            }
+                        }
+                        isPreviewing = false
+                        if (project?.id != projectId || query != querySnapshot || replacement != replacementSnapshot) {
+                            return@launch
+                        }
+                        result.onSuccess {
+                            preview = it
+                            error = null
+                        }.onFailure {
+                            preview = null
+                            error = previewFailedText
+                        }
                     }
                 },
-                enabled = project != null && query.isNotBlank() && !vm.isFileOperationRunning,
+                enabled = project != null && query.isNotBlank() && !vm.isFileOperationRunning && !isPreviewing,
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.batch_rename_preview)) }
             error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
