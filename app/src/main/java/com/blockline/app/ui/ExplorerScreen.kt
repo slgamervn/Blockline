@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +47,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
+import java.io.File
+
+private data class IndexedExplorerEntry(
+    val file: File,
+    val path: String,
+    val ancestors: List<String>,
+    val depth: Int
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,32 +66,38 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var targetPath by remember { mutableStateOf("") }
     val allEntries = project?.let { vm.projectEntries[it.id] }.orEmpty()
+    val indexedEntries = remember(allEntries, project?.id) {
+        val projectId = project?.id
+        allEntries.map { file ->
+            val path = projectId?.let { vm.repo.relative(it, file) }.orEmpty()
+            val segments = path.split('/')
+            IndexedExplorerEntry(
+                file = file,
+                path = path,
+                ancestors = (1 until segments.size).map { segments.take(it).joinToString("/") },
+                depth = path.count { it == '/' }
+            )
+        }
+    }
     val recentPaths = project?.let { vm.repo.recentFiles(it.id) }.orEmpty()
-    val entries = remember(allEntries, filter, recentPaths, project?.id) {
-        allEntries.filter { file ->
-            val path = project?.let { vm.repo.relative(it.id, file) } ?: ""
+    val entries = remember(indexedEntries, filter, recentPaths, project?.id) {
+        indexedEntries.filter { entry ->
             when (filter) {
-                "Favorites" -> file.isFile && vm.isFavorite(path)
-                "Recent" -> file.isFile && path in recentPaths
+                "Favorites" -> entry.file.isFile && vm.isFavorite(entry.path)
+                "Recent" -> entry.file.isFile && entry.path in recentPaths
                 else -> true
             }
         }.let { filtered ->
-            if (filter == "Recent" && project != null) {
-                filtered.sortedBy { file ->
-                    recentPaths.indexOf(vm.repo.relative(project.id, file)).let { if (it < 0) Int.MAX_VALUE else it }
+            if (filter == "Recent") {
+                filtered.sortedBy { entry ->
+                    recentPaths.indexOf(entry.path).let { if (it < 0) Int.MAX_VALUE else it }
                 }
             } else filtered
         }
     }
     val visibleEntries = remember(entries, expanded, filter, project?.id) {
-        if (filter != "All" || project == null) entries
-        else entries.filter { file ->
-            val path = vm.repo.relative(project.id, file)
-            val segments = path.split('/')
-            (1 until segments.size).all { depth ->
-                segments.take(depth).joinToString("/") in expanded
-            }
-        }
+        if (filter != "All") entries
+        else entries.filter { entry -> entry.ancestors.all { it in expanded } }
     }
 
     Scaffold(topBar = {
@@ -112,13 +127,18 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                 if (!vm.isIndexingProjectFiles && entries.isEmpty()) {
                     EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())
                 } else if (entries.isNotEmpty()) {
-                    LazyColumn(Modifier.fillMaxSize()) {
-                        items(visibleEntries, key = { vm.repo.relative(project.id, it) }, contentType = { if (it.isDirectory) "folder" else "file" }) { file ->
-                            val path = vm.repo.relative(project.id, file)
+                    LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
+                        items(
+                            items = visibleEntries,
+                            key = { it.path },
+                            contentType = { if (it.file.isDirectory) "folder" else "file" }
+                        ) { entry ->
+                            val file = entry.file
+                            val path = entry.path
+                            val depth = entry.depth
                             var menu by remember(path) { mutableStateOf(false) }
-                                val depth = path.count { it == '/' }
-                                ListItem(
-                                    leadingContent = { Icon(if (file.isDirectory) Icons.Default.Folder else Icons.AutoMirrored.Filled.InsertDriveFile, null) },
+                            ListItem(
+                                leadingContent = { Icon(if (file.isDirectory) Icons.Default.Folder else Icons.AutoMirrored.Filled.InsertDriveFile, null) },
                                     headlineContent = { Text((if (file.isDirectory && expanded.contains(path)) "▾ " else if (file.isDirectory) "▸ " else "") + file.name) },
                                     supportingContent = { Text(path, maxLines = 1) },
                                     trailingContent = {
