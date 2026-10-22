@@ -2,6 +2,7 @@ package com.blockline.app.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
 import com.blockline.app.data.JsonTools
+import com.blockline.app.data.AddonCompletionEngine
 import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.Emerald
@@ -100,6 +104,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var highlightSource by remember(path) { mutableStateOf("") }
     var syntaxIssue by remember(path) { mutableStateOf<ValidationIssue?>(null) }
     var checkingJson by remember(path) { mutableStateOf(false) }
+    val completionEngine = remember(context) { runCatching { AddonCompletionEngine.load(context) }.getOrNull() }
+    var completionItems by remember(path) { mutableStateOf<List<AddonCompletionEngine.Suggestion>>(emptyList()) }
+    var completionRange by remember(path) { mutableStateOf(0 to 0) }
     val largeOffsets = remember(vm.content, vm.readOnly) {
         if (vm.readOnly) largeFilePageOffsets(vm.content) else listOf(0)
     }
@@ -120,6 +127,35 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 Regex(Regex.escape(query), RegexOption.IGNORE_CASE).findAll(source).count()
             }
             if (query == findText) matchCount = count
+        }
+    }
+    LaunchedEffect(path, editorValue.text, editorValue.selection, vm.readOnly, completionEngine) {
+        val engine = completionEngine
+        val activePath = path
+        if (engine == null || activePath == null || vm.readOnly || vm.isOpeningFile) {
+            completionItems = emptyList()
+            return@LaunchedEffect
+        }
+        val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
+        val beforeCursor = editorValue.text.substring(0, cursor)
+        val currentToken = Regex("[A-Za-z0-9_$:.-]*$").find(beforeCursor)?.value.orEmpty()
+        val shouldSuggest = currentToken.isNotEmpty() || beforeCursor.endsWith(".") ||
+            (activePath.substringAfterLast('/').equals("manifest.json", true) && beforeCursor.trimEnd().endsWith("{"))
+        if (!shouldSuggest) {
+            completionItems = emptyList()
+            return@LaunchedEffect
+        }
+        delay(140)
+        val snapshotText = editorValue.text
+        val snapshotCursor = cursor
+        val result = withContext(Dispatchers.Default) {
+            engine.suggest(AddonCompletionEngine.Request(activePath, snapshotText, snapshotCursor))
+        }
+        if (activePath == vm.activeFile && snapshotText == editorValue.text &&
+            snapshotCursor == editorValue.selection.start
+        ) {
+            completionRange = result.start to result.end
+            completionItems = result.items
         }
     }
     LaunchedEffect(path, editorValue.text, lang) {
@@ -360,24 +396,53 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         )
                     }
                 } else {
-                    BasicTextField(
-                        value = editorValue,
-                        onValueChange = {
-                            editorValue = it
-                            if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightSource = ""
-                        },
-                        readOnly = vm.isOpeningFile,
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                        visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) HighlightTransformation(lang, Palette(
-                            Color(0xFF8FC9FF),
-                            Color(0xFFB5E7A0),
-                            Color(0xFFE6B35A),
-                            Emerald,
-                            Color(0xFF82958A),
-                            if (syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING) Color(0x55E6B35A) else Color(0x55F44336)
-                        ), if (lang == Lang.JSON) jsonErrorOffset else null) else VisualTransformation.None
-                    )
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        BasicTextField(
+                            value = editorValue,
+                            onValueChange = {
+                                editorValue = it
+                                if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightSource = ""
+                            },
+                            readOnly = vm.isOpeningFile,
+                            modifier = Modifier.fillMaxSize(),
+                            textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
+                            visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) HighlightTransformation(lang, Palette(
+                                Color(0xFF8FC9FF),
+                                Color(0xFFB5E7A0),
+                                Color(0xFFE6B35A),
+                                Emerald,
+                                Color(0xFF82958A),
+                                if (syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING) Color(0x55E6B35A) else Color(0x55F44336)
+                            ), if (lang == Lang.JSON) jsonErrorOffset else null) else VisualTransformation.None
+                        )
+                        DropdownMenu(
+                            expanded = completionItems.isNotEmpty(),
+                            onDismissRequest = { completionItems = emptyList() }
+                        ) {
+                            completionItems.take(12).forEach { suggestion ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(suggestion.label, style = MaterialTheme.typography.bodyMedium)
+                                            if (suggestion.detail.isNotBlank()) {
+                                                Text(suggestion.detail, style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        val start = completionRange.first.coerceIn(0, editorValue.text.length)
+                                        val end = completionRange.second.coerceIn(start, editorValue.text.length)
+                                        val updated = editorValue.text.replaceRange(start, end, suggestion.insertText)
+                                        val cursor = start + suggestion.insertText.length
+                                        editorValue = TextFieldValue(updated, TextRange(cursor))
+                                        completionItems = emptyList()
+                                        vm.updateContent(updated)
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
