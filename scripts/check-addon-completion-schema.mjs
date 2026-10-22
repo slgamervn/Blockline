@@ -107,6 +107,7 @@ for (const [owner, members] of Object.entries(requiredApiMembers)) {
 const previewOnlyApiMembers = {
   world: ["allowCheats", "broadcastClientMessage", "getClock", "playMusic"],
   Dimension: ["poiManager", "getWeather", "getGeneratedStructures", "stopAllSounds", "stopSound", "spawnXp"],
+  Entity: ["isPassengerOfBlock", "target", "startPassengerOfBlock", "stopPassengerOfBlock"],
   Player: [
     "chatDisplayName",
     "chatMessagePrefix",
