@@ -52,4 +52,25 @@ class AddonCompletionEngineTest {
         assertEquals("123e4567-e89b-12d3-a456-426614174000", first.items.first { it.detail == "Generated UUID" }.label)
         assertEquals(first.items.map { it.label }, second.items.map { it.label })
     }
+
+    @Test fun recognizesWindowsPathsAndItemFiles() {
+        val text = "{\"minecraft:i"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP\\items\\custom_item.json", text, text.length))
+        assertTrue(result.items.any { it.label == "minecraft:item" })
+        assertTrue(result.items.all { it.label.startsWith("minecraft:i", ignoreCase = true) })
+    }
+
+    @Test fun cursorIsClampedAndEmptyInputSuggestsKeys() {
+        val text = "{"
+        val result = engine.suggest(AddonCompletionEngine.Request("manifest.json", text, text.length + 20))
+        assertEquals(text.length, result.end)
+        assertTrue(result.items.any { it.label == "format_version" })
+    }
+
+    @Test fun suggestsEntityComponentsInsideComponentsObject() {
+        val text = "{\"components\":{\"minecraft:he"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
+        assertTrue(result.items.any { it.label == "minecraft:health" })
+        assertTrue(result.items.none { it.label == "minecraft:movement" })
+    }
 }
