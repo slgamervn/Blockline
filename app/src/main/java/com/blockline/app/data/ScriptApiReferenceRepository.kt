@@ -9,6 +9,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -189,33 +190,42 @@ class ScriptApiReferenceRepository(context: Context) {
     }
 
     private fun readHttps(urlText: String, maxBytes: Int): String {
-        val url = URL(urlText)
-        require(url.protocol == "https" && url.host in ALLOWED_HOSTS) { "Blocked API source URL." }
-        val connection = url.openConnection() as HttpURLConnection
-        connection.connectTimeout = NETWORK_TIMEOUT_MS
-        connection.readTimeout = NETWORK_TIMEOUT_MS
-        connection.instanceFollowRedirects = true
-        connection.setRequestProperty("User-Agent", "Blockline-Script-API-Reference")
-        connection.setRequestProperty("Accept", "application/json, text/plain, */*")
-        try {
-            val code = connection.responseCode
-            if (code !in 200..299) throw IOException("HTTP " + code)
-            connection.inputStream.use { input ->
-                val output = ByteArrayOutputStream()
-                val buffer = ByteArray(8192)
-                var total = 0
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    total += count
-                    if (total > maxBytes) throw IOException("Downloaded source exceeds the safety limit.")
-                    output.write(buffer, 0, count)
+        var url = URL(urlText)
+        repeat(MAX_REDIRECTS + 1) {
+            require(isAllowedSourceUrl(url)) { "Blocked API source URL." }
+            val connection = url.openConnection() as HttpURLConnection
+            connection.connectTimeout = NETWORK_TIMEOUT_MS
+            connection.readTimeout = NETWORK_TIMEOUT_MS
+            connection.instanceFollowRedirects = false
+            connection.setRequestProperty("User-Agent", "Blockline-Script-API-Reference")
+            connection.setRequestProperty("Accept", "application/json, text/plain, */*")
+            try {
+                val code = connection.responseCode
+                if (code in 300..399) {
+                    val location = connection.getHeaderField("Location")
+                        ?: throw IOException("Redirect response did not include a Location header.")
+                    url = URL(url, location)
+                    return@repeat
                 }
-                return String(output.toByteArray(), StandardCharsets.UTF_8)
+                if (code !in 200..299) throw IOException("HTTP " + code)
+                connection.inputStream.use { input ->
+                    val output = ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    var total = 0
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        total += count
+                        if (total > maxBytes) throw IOException("Downloaded source exceeds the safety limit.")
+                        output.write(buffer, 0, count)
+                    }
+                    return String(output.toByteArray(), StandardCharsets.UTF_8)
+                }
+            } finally {
+                connection.disconnect()
             }
-        } finally {
-            connection.disconnect()
         }
+        throw IOException("Too many redirects while downloading Script API declarations.")
     }
 
     private fun readMetadata(packageName: String): PackageMetadata? = runCatching {
@@ -300,7 +310,13 @@ class ScriptApiReferenceRepository(context: Context) {
     private val versionComparator = Comparator<String> { left, right -> compareVersions(right, left) }
 
     companion object {
+        internal fun isAllowedSourceUrl(url: URL): Boolean =
+            url.protocol.equals("https", ignoreCase = true) &&
+                url.host.lowercase(Locale.ROOT) in ALLOWED_HOSTS &&
+                url.userInfo == null
+
         private const val NETWORK_TIMEOUT_MS = 7_000
+        private const val MAX_REDIRECTS = 5
         private const val MAX_METADATA_BYTES = 4_000_000
         private const val MAX_SOURCE_BYTES = 3_500_000
         private val ALLOWED_HOSTS = setOf("registry.npmjs.org", "cdn.jsdelivr.net", "data.jsdelivr.net")
