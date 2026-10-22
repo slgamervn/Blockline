@@ -105,8 +105,8 @@ for (const [owner, members] of Object.entries(requiredApiMembers)) {
 }
 
 const previewOnlyApiMembers = {
-  world: ["broadcastClientMessage", "getClock", "playMusic"],
-  Dimension: ["getWeather", "getGeneratedStructures", "stopAllSounds", "stopSound", "spawnXp"],
+  world: ["allowCheats", "broadcastClientMessage", "getClock", "playMusic"],
+  Dimension: ["poiManager", "getWeather", "getGeneratedStructures", "stopAllSounds", "stopSound", "spawnXp"],
   Player: [
     "chatDisplayName",
     "chatMessagePrefix",
