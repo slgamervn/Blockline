@@ -4,7 +4,7 @@ import java.io.File
 
 internal fun resolveProjectDirectory(root: File, id: String): File {
     require(id.isNotBlank() && id != "." && id != ".." &&
-        '/' !in id && '\\\\' !in id
+        '/' !in id && '\\' !in id
     ) {
         "Invalid project ID"
     }
