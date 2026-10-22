@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -632,35 +633,40 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
             if (result != null && filteredSymbols.isEmpty()) {
                 Text(stringResource(R.string.api_reference_no_symbols))
             }
-            filteredSymbols.forEach { symbol ->
-                androidx.compose.material3.HorizontalDivider()
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text("${symbol.kind}  ${symbol.name}", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                    Text(symbol.signature, fontFamily = FontFamily.Monospace, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
-                    if (symbol.documentation.isNotBlank()) {
-                        Text(symbol.documentation, style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = {
-                            clipboard.setText(AnnotatedString(symbol.rawDeclaration))
-                            vm.message = context.getString(R.string.api_reference_copied, symbol.name)
-                        }) { Icon(Icons.Default.ContentCopy, null); Text(stringResource(R.string.api_reference_copy)) }
-                        TextButton(onClick = {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, symbol.name)
-                                putExtra(Intent.EXTRA_TEXT, symbol.rawDeclaration)
-                            }
-                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.api_reference_share)))
-                        }) { Text(stringResource(R.string.api_reference_share)) }
-                        TextButton(
-                            enabled = vm.activeFile?.substringAfterLast('.') == "ts" && !vm.readOnly,
-                            onClick = {
-                                val separator = if (vm.content.isBlank()) "" else "\n\n"
-                                vm.updateContent(vm.content + separator + symbol.rawDeclaration)
-                                onOpenEditor()
-                            }
-                        ) { Text(stringResource(R.string.api_reference_insert)) }
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 460.dp)) {
+                items(
+                    filteredSymbols,
+                    key = { symbol -> symbol.kind + ":" + symbol.name + ":" + symbol.signature }
+                ) { symbol ->
+                    androidx.compose.material3.HorizontalDivider()
+                    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text("${symbol.kind}  ${symbol.name}", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                        Text(symbol.signature, fontFamily = FontFamily.Monospace, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        if (symbol.documentation.isNotBlank()) {
+                            Text(symbol.documentation, style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = {
+                                clipboard.setText(AnnotatedString(symbol.rawDeclaration))
+                                vm.message = context.getString(R.string.api_reference_copied, symbol.name)
+                            }) { Icon(Icons.Default.ContentCopy, null); Text(stringResource(R.string.api_reference_copy)) }
+                            TextButton(onClick = {
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_SUBJECT, symbol.name)
+                                    putExtra(Intent.EXTRA_TEXT, symbol.rawDeclaration)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.api_reference_share)))
+                            }) { Text(stringResource(R.string.api_reference_share)) }
+                            TextButton(
+                                enabled = vm.activeFile?.substringAfterLast('.') == "ts" && !vm.readOnly,
+                                onClick = {
+                                    val separator = if (vm.content.isBlank()) "" else "\n\n"
+                                    vm.updateContent(vm.content + separator + symbol.rawDeclaration)
+                                    onOpenEditor()
+                                }
+                            ) { Text(stringResource(R.string.api_reference_insert)) }
+                        }
                     }
                 }
             }

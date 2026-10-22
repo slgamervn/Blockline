@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,9 +55,13 @@ internal fun VanillaReferenceCard() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val cacheFile = remember { VanillaResourceIndex.cacheFile(context.filesDir) }
-    var pathCount by remember { mutableStateOf(VanillaResourceIndex.read(cacheFile).size) }
+    var pathCount by remember { mutableStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(cacheFile) {
+        pathCount = withContext(Dispatchers.IO) { VanillaResourceIndex.read(cacheFile).size }
+    }
 
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -76,12 +81,13 @@ internal fun VanillaReferenceCard() {
                             val result = runCatching {
                                 withContext(Dispatchers.IO) { VanillaResourceIndex.refresh(cacheFile) }
                             }
-                            result.onSuccess {
-                                pathCount = it
-                                status = context.getString(R.string.vanilla_reference_ready, it)
-                            }.onFailure {
-                                pathCount = VanillaResourceIndex.read(cacheFile).size
-                                status = context.getString(R.string.vanilla_reference_failed, it.message ?: "Network error")
+                            if (result.isSuccess) {
+                                val count = result.getOrThrow()
+                                pathCount = count
+                                status = context.getString(R.string.vanilla_reference_ready, count)
+                            } else {
+                                pathCount = withContext(Dispatchers.IO) { VanillaResourceIndex.read(cacheFile).size }
+                                status = context.getString(R.string.vanilla_reference_failed, result.exceptionOrNull()?.message ?: "Network error")
                             }
                             refreshing = false
                         }
@@ -291,15 +297,24 @@ internal fun BrarchiveToolCard() {
                     val stream = context.contentResolver.openInputStream(uri)
                         ?: throw IllegalStateException("Unable to open the selected archive.")
                     val bytes = stream.use { BrarchiveCodec.readBounded(it) }
-                    BrarchiveCodec.decode(bytes)
+                    val loaded = BrarchiveCodec.decode(bytes)
+                    val firstEditable = loaded.indexOfFirst {
+                        it.isUtf8Text && it.content.size <= 2 * 1024 * 1024
+                    }.takeIf { it >= 0 } ?: loaded.indices.firstOrNull()
+                    val firstText = firstEditable?.let { index ->
+                        val entry = loaded[index]
+                        if (entry.isUtf8Text && entry.content.size <= 2 * 1024 * 1024) {
+                            BrarchiveCodec.textContent(entry).orEmpty()
+                        } else ""
+                    }.orEmpty()
+                    Triple(loaded, firstEditable, firstText)
                 }
             }
             result.onSuccess { loaded ->
-                entries = loaded
+                entries = loaded.first
                 drafts = emptyMap()
-                selectedIndex = loaded.indexOfFirst { it.isUtf8Text }.takeIf { it >= 0 }
-                    ?: loaded.indices.firstOrNull()
-                selectedText = selectedIndex?.let { BrarchiveCodec.textContent(loaded[it]) }.orEmpty()
+                selectedIndex = loaded.second
+                selectedText = loaded.third
                 selectedIssue = null
                 val name = uri.lastPathSegment?.substringAfterLast('/')?.substringAfterLast(':')
                 archiveName = name?.takeIf { it.endsWith(".brarchive", true) } ?: "output.brarchive"
@@ -340,11 +355,6 @@ internal fun BrarchiveToolCard() {
         selectedIssue = null
     }
 
-    fun snapshotEntries(): List<BrarchiveEntry> = entries.mapIndexed { index, entry ->
-        val edited = drafts[index]
-        if (edited == null) entry else BrarchiveCodec.createEntry(entry.name, edited.toByteArray(Charsets.UTF_8))
-    }
-
     fun exportArchive(asZip: Boolean) {
         if (entries.isEmpty()) {
             status = context.getString(R.string.brarchive_no_entries)
@@ -353,11 +363,17 @@ internal fun BrarchiveToolCard() {
         scope.launch {
             busy = true
             status = context.getString(R.string.brarchive_export_ready)
-            val snapshot = snapshotEntries()
+            val entriesSnapshot = entries
+            val draftsSnapshot = drafts
             val base = archiveName.substringBeforeLast('.', archiveName).ifBlank { "output" }
             val filename = if (asZip) base + ".zip" else base + ".brarchive"
             val result = runCatching {
                 withContext(Dispatchers.Default) {
+                    val snapshot = entriesSnapshot.mapIndexed { index, entry ->
+                        val edited = draftsSnapshot[index]
+                        if (edited == null) entry
+                        else BrarchiveCodec.createEntry(entry.name, edited.toByteArray(Charsets.UTF_8))
+                    }
                     if (asZip) BrarchiveCodec.encodeZip(snapshot) else BrarchiveCodec.encode(snapshot)
                 }
             }
@@ -439,8 +455,17 @@ internal fun BrarchiveToolCard() {
                         TextButton(
                             onClick = {
                                 selectedIndex = index
-                                selectedText = drafts[index] ?: BrarchiveCodec.textContent(entry).orEmpty()
                                 selectedIssue = null
+                                val draft = drafts[index]
+                                selectedText = draft.orEmpty()
+                                if (draft == null && entry.isUtf8Text && entry.content.size <= 2 * 1024 * 1024) {
+                                    scope.launch {
+                                        val decoded = withContext(Dispatchers.IO) {
+                                            BrarchiveCodec.textContent(entry).orEmpty()
+                                        }
+                                        if (selectedIndex == index && drafts[index] == null) selectedText = decoded
+                                    }
+                                }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
