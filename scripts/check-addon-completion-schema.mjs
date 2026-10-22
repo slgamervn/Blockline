@@ -91,4 +91,4 @@ if (schema.js.Dimension.includes("getGeneratedStructures")) {
   fail("js.Dimension.getGeneratedStructures is preview-only and must not be suggested as stable");
 }
 
-console.log("Validated Minecraft Bedrock add-on completion schema.");
+console.log("Validated Minecraft Bedrock add-on completion schema and stable API suggestions.");
