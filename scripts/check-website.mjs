@@ -46,7 +46,7 @@ assert(/--reveal-y/.test(css) && /scrollDirection > 0/.test(js), "Scroll reveal 
 
 assert(/aria-expanded/.test(js) && /Escape/.test(js), "Accessible mobile navigation has keyboard support");
 assert(/data-demo-tab/.test(html) && /activateDemoTab/.test(js), "Interactive demo tabs are present");
-assert(/demoPanel\.addEventListener\('touchstart'/.test(js) && /deltaX < 0 \? 1 : -1/.test(js) && /Math\.abs\(deltaY\) \* 1\.25/.test(js), "Mobile preview swipes change the active process step while vertical scrolling remains unaffected");
+assert(/const demoSwipeSurface = document\.querySelector\('\.demo-layout'\)/.test(js) && /demoSwipeSurface\.addEventListener\('touchstart'/.test(js) && /demoSwipeSurface\.addEventListener\('touchend'/.test(js) && /passive:\s*false/.test(js) && /event\.preventDefault\(\)/.test(js) && /deltaX < 0 \? 1 : -1/.test(js) && /Math\.abs\(deltaY\) \* 1\.25/.test(js), "Swiping mobile process cards or preview updates the same selected step without hijacking vertical scrolling");
 assert(/data-reading-copy/.test(html) && /reading-progress/.test(js), "Manifesto scroll highlight is present");
 assert(/@media\s*\(max-width:\s*380px\)/.test(css) && /@media\s*\(max-width:\s*560px\)/.test(css), "Narrow mobile breakpoints are present");
 assert(/@media\s*\(min-width:\s*1600px\)/.test(css), "Wide desktop breakpoint is present");
