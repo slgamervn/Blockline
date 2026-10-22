@@ -95,12 +95,20 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     var replacementText by remember { mutableStateOf("") }
     var showApplyReplaceConfirm by remember { mutableStateOf(false) }
     val p = vm.current
-    val pathMatches = p?.let { project ->
-        vm.projectEntries[project.id].orEmpty().filter {
-            it.isFile && filter.matches(it, vm.repo.relative(project.id, it)) &&
-                vm.repo.relative(project.id, it).contains(query, true)
-        }
-    }.orEmpty()
+    val indexedFiles = p?.let { vm.projectEntries[it.id] }.orEmpty()
+    val searchCandidates = remember(p?.id, indexedFiles) {
+        if (p == null) emptyList()
+        else indexedFiles.asSequence()
+            .filter { it.isFile }
+            .map { file -> file to vm.repo.relative(p.id, file) }
+            .toList()
+    }
+    val pathMatches = remember(searchCandidates, filter, query) {
+        searchCandidates.asSequence()
+            .filter { (file, path) -> filter.matches(file, path) && path.contains(query, true) }
+            .map { it.first }
+            .toList()
+    }
     val filterOptions = listOf(
         SearchFileFilter.ALL to R.string.filter_all,
         SearchFileFilter.JSON to R.string.filter_json,

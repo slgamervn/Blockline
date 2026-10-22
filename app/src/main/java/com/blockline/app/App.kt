@@ -67,7 +67,11 @@ private val TABS = listOf(
     TabDef("more", R.string.nav_more, Icons.Default.MoreHoriz)
 )
 private fun goTab(nav: NavController, route: String) {
-    nav.navigate(route) { popUpTo(nav.graph.findStartDestination().id); launchSingleTop = true }
+    nav.navigate(route) {
+        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
 }
 
 @Composable
@@ -128,19 +132,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                             selected = selected,
                             onClick = { goTab(nav, t.route) },
                             icon = {
-                                val scale by animateFloatAsState(
-                                    targetValue = if (selected) 1.08f else 1f,
-                                    animationSpec = if (animationsEnabled) tween(150) else snap(),
-                                    label = "navigation-icon-${t.route}"
-                                )
-                                Icon(
-                                    t.icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                    }
-                                )
+                                Icon(t.icon, contentDescription = null)
                             },
                             label = { Text(stringResource(t.label)) }
                         )
@@ -152,30 +144,10 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 navController = nav,
                 startDestination = "projects",
                 modifier = Modifier.padding(pad),
-                enterTransition = {
-                    if (animationsEnabled) {
-                        fadeIn(animationSpec = tween(220)) +
-                            slideInHorizontally(animationSpec = tween(220)) { width -> width / 14 }
-                    } else EnterTransition.None
-                },
-                exitTransition = {
-                    if (animationsEnabled) {
-                        fadeOut(animationSpec = tween(160)) +
-                            slideOutHorizontally(animationSpec = tween(160)) { width -> -width / 24 }
-                    } else ExitTransition.None
-                },
-                popEnterTransition = {
-                    if (animationsEnabled) {
-                        fadeIn(animationSpec = tween(220)) +
-                            slideInHorizontally(animationSpec = tween(220)) { width -> -width / 14 }
-                    } else EnterTransition.None
-                },
-                popExitTransition = {
-                    if (animationsEnabled) {
-                        fadeOut(animationSpec = tween(160)) +
-                            slideOutHorizontally(animationSpec = tween(160)) { width -> width / 24 }
-                    } else ExitTransition.None
-                }
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None }
             ) {
                 composable("projects") { ProjectsScreen(vm) { nav.navigate("overview") } }
                 composable("overview") {

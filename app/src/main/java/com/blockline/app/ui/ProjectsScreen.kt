@@ -93,7 +93,6 @@ import java.io.OutputStream
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
-    val animationsEnabled = rememberSystemAnimationsEnabled()
     var actionProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameValue by remember { mutableStateOf("") }
@@ -126,35 +125,33 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
             }
             if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_projects), stringResource(R.string.no_projects_hint), Modifier.weight(1f))
             else LazyColumn(Modifier.weight(1f)) {
-                items(vm.projects, key = { it.id }) { p ->
-                    var itemVisible by remember(p.id) { mutableStateOf(false) }
-                    LaunchedEffect(p.id) { itemVisible = true }
-                    AnimatedVisibility(
-                        visible = itemVisible,
-                        enter = if (animationsEnabled) {
-                            fadeIn(animationSpec = tween(150)) +
-                                slideInVertically(animationSpec = tween(150)) { height -> height / 28 }
-                        } else EnterTransition.None,
-                        exit = ExitTransition.None
-                    ) {
-                        var menu by remember(p.id) { mutableStateOf(false) }
-                        Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-                            ListItem(
-                                headlineContent = { Text(p.name) },
-                                supportingContent = { Text(if (p.id == vm.current?.id) stringResource(R.string.current_open) else stringResource(R.string.last_opened_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened)))) },
-                                leadingContent = { Icon(Icons.Default.Archive, null) },
-                                trailingContent = {
-                                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
-                                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                        DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
-                                        DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false })
-                                        DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
-                                        DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
-                                    }
-                                },
-                                modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
-                            )
-                        }
+                items(
+                    items = vm.projects,
+                    key = { it.id },
+                    contentType = { "project" }
+                ) { p ->
+                    var menu by remember(p.id) { mutableStateOf(false) }
+                    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+                        ListItem(
+                            headlineContent = { Text(p.name) },
+                            supportingContent = {
+                                Text(
+                                    if (p.id == vm.current?.id) stringResource(R.string.current_open)
+                                    else stringResource(R.string.last_opened_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date(p.lastOpened)))
+                                )
+                            },
+                            leadingContent = { Icon(Icons.Default.Archive, null) },
+                            trailingContent = {
+                                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.project_actions)) }
+                                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.open)) }, onClick = { vm.selectProject(p); menu = false; onOpen() })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { renameProject = p; renameValue = p.name; menu = false })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.duplicate)) }, onClick = { vm.duplicateProject(p); menu = false })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { actionProject = p; menu = false })
+                                }
+                            },
+                            modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
+                        )
                     }
                 }
             }
