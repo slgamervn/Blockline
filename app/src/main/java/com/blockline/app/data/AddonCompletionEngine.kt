@@ -81,15 +81,21 @@ class AddonCompletionEngine private constructor(
                 }
                 val values = fileSchema.optJSONObject("values")
                 when {
-                    before.contains("\"components\"") || before.contains("\"component_groups\"") ->
-                        add(values?.optJSONArray("components").asStrings(), "Entity component")
+                    normalizedPath.endsWith("manifest.json") &&
+                        Regex("\"uuid\"\\s*:\\s*\"?[^\"]*$").containsMatchIn(before) ->
+                        add(listOf(uuidSuggestion), "Generated UUID")
+                    before.contains("\"components\"") || before.contains("\"component_groups\"") -> {
+                        val detail = when {
+                            pathContains(normalizedPath, "items") -> "Item component"
+                            pathContains(normalizedPath, "blocks") -> "Block component"
+                            else -> "Entity component"
+                        }
+                        add(values?.optJSONArray("components").asStrings(), detail)
+                    }
                     before.contains("\"module_type\"") || before.contains("\"type\"") ->
                         add((values?.optJSONArray("module_type").asStrings().orEmpty() + values?.optJSONArray("type").asStrings().orEmpty()).distinct(), "Manifest module type")
                     before.contains("\"format_version\"") ->
                         add(values?.optJSONArray("format_version").asStrings(), "Supported format version")
-                    normalizedPath.endsWith("manifest.json") &&
-                        Regex("\"uuid\"\\s*:\\s*\"?[^\"]*$").containsMatchIn(before) ->
-                        add(listOf(uuidSuggestion), "Generated UUID")
                 }
             }
         }
