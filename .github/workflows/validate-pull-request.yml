@@ -24,10 +24,11 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      - name: Validate website
+      - name: Validate website and Android translation resources
         run: |
           node scripts/check-site.mjs
           node scripts/check-website.mjs
+          node scripts/check-android-translations.mjs
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
