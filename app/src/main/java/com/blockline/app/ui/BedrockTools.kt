@@ -318,8 +318,8 @@ internal fun BrarchiveToolCard() {
                 selectedIssue = null
                 val name = uri.lastPathSegment?.substringAfterLast('/')?.substringAfterLast(':')
                 archiveName = name?.takeIf { it.endsWith(".brarchive", true) } ?: "output.brarchive"
-                val duplicates = loaded.groupBy { it.name }.values.count { it.size > 1 }
-                status = context.getString(R.string.brarchive_loaded, loaded.size, duplicates)
+                val duplicates = loaded.first.groupBy { it.name }.values.count { it.size > 1 }
+                status = context.getString(R.string.brarchive_loaded, loaded.first.size, duplicates)
             }.onFailure {
                 status = context.getString(R.string.brarchive_failed, it.message ?: "Invalid archive")
             }
