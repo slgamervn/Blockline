@@ -59,6 +59,23 @@ for (const [path, requirements] of Object.entries(requiredEntries)) {
   for (const key of requirements.valueArrays) {
     assertStringArray(entry.values?.[key], `files.${path}.values.${key}`);
   }
+
+  if (path === "manifest.json") {
+    const contexts = {
+      root: ["format_version", "header", "modules"],
+      header: ["name", "description", "uuid", "version"],
+      modules: ["type", "uuid", "version"],
+      dependencies: ["uuid", "version"],
+    };
+    for (const [context, requiredKeys] of Object.entries(contexts)) {
+      assertStringArray(entry.keysByContext?.[context], `files.manifest.json.keysByContext.${context}`);
+      for (const key of requiredKeys) {
+        if (!entry.keysByContext[context].includes(key)) {
+          fail(`files.manifest.json.keysByContext.${context} is missing required key ${key}`);
+        }
+      }
+    }
+  }
 }
 
 assertStringArray(schema.js?.globals, "js.globals");
