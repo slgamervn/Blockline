@@ -63,6 +63,23 @@ class ZipUtilTest {
     }
 
     @Test
+    fun sharesExtractionBudgetAcrossArchives() {
+        val firstRoot = Files.createTempDirectory("blockline-zip-budget-a").toFile()
+        val secondRoot = Files.createTempDirectory("blockline-zip-budget-b").toFile()
+        val budget = ZipExtractionBudget()
+        try {
+            ZipUtil.unzip(ByteArrayInputStream(archive("first.txt" to "one")), firstRoot, budget)
+            ZipUtil.unzip(ByteArrayInputStream(archive("second.txt" to "two")), secondRoot, budget)
+
+            assertEquals(2, budget.entryCount)
+            assertEquals(6L, budget.totalBytes)
+        } finally {
+            firstRoot.deleteRecursively()
+            secondRoot.deleteRecursively()
+        }
+    }
+
+    @Test
     fun rejectsZipSlipPath() {
         val root = Files.createTempDirectory("blockline-zip-test").toFile()
         try {
