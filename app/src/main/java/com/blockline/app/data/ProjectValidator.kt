@@ -19,7 +19,7 @@ data class ValidationIssue(
 
 object ProjectValidator {
     private val uuidPattern = Regex("(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-    private val semanticVersionPattern = Regex("""^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$""")
+    private val semanticVersionPattern = Regex("""^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$""")
     private val jsonExtensions = setOf("json", "mcmeta")
 
     fun validate(projectRoot: File, vanillaResourcePaths: Set<String> = emptySet()): List<ValidationIssue> {
@@ -497,7 +497,12 @@ object ProjectValidator {
     }
 
     private fun semanticVersionComponents(value: String): List<Int>? {
-        if (!semanticVersionPattern.matches(value)) return null
+        val match = semanticVersionPattern.matchEntire(value) ?: return null
+        val prerelease = match.groups[4]?.value
+        if (prerelease != null && prerelease.split('.').any { identifier ->
+                identifier.all { it in '0'..'9' } && identifier.length > 1 && identifier.startsWith('0')
+            }
+        ) return null
         val core = value.substringBefore("+").substringBefore("-").split(".")
         val major = core.getOrNull(0)?.toIntOrNull() ?: return null
         val minor = core.getOrNull(1)?.toIntOrNull() ?: return null
