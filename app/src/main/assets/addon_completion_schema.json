@@ -55,6 +55,56 @@
           "script",
           "world_template"
         ]
+      },
+      "keysByContext": {
+        "root": [
+          "format_version",
+          "header",
+          "modules",
+          "dependencies",
+          "metadata",
+          "capabilities",
+          "subpacks"
+        ],
+        "header": [
+          "name",
+          "description",
+          "uuid",
+          "version",
+          "min_engine_version",
+          "base_game_version",
+          "lock_template_options",
+          "allow_random_seed",
+          "pack_scope",
+          "platform_locked",
+          "product_type"
+        ],
+        "modules": [
+          "type",
+          "uuid",
+          "version",
+          "description",
+          "language",
+          "entry",
+          "capabilities",
+          "metadata"
+        ],
+        "dependencies": [
+          "uuid",
+          "version",
+          "module_name"
+        ],
+        "metadata": [
+          "authors",
+          "license",
+          "url",
+          "generated_with"
+        ],
+        "subpacks": [
+          "folder_name",
+          "name",
+          "memory_tier"
+        ]
       }
     },
     "entities/": {
