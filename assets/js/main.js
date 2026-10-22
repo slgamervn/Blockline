@@ -518,6 +518,31 @@
     });
   });
 
+  if (demoPanel && demoTabs.length > 1) {
+    let touchStart = null;
+    demoPanel.addEventListener('touchstart', (event) => {
+      if (event.changedTouches.length !== 1) {
+        touchStart = null;
+        return;
+      }
+      const touch = event.changedTouches[0];
+      touchStart = { x: touch.clientX, y: touch.clientY };
+    }, { passive: true });
+    demoPanel.addEventListener('touchend', (event) => {
+      if (!touchStart || event.changedTouches.length !== 1) return;
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - touchStart.x;
+      const deltaY = touch.clientY - touchStart.y;
+      touchStart = null;
+      if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+      const currentIndex = demoTabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true');
+      if (currentIndex < 0) return;
+      const nextIndex = (currentIndex + (deltaX < 0 ? 1 : -1) + demoTabs.length) % demoTabs.length;
+      activateDemoTab(demoTabs[nextIndex].dataset.demoTab);
+    }, { passive: true });
+    demoPanel.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
+  }
+
   const faqItems = [...document.querySelectorAll('.faq-list details')];
   faqItems.forEach((item) => {
     item.addEventListener('toggle', () => {
