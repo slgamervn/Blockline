@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FindInPage
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.filled.Save
@@ -45,6 +46,9 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -87,6 +91,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val path = vm.activeFile
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
+    var showHtmlPreview by remember(path) { mutableStateOf(false) }
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
     var largeFilePage by remember(path) { mutableStateOf(0) }
     var matchCount by remember(path) { mutableStateOf(0) }
@@ -210,6 +215,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.redo()
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.editor_redo_cd)) }
+                    if (path?.substringAfterLast('.', "")?.lowercase() in setOf("html", "htm")) {
+                        IconButton(onClick = { showHtmlPreview = true }, enabled = !vm.isOpeningFile) {
+                            Icon(Icons.Default.Visibility, "Preview HTML")
+                        }
+                    }
                     IconButton(onClick = {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         showFind = true
@@ -371,6 +381,39 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     }
+    if (showHtmlPreview) AlertDialog(
+        onDismissRequest = { showHtmlPreview = false },
+        title = { Text("Xem trước HTML") },
+        text = {
+            AndroidView(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 320.dp, max = 560.dp),
+                factory = { viewContext ->
+                    WebView(viewContext).apply {
+                        webViewClient = WebViewClient()
+                        settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        settings.allowFileAccess = false
+                        settings.allowContentAccess = false
+                        settings.allowFileAccessFromFileURLs = false
+                        settings.allowUniversalAccessFromFileURLs = false
+                        settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
+                    }
+                },
+                update = { webView ->
+                    webView.loadDataWithBaseURL(
+                        "https://blockline.local/",
+                        editorValue.text,
+                        "text/html",
+                        "UTF-8",
+                        null
+                    )
+                }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { showHtmlPreview = false }) { Text(stringResource(R.string.close)) }
+        }
+    )
     if (showFind) AlertDialog(
         onDismissRequest = { showFind = false },
         title = { Text(stringResource(R.string.find_in_file)) },
