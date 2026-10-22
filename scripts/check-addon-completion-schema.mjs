@@ -105,8 +105,22 @@ for (const [owner, members] of Object.entries(requiredApiMembers)) {
 }
 
 const previewOnlyApiMembers = {
+  world: ["broadcastClientMessage", "getClock", "playMusic"],
   Dimension: ["getWeather", "getGeneratedStructures", "stopAllSounds", "stopSound", "spawnXp"],
-  Player: ["chatDisplayName", "getPing", "stopAllSounds", "stopSound"],
+  Player: [
+    "chatDisplayName",
+    "chatMessagePrefix",
+    "chatNamePrefix",
+    "chatNameSuffix",
+    "persistentId",
+    "eatItem",
+    "getPing",
+    "getSplitScreenSlot",
+    "playMusic",
+    "postClientMessage",
+    "stopAllSounds",
+    "stopSound",
+  ],
 };
 for (const [owner, members] of Object.entries(previewOnlyApiMembers)) {
   for (const member of members) {
