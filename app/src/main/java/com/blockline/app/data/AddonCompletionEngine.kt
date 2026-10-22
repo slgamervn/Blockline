@@ -11,7 +11,7 @@ class AddonCompletionEngine private constructor(
     private val uuidSuggestion: String
 ) {
     data class Suggestion(val label: String, val insertText: String = label, val detail: String = "")
-    data class Request(val path: String, val text: String, val cursor: Int)
+    data class Request(val path: String, val text: String, val cursor: Int, val documentId: String = path)
     data class Result(val start: Int, val end: Int, val items: List<Suggestion>)
 
     fun suggest(request: Request): Result {
@@ -74,7 +74,7 @@ class AddonCompletionEngine private constructor(
                 val values = fileSchema.optJSONObject("values")
                 when {
                     isManifest && isCurrentStringValueForKey(before, "uuid") ->
-                        add(listOf(uuidFor(request.path, before)), "Generated UUID")
+                        add(listOf(uuidFor(request.documentId, before)), "Generated UUID")
                     isManifest && isCurrentNumericValueForKey(before, "format_version") ->
                         add(values?.optJSONArray("format_version").asStrings(), "Manifest format version")
                     isManifest && isCurrentStringValueForKey(before, "type") ->
@@ -147,11 +147,10 @@ class AddonCompletionEngine private constructor(
                 keys[keys.lastIndex - 1] == "component_groups")
     }
 
-    private fun uuidFor(path: String, before: String): String {
-        val keyStart = before.lastIndexOf("\"uuid\"")
-        val priorUuidCount = Regex("\"uuid\"").findAll(before.substring(0, keyStart.coerceAtLeast(0))).count()
-        if (priorUuidCount == 0) return uuidSuggestion
-        val identity = path.lowercase(java.util.Locale.ROOT) + ":" + priorUuidCount
+    private fun uuidFor(documentId: String, before: String): String {
+        val keyStart = before.lastIndexOf("\\"uuid\\"")
+        val priorUuidCount = Regex("\\"uuid\\"").findAll(before.substring(0, keyStart.coerceAtLeast(0))).count()
+        val identity = documentId.lowercase(java.util.Locale.ROOT) + ":" + priorUuidCount
         return UUID.nameUUIDFromBytes((uuidSuggestion + ":" + identity).toByteArray(Charsets.UTF_8)).toString()
     }
 
