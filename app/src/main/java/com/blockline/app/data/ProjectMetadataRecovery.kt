@@ -9,6 +9,7 @@ internal object ProjectMetadataRecovery {
         return projectRoot.listFiles().orEmpty()
             .asSequence()
             .filter { it.isDirectory && !it.name.startsWith(".") }
+            .filter { runCatching { resolveProjectDirectory(projectRoot, it.name) }.isSuccess }
             .map { directory ->
                 val timestamp = directory.lastModified().coerceAtLeast(0L)
                 Project(
