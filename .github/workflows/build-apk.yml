@@ -206,6 +206,7 @@ jobs:
           body_path: RELEASE_NOTES.md
           files: Blockline-v${{ steps.version.outputs.version_name }}.apk
           generate_release_notes: false
-          make_latest: true
+          prerelease: ${{ contains(steps.version.outputs.version_name, '-') }}
+          make_latest: ${{ contains(steps.version.outputs.version_name, '-') && 'false' || 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
