@@ -158,6 +158,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var batchReplaceReplacement = ""
     private var batchReplaceFilter = SearchFileFilter.ALL
     private var fileIndexRequestId = 0
+    private var projectListRequestId = 0
     private var autoSaveJob: Job? = null
     private val editorSaveCoordinator = EditorSaveCoordinator()
     private var projectSelectionRequestId = 0
@@ -227,7 +228,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
 
-    fun refresh() { projects = repo.list() }
+    fun refresh() {
+        val requestId = ++projectListRequestId
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { repo.list() } }
+            if (requestId != projectListRequestId) return@launch
+            result.onSuccess { projects = it }
+                .onFailure { message = it.message ?: "Could not load projects." }
+        }
+    }
     fun refreshOperationLog() {
         val projectId = current?.id
         if (projectId == null) {
@@ -707,9 +716,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         isOpeningFile = false
         clearResourcePreview()
         if (current?.id == p.id) {
-            repo.touch(p.id)
-            refresh()
-            refreshProjectEntries(p.id)
+            viewModelScope.launch {
+                val result = runCatching { withContext(Dispatchers.IO) { repo.touch(p.id) } }
+                if (current?.id != p.id) return@launch
+                result.onFailure { message = it.message ?: "Could not update project activity." }
+                refresh()
+                refreshProjectEntries(p.id)
+            }
             return
         }
         viewModelScope.launch {
@@ -727,7 +740,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             isValidating = false
             validationIssues = emptyList()
             validationCompleted = false
-            repo.touch(p.id)
+            withContext(Dispatchers.IO) { repo.touch(p.id) }
             refresh()
             refreshProjectEntries(p.id)
             activeFile = null
@@ -739,9 +752,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             contentSearchResults = emptyList()
         }
     }
-    fun createSample() = runCatching { repo.createSample() }.onSuccess {
-        refresh(); selectProject(it); message = text(R.string.sample_created)
-    }.onFailure { message = it.message ?: text(R.string.sample_create_failed) }
+    fun createSample(onCreated: (() -> Unit)? = null) {
+        if (isLoading || isFileOperationRunning) return
+        viewModelScope.launch {
+            isLoading = true
+            val result = runCatching { withContext(Dispatchers.IO) { repo.createSample() } }
+            isLoading = false
+            result.onSuccess {
+                refresh()
+                selectProject(it)
+                message = text(R.string.sample_created)
+                onCreated?.invoke()
+            }.onFailure { message = it.message ?: text(R.string.sample_create_failed) }
+        }
+    }
 
     fun importPack(uri: android.net.Uri) {
         viewModelScope.launch {
@@ -753,7 +777,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             finally { isLoading = false }
         }
     }
-    fun renameProject(p: Project, name: String) = runCatching { repo.rename(p.id, name); refresh(); if (current?.id == p.id) current = repo.list().firstOrNull { it.id == p.id } }.onFailure { message = it.message }
+    fun renameProject(p: Project, name: String) {
+        if (isFileOperationRunning) return
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    repo.rename(p.id, name)
+                    repo.list()
+                }
+            }
+            isFileOperationRunning = false
+            result.onSuccess { updatedProjects ->
+                projectListRequestId++
+                projects = updatedProjects
+                if (current?.id == p.id) current = updatedProjects.firstOrNull { it.id == p.id }
+            }.onFailure { message = it.message ?: "Could not rename project." }
+        }
+    }
     fun duplicateProject(p: Project) {
         if (isFileOperationRunning) return
         isFileOperationRunning = true
