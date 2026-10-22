@@ -93,6 +93,7 @@ import java.io.OutputStream
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
+    val animationsEnabled = rememberSystemAnimationsEnabled()
     var actionProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameValue by remember { mutableStateOf("") }
