@@ -73,7 +73,7 @@ const requiredApiMembers = {
   world: ["getAimAssist"],
   Player: ["getAimAssist", "setPropertyOverrideForEntity"],
   Entity: ["getBlockStandingOn"],
-  Dimension: ["getWeather"],
+  Dimension: ["getBlock", "getEntities", "setWeather"],
   Block: ["getLightLevel", "setPermutation"],
   BlockPermutation: ["resolve", "withState"],
   ItemStack: ["clone", "getLore"],
