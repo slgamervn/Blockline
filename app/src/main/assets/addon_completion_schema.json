@@ -355,10 +355,7 @@
       "setWeather",
       "spawnEntity",
       "spawnItem",
-      "spawnParticle",
-      "spawnXp",
-      "stopAllSounds",
-      "stopSound"
+      "spawnParticle"
     ],
     "Entity": [
       "addEffect",
