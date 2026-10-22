@@ -35,10 +35,10 @@ jobs:
             VERSION_NAME="0.1.${GITHUB_RUN_NUMBER}"
           fi
           if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][A-Za-z0-9.-]+)?$ ]]; then
-        echo "::error::VERSION_NAME must be a semantic version such as 0.1.412."
-        exit 1
-      fi
-      echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+            echo "::error::VERSION_NAME must be a semantic version such as 0.1.412."
+            exit 1
+          fi
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
