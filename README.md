@@ -75,7 +75,7 @@ gradle testDebugUnitTest
 gradle assembleDebug
 ```
 
-The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions runs website checks and unit tests before building and publishing a versioned APK. The website checks cover linked assets, HTML landmarks and anchors, CSS/JavaScript syntax, translation coverage, responsive breakpoints, and reduced-motion behavior. Open **Actions → Build APK** to inspect logs and download build artifacts. Release assets are named `Blockline-v<version>.apk`; a signed release APK requires repository signing secrets, otherwise the workflow publishes a debug-signed APK. A debug APK signed with a different key may not install as an update over another build.
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions validates the website, runs unit tests, and builds a versioned APK. A normal push to `main` uploads a workflow artifact; it does **not** automatically create a public GitHub Release. A stable Release is created only for a valid `vX.Y.Z` tag or when **Actions → Build APK → Run workflow** is started on `main`, and only when all four signing secrets are configured: `BLOCKLINE_KEYSTORE_BASE64`, `BLOCKLINE_KEYSTORE_PASSWORD`, `BLOCKLINE_KEY_ALIAS`, and `BLOCKLINE_KEY_PASSWORD`. Without signing configuration, CI uploads a debug APK artifact and deliberately skips publishing it as the latest stable release. Release assets are named `Blockline-v<version>.apk`. A debug APK signed with a different key may not install as an update over another build. See the run summary and logs to confirm the actual build type and release outcome.
 
 ## Performance and reliability principles
 
