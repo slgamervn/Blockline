@@ -101,10 +101,10 @@ class AddonCompletionEngine private constructor(
     private fun resolveJavaScriptOwner(expression: String): String? {
         val value = expression.trimEnd()
         return when {
-            Regex("(?:^|\\\\.)getDimension\\\\s*\\\\([^)]*\\\\)\\\\s*$").containsMatchIn(value) -> "Dimension"
-            Regex("(?:^|\\\\.)getBlock\\\\s*\\\\([^)]*\\\\)\\\\s*$").containsMatchIn(value) -> "Block"
-            Regex("(?:^|\\\\.)permutation\\\\s*$").containsMatchIn(value) -> "BlockPermutation"
-            else -> Regex("([A-Za-z_$][A-Za-z0-9_$]*)\\\\s*$").find(value)?.groupValues?.getOrNull(1)?.let {
+            Regex("""(?:^|\.)getDimension\s*\([^)]*\)\s*$""").containsMatchIn(value) -> "Dimension"
+            Regex("""(?:^|\.)getBlock\s*\([^)]*\)\s*$""").containsMatchIn(value) -> "Block"
+            Regex("""(?:^|\.)permutation\s*$""").containsMatchIn(value) -> "BlockPermutation"
+            else -> Regex("""([A-Za-z_$][A-Za-z0-9_$]*)\s*$""").find(value)?.groupValues?.getOrNull(1)?.let {
                 when (it) {
                     "player" -> "Player"
                     "entity" -> "Entity"
