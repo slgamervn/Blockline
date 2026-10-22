@@ -148,9 +148,9 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                     Text(stringResource(if (vm.isFileOperationRunning) R.string.file_operation_running else R.string.scanning_files), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                 }
-                if (!vm.isIndexingProjectFiles && entries.isEmpty()) {
+                if (!vm.isIndexingProjectFiles && visibleEntries.isEmpty()) {
                     EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())
-                } else if (entries.isNotEmpty()) {
+                } else if (visibleEntries.isNotEmpty()) {
                     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
                         items(
                             items = visibleEntries,
