@@ -101,7 +101,8 @@ class AddonCompletionEngineTest {
         val second = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val uuidAfterType = "\"type\": \"data\", \"uuid\": \""
         val afterType = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidAfterType, uuidAfterType.length))
-        assertTrue(afterType.items.any { it.detail == "Generated UUID" && it.label == "123e4567-e89b-12d3-a456-426614174000" })
+        assertTrue(afterType.items.any { it.detail == "Generated UUID" })
+        assertTrue(afterType.items.first { it.detail == "Generated UUID" }.label != first.items.first { it.detail == "Generated UUID" }.label)
         assertEquals("123e4567-e89b-12d3-a456-426614174000", first.items.first { it.detail == "Generated UUID" }.label)
         assertEquals(first.items.map { it.label }, second.items.map { it.label })
     }
