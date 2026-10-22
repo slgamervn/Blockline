@@ -11,8 +11,8 @@ class AddonCompletionEngineTest {
           "files":{
             "manifest.json":{"keys":["format_version","header","modules","uuid"],"values":{"module_type":["script","data"]}},
             "entities/":{"keys":["minecraft:entity","components","description"],"values":{"components":["minecraft:health","minecraft:movement"],"format_version":["1.21.0"]}},
-            "items/":{"keys":["minecraft:item","components"],"values":{"format_version":["1.21.0"]}},
-            "blocks/":{"keys":["minecraft:block","components"],"values":{"format_version":["1.21.0"]}}
+            "items/":{"keys":["minecraft:item","components"],"values":{"components":["minecraft:icon","minecraft:max_stack_size"],"format_version":["1.21.0"]}},
+            "blocks/":{"keys":["minecraft:block","components"],"values":{"components":["minecraft:geometry","minecraft:material_instances"],"format_version":["1.21.0"]}}
           },
           "js":{"globals":["world","system","Player"],"world":["getDimension","getPlayers"],"system":["run","runInterval"],"Player":["name","teleport"],"Dimension":["getBlock","spawnEntity"]}
         }
@@ -72,5 +72,19 @@ class AddonCompletionEngineTest {
         val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
         assertTrue(result.items.any { it.label == "minecraft:health" })
         assertTrue(result.items.none { it.label == "minecraft:movement" })
+    }
+
+    @Test fun suggestsItemComponentsInItemFiles() {
+        val text = "{\"components\":{\"minecraft:ma"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/items/custom_item.json", text, text.length))
+        assertTrue(result.items.any { it.label == "minecraft:max_stack_size" })
+        assertTrue(result.items.none { it.label == "minecraft:icon" })
+    }
+
+    @Test fun suggestsBlockComponentsInBlockFiles() {
+        val text = "{\"components\":{\"minecraft:ge"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/blocks/custom_block.json", text, text.length))
+        assertTrue(result.items.any { it.label == "minecraft:geometry" })
+        assertTrue(result.items.none { it.label == "minecraft:material_instances" })
     }
 }
