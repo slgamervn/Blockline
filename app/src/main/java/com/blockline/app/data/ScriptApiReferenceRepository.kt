@@ -283,18 +283,8 @@ class ScriptApiReferenceRepository(context: Context) {
         }
     }
 
-    private fun writeAtomically(target: File, text: String) {
-        val temp = File(target.parentFile, target.name + ".tmp")
-        try {
-            temp.writeText(text, Charsets.UTF_8)
-            if (!temp.renameTo(target)) {
-                temp.delete()
-                check(temp.renameTo(target)) { "Could not save Script API cache." }
-            }
-        } finally {
-            temp.delete()
-        }
-    }
+    private fun writeAtomically(target: File, text: String) =
+        AtomicFileWriter.write(target, text, suffix = ".tmp")
 
     private fun compareVersions(left: String, right: String): Int {
         val a = left.split('.').map { it.toIntOrNull() ?: 0 }
