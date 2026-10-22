@@ -84,6 +84,13 @@ class AddonCompletionEngineTest {
         assertEquals(text.length - "getD".length, result.start)
     }
 
+    @Test fun suggestsMembersAfterChainedApiCall() {
+        val text = "world.getDimension(\"overworld\").getBlock({x:0,y:0,z:0}).getLi"
+        val result = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", text, text.length))
+        assertTrue(result.items.any { it.label == "getLightLevel" })
+        assertEquals(text.length - "getLi".length, result.start)
+    }
+
     @Test fun suggestsEntityMembersFromEntityApiRatherThanPlayerOnlyApi() {
         val text = "entity.get"
         val result = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", text, text.length))
