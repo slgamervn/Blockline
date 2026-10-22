@@ -15,7 +15,7 @@ class ProjectRepository(private val ctx: Context) {
     private val indexFile = File(ctx.filesDir, "projects.json")
     val prefs = ctx.getSharedPreferences("blockline", Context.MODE_PRIVATE)
 
-    fun projectDir(id: String) = File(root, id)
+    fun projectDir(id: String): File = resolveProjectDirectory(root, id)
     fun list(): List<Project> {
         if (!indexFile.isFile) return recoverProjectIndex()
 
