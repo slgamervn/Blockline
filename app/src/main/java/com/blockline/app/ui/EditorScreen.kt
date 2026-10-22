@@ -137,7 +137,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     LaunchedEffect(path, editorValue.text, editorValue.selection, vm.readOnly, completionEngine) {
         val engine = completionEngine
         val activePath = path
-        if (engine == null || activePath == null || vm.readOnly || vm.isOpeningFile) {
+        if (
+            engine == null || activePath == null || vm.readOnly || vm.isOpeningFile ||
+            editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS
+        ) {
             completionItems = emptyList()
             return@LaunchedEffect
         }
