@@ -8,6 +8,7 @@ import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -15,7 +16,7 @@ import java.util.zip.ZipOutputStream
 class ZipUtilTest {
     @Test
     fun extractsRegularArchive() {
-        val root = createTempDir(prefix = "blockline-zip-test")
+        val root = Files.createTempDirectory("blockline-zip-test").toFile()
         try {
             val archive = archive("BP/manifest.json" to "{}")
             ZipUtil.unzip(ByteArrayInputStream(archive), root)
@@ -27,7 +28,7 @@ class ZipUtilTest {
 
     @Test
     fun addonArchiveContainsNestedMcpackFiles() {
-        val root = createTempDir(prefix = "blockline-addon-test")
+        val root = Files.createTempDirectory("blockline-addon-test").toFile()
         try {
             val pack = File(root, "BP").apply { mkdirs() }
             File(pack, "manifest.json").writeText("""{"pack":"behavior"}""")
@@ -63,7 +64,7 @@ class ZipUtilTest {
 
     @Test
     fun rejectsZipSlipPath() {
-        val root = createTempDir(prefix = "blockline-zip-test")
+        val root = Files.createTempDirectory("blockline-zip-test").toFile()
         try {
             assertThrows(SecurityException::class.java) {
                 ZipUtil.unzip(ByteArrayInputStream(archive("../outside.txt" to "unsafe")), root)
@@ -76,7 +77,7 @@ class ZipUtilTest {
 
     @Test
     fun rejectsDuplicateEntries() {
-        val root = createTempDir(prefix = "blockline-zip-test")
+        val root = Files.createTempDirectory("blockline-zip-test").toFile()
         try {
             assertThrows(IllegalArgumentException::class.java) {
                 ZipUtil.unzip(ByteArrayInputStream(archive("same.txt" to "one", "./same.txt" to "two")), root)
