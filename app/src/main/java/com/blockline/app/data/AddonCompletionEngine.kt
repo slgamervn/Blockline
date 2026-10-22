@@ -160,8 +160,9 @@ class AddonCompletionEngine private constructor(
     }
 
     private fun uuidFor(documentId: String, before: String): String {
-        val keyStart = before.lastIndexOf("\\"uuid\\"")
-        val priorUuidCount = Regex("\\"uuid\\"").findAll(before.substring(0, keyStart.coerceAtLeast(0))).count()
+        val uuidKey = '"'.toString() + "uuid" + '"'
+        val keyStart = before.lastIndexOf(uuidKey)
+        val priorUuidCount = Regex(Regex.escape(uuidKey)).findAll(before.substring(0, keyStart.coerceAtLeast(0))).count()
         val identity = documentId.lowercase(java.util.Locale.ROOT) + ":" + priorUuidCount
         return UUID.nameUUIDFromBytes((uuidSuggestion + ":" + identity).toByteArray(Charsets.UTF_8)).toString()
     }
