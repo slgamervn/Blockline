@@ -20,13 +20,15 @@
     "items/": {
       "keys": ["format_version", "minecraft:item", "description", "components", "identifier", "menu_category", "category", "tags", "damage", "durability", "food", "icon", "max_stack_size", "use_animation", "use_duration"],
       "values": {
-        "format_version": ["1.20.0", "1.21.0", "1.21.40"]
+        "format_version": ["1.20.0", "1.21.0", "1.21.40"],
+        "components": ["minecraft:icon", "minecraft:display_name", "minecraft:max_stack_size", "minecraft:damage", "minecraft:durability", "minecraft:food", "minecraft:use_animation", "minecraft:use_duration", "minecraft:cooldown", "minecraft:enchantable", "minecraft:wearable", "minecraft:hand_equipped", "minecraft:glint", "minecraft:allow_off_hand", "minecraft:interact_button"]
       }
     },
     "blocks/": {
       "keys": ["format_version", "minecraft:block", "description", "components", "identifier", "menu_category", "geometry", "material_instances", "collision_box", "selection_box", "loot", "light_emission", "light_dampening", "destructible_by_mining", "destructible_by_explosion", "friction", "map_color", "flammable"],
       "values": {
-        "format_version": ["1.20.0", "1.21.0", "1.21.40"]
+        "format_version": ["1.20.0", "1.21.0", "1.21.40"],
+        "components": ["minecraft:geometry", "minecraft:material_instances", "minecraft:collision_box", "minecraft:selection_box", "minecraft:loot", "minecraft:light_emission", "minecraft:light_dampening", "minecraft:destructible_by_mining", "minecraft:destructible_by_explosion", "minecraft:friction", "minecraft:map_color", "minecraft:flammable", "minecraft:crafting_table", "minecraft:placement_filter", "minecraft:redstone_conductor", "minecraft:breathability", "minecraft:liquid_detection"]
       }
     }
   },
