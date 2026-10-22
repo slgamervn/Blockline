@@ -1,6 +1,7 @@
 package com.blockline.app.data
 
 import org.json.JSONObject
+import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -65,29 +66,56 @@ class AppUpdateRepository {
         private const val CONNECT_TIMEOUT_MS = 8_000
         private const val READ_TIMEOUT_MS = 12_000
 
-        fun isValidVersion(value: String): Boolean =
-            Regex("""^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$""").matches(value)
+        private val VERSION_PATTERN = Regex(
+            """^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"""
+        )
 
-        fun compareVersions(left: String, right: String): Int {
-            val a = numericParts(left)
-            val b = numericParts(right)
-            for (index in 0 until maxOf(a.size, b.size)) {
-                val x = a.getOrElse(index) { 0L }
-                val y = b.getOrElse(index) { 0L }
-                if (x != y) return x.compareTo(y)
+        fun isValidVersion(value: String): Boolean {
+            val match = VERSION_PATTERN.matchEntire(value) ?: return false
+            val prerelease = match.groups[4]?.value ?: return true
+            return prerelease.split('.').all { identifier ->
+                !identifier.all { it in '0'..'9' } || identifier.length == 1 || identifier[0] != '0'
             }
-            return compareSuffix(left, right)
         }
 
-        private fun numericParts(version: String): List<Long> =
-            version.substringBefore('-').substringBefore('+')
-                .split('.').map { it.toLongOrNull() ?: 0L }
+        fun compareVersions(left: String, right: String): Int {
+            val leftMatch = parsedVersion(left)
+            val rightMatch = parsedVersion(right)
+            for (group in 1..3) {
+                val compared = BigInteger(leftMatch.groupValues[group])
+                    .compareTo(BigInteger(rightMatch.groupValues[group]))
+                if (compared != 0) return compared
+            }
 
-        private fun compareSuffix(left: String, right: String): Int {
-            val leftStable = '-' !in left && '+' !in left
-            val rightStable = '-' !in right && '+' !in right
-            if (leftStable != rightStable) return if (leftStable) 1 else -1
-            return left.compareTo(right, ignoreCase = true)
+            val leftPrerelease = leftMatch.groups[4]?.value
+            val rightPrerelease = rightMatch.groups[4]?.value
+            if (leftPrerelease == null && rightPrerelease == null) return 0
+            if (leftPrerelease == null) return 1
+            if (rightPrerelease == null) return -1
+
+            val leftIdentifiers = leftPrerelease.split('.')
+            val rightIdentifiers = rightPrerelease.split('.')
+            for (index in 0 until minOf(leftIdentifiers.size, rightIdentifiers.size)) {
+                val compared = comparePrereleaseIdentifiers(leftIdentifiers[index], rightIdentifiers[index])
+                if (compared != 0) return compared
+            }
+            return leftIdentifiers.size.compareTo(rightIdentifiers.size)
+        }
+
+        private fun parsedVersion(version: String): MatchResult {
+            require(isValidVersion(version)) { "Invalid semantic version: $version" }
+            return VERSION_PATTERN.matchEntire(version)!!
+        }
+
+        private fun comparePrereleaseIdentifiers(left: String, right: String): Int {
+            val leftNumeric = left.all { it in '0'..'9' }
+            val rightNumeric = right.all { it in '0'..'9' }
+            return when {
+                leftNumeric && rightNumeric -> BigInteger(left).compareTo(BigInteger(right))
+                leftNumeric -> -1
+                rightNumeric -> 1
+                else -> left.compareTo(right)
+            }
         }
     }
 }

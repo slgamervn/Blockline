@@ -21,10 +21,23 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
+    fun comparesPrereleaseIdentifiersAccordingToSemanticVersioning() {
+        assertTrue(AppUpdateRepository.compareVersions("1.0.0-beta.11", "1.0.0-beta.2") > 0)
+        assertTrue(AppUpdateRepository.compareVersions("1.0.0-1", "1.0.0-alpha") < 0)
+        assertTrue(AppUpdateRepository.compareVersions("1.0.0-alpha", "1.0.0-alpha.1") < 0)
+        assertEquals(0, AppUpdateRepository.compareVersions("1.0.0-rc.1+build.1", "1.0.0-rc.1+build.2"))
+        assertEquals(0, AppUpdateRepository.compareVersions("1.0.0+build.1", "1.0.0"))
+    }
+
+    @Test
     fun validatesReleaseVersionShape() {
         assertTrue(AppUpdateRepository.isValidVersion("0.1.332"))
         assertTrue(AppUpdateRepository.isValidVersion("1.2.3-rc.1"))
+        assertTrue(AppUpdateRepository.isValidVersion("1.2.3-rc.1+build.5"))
         assertFalse(AppUpdateRepository.isValidVersion("latest"))
         assertFalse(AppUpdateRepository.isValidVersion("1.2"))
+        assertFalse(AppUpdateRepository.isValidVersion("1.02.3"))
+        assertFalse(AppUpdateRepository.isValidVersion("1.2.3-01"))
+        assertFalse(AppUpdateRepository.isValidVersion("1.2.3-alpha..1"))
     }
 }
