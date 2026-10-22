@@ -87,8 +87,15 @@ for (const [owner, members] of Object.entries(requiredApiMembers)) {
   }
 }
 
-if (schema.js.Dimension.includes("getGeneratedStructures")) {
-  fail("js.Dimension.getGeneratedStructures is preview-only and must not be suggested as stable");
+const previewOnlyApiMembers = {
+  Dimension: ["getWeather", "getGeneratedStructures"],
+};
+for (const [owner, members] of Object.entries(previewOnlyApiMembers)) {
+  for (const member of members) {
+    if (schema.js[owner]?.includes(member)) {
+      fail(`js.${owner}.${member} is preview-only and must not be suggested as stable`);
+    }
+  }
 }
 
 console.log("Validated Minecraft Bedrock add-on completion schema and stable API suggestions.");
