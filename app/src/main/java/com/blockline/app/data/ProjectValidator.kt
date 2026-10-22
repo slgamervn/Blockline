@@ -349,7 +349,7 @@ object ProjectValidator {
                 val rawKey = source.substring(keyStart, keyEnd)
                 val previous = keys.put(key, keyStart to keyEnd)
                 if (previous != null) {
-                    duplicateKeys += DuplicateJsonKey(keyStart, rawKey)
+                    duplicateKeys += DuplicateJsonKey(keyEnd, rawKey)
                     shadowedKeyRanges += previous
                 }
                 whitespace()
