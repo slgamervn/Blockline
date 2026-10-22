@@ -102,8 +102,19 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit,
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null && p != null) vm.exportProject(uri, exportMode)
     }
-    val projectFiles = p?.let { vm.projectEntries[it.id].orEmpty() }.orEmpty().filter { it.isFile }
-    val manifestFiles = projectFiles.filter { it.name.equals("manifest.json", true) || it.name.equals("pack_manifest.json", true) }
+    val allProjectEntries = p?.let { vm.projectEntries[it.id].orEmpty() }.orEmpty()
+    val projectFiles by produceState(
+        initialValue = emptyList<java.io.File>(),
+        key1 = p?.id,
+        key2 = allProjectEntries
+    ) {
+        value = withContext(Dispatchers.Default) {
+            allProjectEntries.filter { it.isFile }
+        }
+    }
+    val manifestFiles = remember(projectFiles) {
+        projectFiles.filter { it.name.equals("manifest.json", true) || it.name.equals("pack_manifest.json", true) }
+    }
     Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: stringResource(R.string.overview)) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_project_selected), stringResource(R.string.choose_project_hint), Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
