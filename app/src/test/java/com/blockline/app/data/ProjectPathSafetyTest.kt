@@ -25,6 +25,7 @@ class ProjectPathSafetyTest {
             assertThrows(IllegalArgumentException::class.java) { resolveProjectDirectory(root, ".") }
             assertThrows(IllegalArgumentException::class.java) { resolveProjectDirectory(root, root.canonicalPath) }
             assertThrows(IllegalArgumentException::class.java) { resolveProjectDirectory(root, "nested/child") }
+            assertThrows(IllegalArgumentException::class.java) { resolveProjectDirectory(File(root, "backups").apply { mkdirs() }, "../outside") }
             assertThrows(IllegalArgumentException::class.java) { resolveProjectDirectory(root, "nested\\\\child") }
         } finally {
             root.deleteRecursively()

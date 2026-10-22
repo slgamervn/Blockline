@@ -340,5 +340,5 @@ class ProjectRepository(private val ctx: Context) {
         }
     }
 
-    private fun backupDir(id: String) = File(backupRoot, id)
+    private fun backupDir(id: String): File = resolveProjectDirectory(backupRoot, id)
 }
