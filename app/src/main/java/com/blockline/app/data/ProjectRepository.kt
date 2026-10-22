@@ -31,12 +31,12 @@ class ProjectRepository(private val ctx: Context) {
     }
 
     private fun recoverProjectIndex(preserveDamagedIndex: Boolean = false): List<Project> {
-        val recovered = ProjectMetadataRecovery.recover(root)
-        if (recovered.isEmpty()) return emptyList()
         if (preserveDamagedIndex && indexFile.isFile) {
             val damagedCopy = File(indexFile.parentFile, "projects.corrupt.${System.currentTimeMillis()}.json")
             runCatching { indexFile.copyTo(damagedCopy, overwrite = false) }
         }
+        val recovered = ProjectMetadataRecovery.recover(root)
+        if (recovered.isEmpty()) return emptyList()
         runCatching { save(recovered) }
         return recovered
     }
@@ -44,9 +44,7 @@ class ProjectRepository(private val ctx: Context) {
     private fun save(list: List<Project>) {
         val arr = JSONArray()
         list.forEach { arr.put(JSONObject().put("id", it.id).put("name", it.name).put("createdAt", it.createdAt).put("lastOpened", it.lastOpened)) }
-        val tmp = File(indexFile.parentFile, "projects.tmp")
-        tmp.writeText(arr.toString())
-        if (!tmp.renameTo(indexFile)) { indexFile.writeText(arr.toString()); tmp.delete() }
+        AtomicFileWriter.write(indexFile, arr.toString(), suffix = ".tmp")
     }
 
     fun touch(id: String) {
@@ -63,9 +61,17 @@ class ProjectRepository(private val ctx: Context) {
     fun duplicate(id: String): Project {
         val src = list().firstOrNull { it.id == id } ?: error("Project not found")
         val newId = UUID.randomUUID().toString()
-        check(projectDir(id).copyRecursively(projectDir(newId), overwrite = false)) { "Could not duplicate project" }
-        val now = System.currentTimeMillis()
-        return Project(newId, src.name + " (copy)", now, now).also { save(list() + it) }
+        val destination = projectDir(newId)
+        try {
+            check(projectDir(id).copyRecursively(destination, overwrite = false)) { "Could not duplicate project" }
+            val now = System.currentTimeMillis()
+            val duplicate = Project(newId, src.name + " (copy)", now, now)
+            save(list() + duplicate)
+            return duplicate
+        } catch (error: Exception) {
+            destination.deleteRecursively()
+            throw error
+        }
     }
 
     fun delete(id: String) {
@@ -80,31 +86,41 @@ class ProjectRepository(private val ctx: Context) {
     fun createSample(): Project {
         val id = UUID.randomUUID().toString()
         val dest = projectDir(id)
-        val replacements = mapOf(
-            "__BP_HEADER_UUID__" to UUID.randomUUID().toString(),
-            "__BP_DATA_UUID__" to UUID.randomUUID().toString(),
-            "__BP_SCRIPT_UUID__" to UUID.randomUUID().toString(),
-            "__RP_HEADER_UUID__" to UUID.randomUUID().toString(),
-            "__RP_MODULE_UUID__" to UUID.randomUUID().toString()
-        )
-        val sampleFiles = listOf(
-            "BP/manifest.json",
-            "BP/scripts/main.js",
-            "BP/functions/hello.mcfunction",
-            "RP/manifest.json",
-            "RP/texts/languages.json",
-            "RP/texts/en_US.lang",
-            "RP/texts/vi_VN.lang"
-        )
-        sampleFiles.forEach { relative ->
-            val target = File(dest, relative)
-            target.parentFile?.mkdirs()
-            var content = ctx.assets.open("sample-pack/$relative").bufferedReader().use { it.readText() }
-            replacements.forEach { (token, value) -> content = content.replace(token, value) }
-            target.writeText(content)
+        try {
+            val replacements = mapOf(
+                "__BP_HEADER_UUID__" to UUID.randomUUID().toString(),
+                "__BP_DATA_UUID__" to UUID.randomUUID().toString(),
+                "__BP_SCRIPT_UUID__" to UUID.randomUUID().toString(),
+                "__RP_HEADER_UUID__" to UUID.randomUUID().toString(),
+                "__RP_MODULE_UUID__" to UUID.randomUUID().toString()
+            )
+            val sampleFiles = listOf(
+                "BP/manifest.json",
+                "BP/scripts/main.js",
+                "BP/functions/hello.mcfunction",
+                "RP/manifest.json",
+                "RP/texts/languages.json",
+                "RP/texts/en_US.lang",
+                "RP/texts/vi_VN.lang"
+            )
+            sampleFiles.forEach { relative ->
+                val target = File(dest, relative)
+                check(target.parentFile?.mkdirs() == true || target.parentFile?.isDirectory == true) {
+                    "Could not create sample project directories."
+                }
+                var content = ctx.assets.open("sample-pack/$relative").bufferedReader().use { it.readText() }
+                replacements.forEach { (token, value) -> content = content.replace(token, value) }
+                target.writeText(content)
+            }
+            check(sampleFiles.all { File(dest, it).isFile }) { "Sample project is incomplete." }
+            val now = System.currentTimeMillis()
+            val project = Project(id, "Blockline Sample", now, now)
+            save(list() + project)
+            return project
+        } catch (error: Exception) {
+            dest.deleteRecursively()
+            throw error
         }
-        val now = System.currentTimeMillis()
-        return Project(id, "Blockline Sample", now, now).also { save(list() + it) }
     }
 
     fun displayName(uri: Uri): String {
