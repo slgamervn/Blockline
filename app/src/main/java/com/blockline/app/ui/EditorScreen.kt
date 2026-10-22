@@ -139,8 +139,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
         val beforeCursor = editorValue.text.substring(0, cursor)
         val currentToken = Regex("[A-Za-z0-9_$:.-]*$").find(beforeCursor)?.value.orEmpty()
+        val isManifest = activePath.substringAfterLast('/').equals("manifest.json", true)
+        val isManifestUuidStart = isManifest && Regex("\\"uuid\\"\\s*:\\s*\\"$").containsMatchIn(beforeCursor)
         val shouldSuggest = currentToken.isNotEmpty() || beforeCursor.endsWith(".") ||
-            (activePath.substringAfterLast('/').equals("manifest.json", true) && beforeCursor.trimEnd().endsWith("{"))
+            isManifestUuidStart || (isManifest && beforeCursor.trimEnd().endsWith("{"))
         if (!shouldSuggest) {
             completionItems = emptyList()
             return@LaunchedEffect
