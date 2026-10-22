@@ -159,6 +159,13 @@ class AddonCompletionEngineTest {
         assertTrue(result.items.none { it.detail == "Manifest module type" })
     }
 
+
+    @Test fun suggestsManifestFormatVersionAsNumber() {
+        val text = """{"format_version": """
+        val result = engine.suggest(AddonCompletionEngine.Request("manifest.json", text, text.length))
+        assertTrue(result.items.any { it.label == "2" && it.detail == "Manifest format version" })
+    }
+
     @Test fun doesNotSuggestFormatVersionsOutsideFormatVersionValue() {
         val text = "\"format_version\": \"1.21.0\", \"description\": \"1.21"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
