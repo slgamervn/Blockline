@@ -41,20 +41,7 @@ class AddonCompletionEngine private constructor(
         if (isJavaScript) {
             val js = schema.optJSONObject("js")
             val dot = before.lastIndexOf('.')
-            val owner = if (dot >= 0) {
-                val ownerMatch = Regex("([A-Za-z_$][A-Za-z0-9_$]*)\\s*$").find(before.substring(0, dot))
-                ownerMatch?.groupValues?.getOrNull(1)?.let {
-                    when (it) {
-                        "player" -> "Player"
-                        "entity" -> "Entity"
-                        "dim", "dimension" -> "Dimension"
-                        "block" -> "Block"
-                        "permutation", "blockPermutation" -> "BlockPermutation"
-                        "itemStack", "itemstack", "stack" -> "ItemStack"
-                        else -> it
-                    }
-                }
-            } else null
+            val owner = if (dot >= 0) resolveJavaScriptOwner(before.substring(0, dot)) else null
             if (owner != null && js != null) {
                 val members = js.optJSONArray(owner).asStrings()
                 add(members, "$owner API")
@@ -62,7 +49,7 @@ class AddonCompletionEngine private constructor(
                     prefix = Regex("[A-Za-z0-9_$]*$").find(before)?.value.orEmpty()
                     replaceStart = cursor - prefix.length
                 }
-            } else {
+            } else if (dot < 0) {
                 add(js?.optJSONArray("globals").asStrings(), "@minecraft/server")
                 add(schema.optJSONArray("javascriptKeywords").asStrings(), "JavaScript")
             }
@@ -109,6 +96,26 @@ class AddonCompletionEngine private constructor(
         return Result(replaceStart.coerceIn(0, cursor), cursor, candidates.values
             .sortedWith(compareBy<Suggestion> { it.label.lowercase() }.thenBy { it.label })
             .take(60))
+    }
+
+    private fun resolveJavaScriptOwner(expression: String): String? {
+        val value = expression.trimEnd()
+        return when {
+            Regex("(?:^|\\\\.)getDimension\\\\s*\\\\([^)]*\\\\)\\\\s*$").containsMatchIn(value) -> "Dimension"
+            Regex("(?:^|\\\\.)getBlock\\\\s*\\\\([^)]*\\\\)\\\\s*$").containsMatchIn(value) -> "Block"
+            Regex("(?:^|\\\\.)permutation\\\\s*$").containsMatchIn(value) -> "BlockPermutation"
+            else -> Regex("([A-Za-z_$][A-Za-z0-9_$]*)\\\\s*$").find(value)?.groupValues?.getOrNull(1)?.let {
+                when (it) {
+                    "player" -> "Player"
+                    "entity" -> "Entity"
+                    "dim", "dimension" -> "Dimension"
+                    "block" -> "Block"
+                    "permutation", "blockPermutation" -> "BlockPermutation"
+                    "itemStack", "itemstack", "stack" -> "ItemStack"
+                    else -> it
+                }
+            }
+        }
     }
 
     private fun isJsonKeyContext(before: String): Boolean {
