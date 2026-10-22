@@ -89,6 +89,7 @@ for (const [owner, members] of Object.entries(requiredApiMembers)) {
 
 const previewOnlyApiMembers = {
   Dimension: ["getWeather", "getGeneratedStructures"],
+  Player: ["chatDisplayName", "getPing", "stopAllSounds", "stopSound"],
 };
 for (const [owner, members] of Object.entries(previewOnlyApiMembers)) {
   for (const member of members) {
