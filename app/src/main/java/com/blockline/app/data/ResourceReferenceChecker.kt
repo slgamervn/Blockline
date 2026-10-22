@@ -15,8 +15,8 @@ internal object ResourceReferenceChecker {
     ): List<ValidationIssue> {
         val issues = mutableListOf<ValidationIssue>()
         val canonicalRoot = runCatching { projectRoot.canonicalFile }.getOrNull() ?: return issues
-        val pngFiles = files.asSequence()
-            .filter { it.isFile && it.extension.equals("png", true) }
+        val textureFiles = files.asSequence()
+            .filter { it.isFile && it.extension.lowercase(Locale.ROOT) in setOf("png", "tga", "jpg", "jpeg", "webp") }
             .mapNotNull { runCatching { it.canonicalFile }.getOrNull() }
             .toSet()
 
@@ -34,7 +34,7 @@ internal object ResourceReferenceChecker {
                 val packRoot = findPackRoot(canonicalRoot, file) ?: canonicalRoot
                 val packPath = packRoot.path + File.separator
                 val packTextures = textureIndexByPack.getOrPut(packRoot.path) {
-                    pngFiles.filter { it.path.startsWith(packPath) }.toSet()
+                    textureFiles.filter { it.path.startsWith(packPath) }.toSet()
                 }
                 inspectTextures(root, false) { reference ->
                     val normalized = reference.trim().replace('\\', '/').removePrefix("/")

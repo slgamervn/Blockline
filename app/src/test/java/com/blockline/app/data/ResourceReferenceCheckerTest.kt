@@ -64,6 +64,25 @@ class ResourceReferenceCheckerTest {
     }
 
     @Test
+    fun acceptsExistingTgaTextureWithoutReportingItMissing() {
+        val root = Files.createTempDirectory("blockline-tga-texture-").toFile()
+        try {
+            val entity = File(root, "entity/client_entity.json").apply {
+                parentFile?.mkdirs()
+                writeText("""{"description":{"textures":{"default":"textures/entity/skin"}}}""")
+            }
+            val texture = File(root, "textures/entity").apply { mkdirs() }.resolve("skin.tga")
+            texture.writeBytes(byteArrayOf(1, 2, 3))
+
+            val issues = ResourceReferenceChecker.check(root, listOf(entity, texture))
+
+            assertTrue("Existing TGA texture should be accepted: $issues", issues.isEmpty())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun doesNotResolveTextureFromAnotherPackWithTheSameRelativePath() {
         val root = Files.createTempDirectory("blockline-isolated-pack-texture-").toFile()
         try {
