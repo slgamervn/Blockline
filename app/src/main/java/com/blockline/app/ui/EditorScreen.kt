@@ -402,9 +402,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 },
                 update = { webView ->
                     val html = editorValue.text
-                    val contentKey = html.hashCode()
-                    if (webView.tag != contentKey) {
-                        webView.tag = contentKey
+                    if (webView.tag != html) {
+                        webView.tag = html
                         webView.loadDataWithBaseURL(
                             "https://blockline.local/",
                             html,
