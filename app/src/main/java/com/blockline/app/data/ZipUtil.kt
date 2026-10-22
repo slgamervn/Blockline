@@ -10,23 +10,27 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+class ZipExtractionBudget internal constructor() {
+    internal var entryCount = 0
+    internal var totalBytes = 0L
+    internal var nestedArchiveCount = 0
+}
+
 object ZipUtil {
     private const val MAX_ENTRIES = 10_000
     private const val MAX_ENTRY_BYTES = 64L * 1024 * 1024
     private const val MAX_TOTAL_BYTES = 256L * 1024 * 1024
 
-    fun unzip(input: InputStream, destDir: File) {
+    fun unzip(input: InputStream, destDir: File, budget: ZipExtractionBudget = ZipExtractionBudget()) {
         check(destDir.mkdirs() || destDir.isDirectory) { "Could not create extraction directory." }
         val destCanon = destDir.canonicalPath
         val seen = HashSet<String>()
-        var entryCount = 0
-        var totalBytes = 0L
 
         ZipInputStream(BufferedInputStream(input)).use { zis ->
             var entry: ZipEntry? = zis.nextEntry
             while (entry != null) {
-                entryCount++
-                if (entryCount > MAX_ENTRIES) {
+                budget.entryCount++
+                if (budget.entryCount > MAX_ENTRIES) {
                     throw IllegalArgumentException("Archive contains too many entries (limit: $MAX_ENTRIES).")
                 }
 
@@ -61,11 +65,11 @@ object ZipUtil {
                             val count = zis.read(buffer)
                             if (count < 0) break
                             entryBytes += count
-                            totalBytes += count
+                            budget.totalBytes += count
                             if (entryBytes > MAX_ENTRY_BYTES) {
                                 throw IllegalArgumentException("Archive entry exceeds the 64 MiB extraction limit: $name")
                             }
-                            if (totalBytes > MAX_TOTAL_BYTES) {
+                            if (budget.totalBytes > MAX_TOTAL_BYTES) {
                                 throw IllegalArgumentException("Archive exceeds the 256 MiB total extraction limit.")
                             }
                             output.write(buffer, 0, count)
