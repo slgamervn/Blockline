@@ -146,7 +146,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                         if (score == null) {
                             Text(stringResource(R.string.pack_health_score_waiting), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
                         } else {
-                            LinearProgressIndicator(progress = score / 100f, modifier = Modifier.fillMaxWidth())
+                            LinearProgressIndicator(progress = { score / 100f }, modifier = Modifier.fillMaxWidth())
                             Text(
                                 stringResource(R.string.validation_counts,
                                     vm.validationIssues.count { it.severity == com.blockline.app.data.IssueSeverity.ERROR },
