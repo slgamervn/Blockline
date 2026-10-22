@@ -101,7 +101,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }, actions = {
         IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, stringResource(R.string.import_pack_cd)) }
     }) }, floatingActionButton = {
-        FloatingActionButton(onClick = { vm.createSample(); onOpen() }) { Icon(Icons.Default.Add, stringResource(R.string.create_sample_cd)) }
+        FloatingActionButton(onClick = { vm.createSample(onOpen) }) { Icon(Icons.Default.Add, stringResource(R.string.create_sample_cd)) }
     }) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().padding(horizontal = 16.dp)) {
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
