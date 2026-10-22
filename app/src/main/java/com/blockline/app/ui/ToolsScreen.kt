@@ -356,13 +356,19 @@ private fun BatchRenameToolCard(vm: AppViewModel) {
                     val pathsSnapshot = allPaths.toSet()
                     isPreviewing = true
                     scope.launch {
-                        val result = runCatching {
-                            withContext(Dispatchers.Default) {
-                                BatchRenameEngine.preview(filesSnapshot, pathsSnapshot, querySnapshot, replacementSnapshot)
-                            }
+                        val result = try {
+                            Result.success(
+                                withContext(Dispatchers.Default) {
+                                    BatchRenameEngine.preview(filesSnapshot, pathsSnapshot, querySnapshot, replacementSnapshot)
+                                }
+                            )
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                            throw cancelled
+                        } catch (failure: Exception) {
+                            Result.failure(failure)
                         }
                         isPreviewing = false
-                        if (project?.id != projectId || query != querySnapshot || replacement != replacementSnapshot) {
+                        if (vm.current?.id != projectId || query != querySnapshot || replacement != replacementSnapshot) {
                             return@launch
                         }
                         result.onSuccess {
