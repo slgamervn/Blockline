@@ -70,13 +70,7 @@ class AppUpdateRepository {
             """^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"""
         )
 
-        fun isValidVersion(value: String): Boolean {
-            val match = VERSION_PATTERN.matchEntire(value) ?: return false
-            val prerelease = match.groups[4]?.value ?: return true
-            return prerelease.split('.').all { identifier ->
-                !identifier.all { it in '0'..'9' } || identifier.length == 1 || identifier[0] != '0'
-            }
-        }
+        fun isValidVersion(value: String): Boolean = SemanticVersion.isValid(value)
 
         fun compareVersions(left: String, right: String): Int {
             val leftMatch = parsedVersion(left)
