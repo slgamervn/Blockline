@@ -172,15 +172,15 @@ class AddonCompletionEngine private constructor(
         return Regex(pattern).containsMatchIn(before)
     }
 
+    private data class JsonContainer(val isArray: Boolean, val key: String?)
+
     private fun openObjectKeys(before: String): List<String?> {
-        data class Container(val isArray: Boolean, val key: String?)
-        val stack = mutableListOf<Container>()
+        val stack = mutableListOf<JsonContainer>()
         var pendingKey: String? = null
         var index = 0
         while (index < before.length) {
             when (before[index]) {
                 '"' -> {
-                    val start = index + 1
                     index++
                     val value = StringBuilder()
                     var escaped = false
@@ -212,11 +212,11 @@ class AddonCompletionEngine private constructor(
                 }
                 '{' -> {
                     val arrayParentKey = stack.lastOrNull()?.takeIf { it.isArray }?.key
-                    stack.add(Container(false, pendingKey ?: arrayParentKey))
+                    stack.add(JsonContainer(false, pendingKey ?: arrayParentKey))
                     pendingKey = null
                 }
                 '[' -> {
-                    stack.add(Container(true, pendingKey))
+                    stack.add(JsonContainer(true, pendingKey))
                     pendingKey = null
                 }
                 '}', ']' -> {
