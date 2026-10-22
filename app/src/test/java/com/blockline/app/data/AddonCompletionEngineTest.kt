@@ -14,7 +14,7 @@ class AddonCompletionEngineTest {
             "items/":{"keys":["minecraft:item","components"],"values":{"components":["minecraft:icon","minecraft:max_stack_size"],"format_version":["1.21.0"]}},
             "blocks/":{"keys":["minecraft:block","components"],"values":{"components":["minecraft:geometry","minecraft:material_instances"],"format_version":["1.21.0"]}}
           },
-          "js":{"globals":["world","system","Player"],"world":["getDimension","getPlayers"],"system":["run","runInterval"],"Player":["name","teleport"],"Dimension":["getBlock","spawnEntity"]}
+          "js":{"globals":["world","system","Player","Entity"],"world":["getDimension","getPlayers"],"system":["run","runInterval"],"Player":["name","teleport","getItemCooldown"],"Entity":["getComponent","getHeadLocation"],"Dimension":["getBlock","spawnEntity"]}
         }
     """.trimIndent()
 
@@ -40,6 +40,14 @@ class AddonCompletionEngineTest {
         assertTrue(result.items.any { it.label == "getDimension" })
         assertTrue(result.items.none { it.label == "getPlayers" })
         assertEquals(text.length - "getD".length, result.start)
+    }
+
+    @Test fun suggestsEntityMembersFromEntityApiRatherThanPlayerOnlyApi() {
+        val text = "entity.get"
+        val result = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", text, text.length))
+        assertTrue(result.items.any { it.label == "getComponent" })
+        assertTrue(result.items.any { it.label == "getHeadLocation" })
+        assertTrue(result.items.none { it.label == "getItemCooldown" })
     }
 
     @Test fun suggestsManifestModuleTypesAndStableUuid() {

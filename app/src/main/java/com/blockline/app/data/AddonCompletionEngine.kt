@@ -45,7 +45,8 @@ class AddonCompletionEngine private constructor(
                 val ownerMatch = Regex("([A-Za-z_$][A-Za-z0-9_$]*)\\s*$").find(before.substring(0, dot))
                 ownerMatch?.groupValues?.getOrNull(1)?.let {
                     when (it) {
-                        "player", "entity" -> "Player"
+                        "player" -> "Player"
+                        "entity" -> "Entity"
                         "dim", "dimension" -> "Dimension"
                         else -> it
                     }

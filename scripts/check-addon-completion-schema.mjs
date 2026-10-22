@@ -62,7 +62,7 @@ for (const [path, requirements] of Object.entries(requiredEntries)) {
 }
 
 assertStringArray(schema.js?.globals, "js.globals");
-for (const owner of ["world", "system", "Player", "Dimension"]) {
+for (const owner of ["world", "system", "Player", "Entity", "Dimension"]) {
   if (!schema.js.globals.includes(owner)) {
     fail(`js.globals is missing ${owner}`);
   }
