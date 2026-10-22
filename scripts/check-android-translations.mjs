@@ -10,13 +10,13 @@ const resourceFiles = [
 const errors = [];
 
 function parseResources({ locale, file }) {
-  const xml = fs.readFileSync(file, "utf8").replace(/<!--[\\s\\S]*?-->/g, "");
+  const xml = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, "");
   const entries = new Map();
-  const pattern = /<(string|plurals|string-array|integer-array)\\b([^>]*?)(?:\\/>|>([\\s\\S]*?)<\\/\\1\\s*>)/g;
+  const pattern = /<(string|plurals|string-array|integer-array)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1\s*>)/g;
 
   for (const match of xml.matchAll(pattern)) {
     const [, type, attributes, body = ""] = match;
-    const name = /\\bname\\s*=\\s*["']([^"']+)["']/.exec(attributes)?.[1];
+    const name = /\bname\s*=\s*["']([^"']+)["']/.exec(attributes)?.[1];
     if (!name) {
       errors.push(`${locale}: <${type}> resource is missing its name attribute.`);
       continue;
@@ -25,7 +25,7 @@ function parseResources({ locale, file }) {
       errors.push(`${locale}: duplicate resource name "${name}".`);
       continue;
     }
-    const placeholders = (body.match(/%(?:\\d+\\$)?(?:\\.\\d+)?[sdf]|%%/g) || []).sort();
+    const placeholders = (body.match(/%(?:\d+\$)?(?:\.\d+)?[sdf]|%%/g) || []).sort();
     entries.set(name, { type, placeholders });
   }
   return entries;
