@@ -31,17 +31,18 @@ permissions:
 jobs:
   validate:
     name: Validate landing page and workflow YAML
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Validate GitHub Actions workflow YAML
         run: |
           ruby -e 'require "yaml"; ARGV.each { |file| YAML.parse_file(file); puts "Valid YAML: #{file}" }' .github/workflows/*.yml
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
+          package-manager-cache: false
       - name: Check HTML links, scripts, CSS, and motion safeguards
-        run: node --check scripts/check-website.mjs && node scripts/check-website.mjs
+        run: node --check scripts/check-site.mjs && node scripts/check-site.mjs && node --check scripts/check-website.mjs && node scripts/check-website.mjs
