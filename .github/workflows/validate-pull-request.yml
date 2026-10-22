@@ -59,7 +59,7 @@ jobs:
         run: gradle assembleDebug --stacktrace --no-daemon
 
       - name: Upload debug APK for device testing
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: blockline-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
