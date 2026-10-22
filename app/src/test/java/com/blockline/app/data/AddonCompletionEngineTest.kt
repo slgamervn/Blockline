@@ -9,7 +9,7 @@ class AddonCompletionEngineTest {
         {
           "javascriptKeywords":["const","function"],
           "files":{
-            "manifest.json":{"keys":["format_version","header","modules","uuid"],"values":{"module_type":["script","data"]}},
+            "manifest.json":{"keys":["format_version","header","modules","uuid"],"values":{"format_version":["2"],"module_type":["script","data"]}},
             "entities/":{"keys":["minecraft:entity","components","description"],"values":{"components":["minecraft:health","minecraft:movement"],"format_version":["1.21.0"]}},
             "items/":{"keys":["minecraft:item","components"],"values":{"components":["minecraft:icon","minecraft:max_stack_size"],"format_version":["1.21.0"]}},
             "blocks/":{"keys":["minecraft:block","components"],"values":{"components":["minecraft:geometry","minecraft:material_instances"],"format_version":["1.21.0"]}}
@@ -105,7 +105,7 @@ class AddonCompletionEngineTest {
         val uuidText = "\"uuid\": \""
         val first = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val second = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
-        val uuidAfterType = "\"type\": \"data\", \"uuid\": \""
+        val uuidAfterType = "{\"header\":{\"uuid\":\"first\"},\"modules\":[{\"type\":\"data\",\"uuid\":\""
         val afterType = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidAfterType, uuidAfterType.length))
         assertTrue(afterType.items.any { it.detail == "Generated UUID" })
         assertTrue(afterType.items.first { it.detail == "Generated UUID" }.label != first.items.first { it.detail == "Generated UUID" }.label)
