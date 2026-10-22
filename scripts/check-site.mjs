@@ -16,9 +16,9 @@ assert.match(html, /href=["']assets\/css\/style\.css(?:\?[^"']*)?["']/i, "The ex
 assert.match(html, /src=["']assets\/js\/main\.js["'][^>]*defer\b/i, "The external interaction script is deferred.");
 assert.ok(existsSync(path.join(root, "favicon.svg")), "The declared favicon file exists.");
 
-const localResources = [...html.matchAll(/\\b(?:href|src)=["']([^"']+)["']/gi)]
+const localResources = [...html.matchAll(/\b(?:href|src)=["']([^"']+)["']/gi)]
   .map((match) => match[1].trim())
-  .filter((value) => value && !/^(?:[a-z][a-z0-9+.-]*:|\\/\\/|#)/i.test(value));
+  .filter((value) => value && !/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(value));
 for (const resource of new Set(localResources)) {
   let pathname;
   try {
