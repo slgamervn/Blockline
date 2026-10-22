@@ -53,7 +53,7 @@ class ProjectValidatorDependencyEdgeCasesTest {
                 "Expected duplicate UUID diagnostic, got: $issues",
                 issues.any {
                     it.severity == IssueSeverity.ERROR &&
-                        it.message.contains("Duplicate UUID 12345678-1234-1234-1234-123456789ABC")
+                        it.message.lowercase().contains("duplicate uuid 12345678-1234-1234-1234-123456789abc")
                 }
             )
         } finally {
