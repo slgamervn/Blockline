@@ -19,7 +19,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Validate GitHub Actions workflow YAML
-        run: ruby -e 'require "yaml"; ARGV.each { |file| YAML.parse_file(file); puts "Valid YAML: #{file}" }' .github/workflows/*.yml
+        run: |
+          ruby -e 'require "yaml"; ARGV.each { |file| YAML.parse_file(file); puts "Valid YAML: #{file}" }' .github/workflows/*.yml
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
