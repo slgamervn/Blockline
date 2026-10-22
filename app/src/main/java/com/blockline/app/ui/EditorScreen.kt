@@ -158,7 +158,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         val snapshotText = editorValue.text
         val snapshotCursor = cursor
         val result = withContext(Dispatchers.Default) {
-            engine.suggest(AddonCompletionEngine.Request(activePath, snapshotText, snapshotCursor))
+            engine.suggest(AddonCompletionEngine.Request(activePath, snapshotText, snapshotCursor, "${vm.current?.id ?: "unknown"}:$activePath"))
         }
         if (activePath == vm.activeFile && snapshotText == editorValue.text &&
             snapshotCursor == editorValue.selection.start
