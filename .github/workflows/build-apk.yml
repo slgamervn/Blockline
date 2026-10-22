@@ -34,9 +34,20 @@ jobs:
           else
             VERSION_NAME="0.1.${GITHUB_RUN_NUMBER}"
           fi
-          if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][A-Za-z0-9.-]+)?$ ]]; then
-            echo "::error::VERSION_NAME must be a semantic version such as 0.1.412."
+          SEMVER_REGEX='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$'
+          if [[ ! "$VERSION_NAME" =~ $SEMVER_REGEX ]]; then
+            echo "::error::VERSION_NAME must follow Semantic Versioning, for example 0.1.412 or 1.2.3-rc.1+build.5."
             exit 1
+          fi
+          PRERELEASE="\${BASH_REMATCH[5]}"
+          if [[ -n "$PRERELEASE" ]]; then
+            IFS='.' read -r -a prerelease_identifiers <<< "$PRERELEASE"
+            for identifier in "\${prerelease_identifiers[@]}"; do
+              if [[ "$identifier" =~ ^[0-9]+$ && "$identifier" =~ ^0[0-9]+$ ]]; then
+                echo "::error::Numeric prerelease identifiers must not contain leading zeroes: $identifier"
+                exit 1
+              fi
+            done
           fi
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
@@ -55,6 +66,7 @@ jobs:
           node scripts/check-site.mjs
           node scripts/check-website.mjs
           node scripts/check-android-translations.mjs
+          node scripts/check-addon-completion-schema.mjs
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
