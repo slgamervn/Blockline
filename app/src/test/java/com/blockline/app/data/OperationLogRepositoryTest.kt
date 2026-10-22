@@ -38,6 +38,51 @@ class OperationLogRepositoryTest {
     }
 
     @Test
+    fun preservesMalformedLogBeforeAppendRepairsTheActiveFile() {
+        val root = Files.createTempDirectory("blockline-corrupt-operation-log").toFile()
+        try {
+            val activeLog = java.io.File(root, "project-a.json")
+            activeLog.writeText("{broken", Charsets.UTF_8)
+            val repository = OperationLogRepository(root)
+
+            assertTrue(repository.list("project-a").isEmpty())
+            assertEquals("{broken", activeLog.readText(Charsets.UTF_8))
+            val snapshots = root.listFiles().orEmpty().filter {
+                it.isFile && it.name.startsWith("project-a.corrupt.") && it.extension == "json"
+            }
+            assertEquals(1, snapshots.size)
+            assertEquals("{broken", snapshots.single().readText(Charsets.UTF_8))
+
+            repository.append("project-a", "Recovered", "new entry")
+
+            assertEquals(1, repository.list("project-a").size)
+            assertEquals("new entry", repository.list("project-a").single().detail)
+            assertEquals("{broken", snapshots.single().readText(Charsets.UTF_8))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun preservesLogWithInvalidRecordsBeforeFilteringThem() {
+        val root = Files.createTempDirectory("blockline-invalid-operation-log-record").toFile()
+        try {
+            val activeLog = java.io.File(root, "project-b.json")
+            val original = """[{"timestamp":0,"action":"","detail":"invalid record"}]"""
+            activeLog.writeText(original, Charsets.UTF_8)
+            val repository = OperationLogRepository(root)
+
+            assertTrue(repository.list("project-b").isEmpty())
+            val snapshot = root.listFiles().orEmpty().single {
+                it.isFile && it.name.startsWith("project-b.corrupt.") && it.extension == "json"
+            }
+            assertEquals(original, snapshot.readText(Charsets.UTF_8))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun rejectsUnsafeProjectIdentifiers() {
         val root = Files.createTempDirectory("blockline-operation-log").toFile()
         try {

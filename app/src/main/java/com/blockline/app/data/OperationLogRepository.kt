@@ -4,8 +4,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
+import java.security.MessageDigest
 import java.util.UUID
 
 data class OperationLogEntry(val timestamp: Long, val action: String, val detail: String)
@@ -43,16 +46,45 @@ class OperationLogRepository(private val root: File) {
 
     private fun read(file: File): List<OperationLogEntry> {
         if (!file.isFile) return emptyList()
-        return runCatching {
-            val array = JSONArray(file.readText(Charsets.UTF_8))
-            (0 until array.length()).mapNotNull { index ->
-                val item = array.optJSONObject(index) ?: return@mapNotNull null
-                val timestamp = item.optLong("timestamp", 0L)
-                val action = item.optString("action", "")
-                if (timestamp <= 0L || action.isBlank()) null
-                else OperationLogEntry(timestamp, action, item.optString("detail", ""))
-            }.takeLast(MAX_ENTRIES)
-        }.getOrDefault(emptyList())
+        val rawBytes = Files.readAllBytes(file.toPath())
+        val array = try {
+            JSONArray(String(rawBytes, Charsets.UTF_8))
+        } catch (_: Exception) {
+            preserveCorruptLog(file, rawBytes)
+            return emptyList()
+        }
+        val entries = mutableListOf<OperationLogEntry>()
+        var hasInvalidEntry = false
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index)
+            if (item == null) {
+                hasInvalidEntry = true
+                continue
+            }
+            val timestamp = item.optLong("timestamp", 0L)
+            val action = item.optString("action", "")
+            if (timestamp <= 0L || action.isBlank()) {
+                hasInvalidEntry = true
+                continue
+            }
+            entries += OperationLogEntry(timestamp, action, item.optString("detail", ""))
+        }
+        if (hasInvalidEntry) preserveCorruptLog(file, rawBytes)
+        return entries.takeLast(MAX_ENTRIES)
+    }
+
+    private fun preserveCorruptLog(file: File, rawBytes: ByteArray) {
+        val parent = file.parentFile ?: error("Operation log has no parent directory.")
+        val digest = MessageDigest.getInstance("SHA-256").digest(rawBytes)
+            .take(8)
+            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+        val snapshot = File(parent, "${file.nameWithoutExtension}.corrupt.$digest.json")
+        if (snapshot.exists()) return
+        try {
+            Files.write(snapshot.toPath(), rawBytes, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+        } catch (error: FileAlreadyExistsException) {
+            if (!snapshot.isFile) throw error
+        }
     }
 
     private fun writeAtomically(target: File, content: String) {
