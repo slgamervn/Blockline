@@ -307,12 +307,19 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
 private fun BatchRenameToolCard(vm: AppViewModel) {
     val project = vm.current
     val entries = project?.let { vm.projectEntries[it.id] }.orEmpty()
-    val allPaths = remember(project?.id, entries) {
-        project?.let { selected -> entries.map { vm.repo.relative(selected.id, it) } }.orEmpty()
+    val pathLists by produceState(Pair(emptyList<String>(), emptyList<String>()), project?.id, entries) {
+        val selected = project
+        value = if (selected == null) Pair(emptyList(), emptyList()) else withContext(Dispatchers.IO) {
+            val allPaths = entries.map { vm.repo.relative(selected.id, it) }
+            val filePaths = entries.asSequence()
+                .filter { it.isFile }
+                .map { vm.repo.relative(selected.id, it) }
+                .toList()
+            Pair(allPaths, filePaths)
+        }
     }
-    val filePaths = remember(project?.id, entries) {
-        project?.let { selected -> entries.filter { it.isFile }.map { vm.repo.relative(selected.id, it) } }.orEmpty()
-    }
+    val allPaths = pathLists.first
+    val filePaths = pathLists.second
     var query by remember(project?.id) { mutableStateOf("") }
     var replacement by remember(project?.id) { mutableStateOf("") }
     var preview by remember(project?.id) { mutableStateOf<BatchRenamePreview?>(null) }
