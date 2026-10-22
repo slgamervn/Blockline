@@ -363,7 +363,6 @@
       "spawnXp",
       "stopAllSounds",
       "stopSound",
-      "getGeneratedStructures",
       "getWeather"
     ],
     "Entity": [
