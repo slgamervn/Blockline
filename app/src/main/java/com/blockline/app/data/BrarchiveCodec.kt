@@ -88,13 +88,15 @@ object BrarchiveCodec {
 
     fun createEntry(name: String, content: ByteArray): BrarchiveEntry {
         require(!name.contains('\u0000')) { "Entry filename cannot contain a NUL character." }
+        val hasMcbHeader = content.size >= 4 &&
+            content[0] == 0x7f.toByte() && content[1] == 0x4d.toByte() &&
+            content[2] == 0x43.toByte() && content[3] == 0x42.toByte()
+        val isMcb = hasMcbHeader || name.substringAfterLast('.', "").equals("mcb", ignoreCase = true)
         return BrarchiveEntry(
             name = name,
             content = content,
-            isUtf8Text = decodeUtf8(content) != null,
-            isMcbBinary = content.size >= 4 &&
-                content[0] == 0x7f.toByte() && content[1] == 0x4d.toByte() &&
-                content[2] == 0x43.toByte() && content[3] == 0x42.toByte()
+            isUtf8Text = !isMcb && decodeUtf8(content) != null,
+            isMcbBinary = isMcb
         )
     }
 
@@ -148,11 +150,13 @@ object BrarchiveCodec {
         var totalContent = 0L
         entries.forEach { entry ->
             val name = entry.name
-            require(name.isNotBlank() && name != "." && name != ".." &&
-                !name.contains('/') && !name.contains('\\') && !name.contains('\u0000') &&
-                !name.contains(':') && !name.startsWith('/')
+            val normalizedName = name.replace('\\', '/')
+            val segments = normalizedName.split('/')
+            require(name.isNotBlank() && !normalizedName.startsWith('/') &&
+                !normalizedName.contains('\u0000') && !normalizedName.contains(':') &&
+                segments.none { it.isBlank() || it == "." || it == ".." }
             ) { "Unsafe ZIP entry name: " + name }
-            require(names.add(name.lowercase(Locale.ROOT))) {
+            require(names.add(normalizedName.lowercase(Locale.ROOT))) {
                 "ZIP export cannot preserve duplicate entry names safely: " + name
             }
             totalContent += entry.content.size.toLong()
@@ -162,7 +166,7 @@ object BrarchiveCodec {
         val output = ByteArrayOutputStream()
         ZipOutputStream(output).use { zip ->
             entries.forEach { entry ->
-                zip.putNextEntry(ZipEntry(entry.name))
+                zip.putNextEntry(ZipEntry(entry.name.replace('\\', '/')))
                 zip.write(entry.content)
                 zip.closeEntry()
             }

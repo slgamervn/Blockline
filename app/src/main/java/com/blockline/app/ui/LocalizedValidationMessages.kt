@@ -78,6 +78,7 @@ internal fun localizeValidationMessage(context: Context, message: String): Strin
             val m = match("""Duplicate UUID (.+); also used by (.+)\.""")!!
             text(R.string.validation_msg_duplicate_uuid, m[1], m[2])
         }
+        match("""Texture reference '([^']*)' is not present in this pack or the downloaded vanilla reference index\. It may be provided by Minecraft vanilla or another active resource pack; verify in-game before treating it as broken\.""") != null -> text(R.string.validation_msg_texture_external, match("""Texture reference '([^']*)' is not present in this pack or the downloaded vanilla reference index\. It may be provided by Minecraft vanilla or another active resource pack; verify in-game before treating it as broken\.""")!![1])
         match("""Texture reference '([^']*)' does not match a PNG file in this pack\. Verify the path and extension\.""") != null -> text(R.string.validation_msg_texture_reference, match("""Texture reference '([^']*)' does not match a PNG file in this pack\. Verify the path and extension\.""")!![1])
         else -> message
     }

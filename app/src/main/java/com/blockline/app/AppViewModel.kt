@@ -22,6 +22,7 @@ import com.blockline.app.data.AppUpdateRepository
 import com.blockline.app.data.ResourcePreview
 import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
+import com.blockline.app.data.VanillaResourceIndex
 import com.blockline.app.data.PackDependency
 import com.blockline.app.data.PackDependencyResolver
 import com.blockline.app.data.BatchReplaceEngine
@@ -613,7 +614,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         validationCompleted = false
         viewModelScope.launch {
             val result = runCatching {
-                withContext(Dispatchers.IO) { ProjectValidator.validate(repo.projectDir(project.id)) }
+                withContext(Dispatchers.IO) {
+                    ProjectValidator.validate(
+                        repo.projectDir(project.id),
+                        VanillaResourceIndex.read(VanillaResourceIndex.cacheFile(getApplication<Application>().filesDir))
+                    )
+                }
             }
             if (requestId != validationRequestId) return@launch
             isValidating = false

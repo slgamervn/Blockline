@@ -8,7 +8,11 @@ import java.util.Locale
 internal object ResourceReferenceChecker {
     private val textureKey = Regex("(?i)^textures?$")
 
-    fun check(projectRoot: File, files: List<File>): List<ValidationIssue> {
+    fun check(
+        projectRoot: File,
+        files: List<File>,
+        vanillaResourcePaths: Set<String> = emptySet()
+    ): List<ValidationIssue> {
         val issues = mutableListOf<ValidationIssue>()
         val canonicalRoot = runCatching { projectRoot.canonicalFile }.getOrNull() ?: return issues
         val pngFiles = files.asSequence()
@@ -35,16 +39,25 @@ internal object ResourceReferenceChecker {
                 inspectTextures(root, false) { reference ->
                     val normalized = reference.trim().replace('\\', '/').removePrefix("/")
                     if (!normalized.startsWith("textures/", true) || normalized.contains("..")) return@inspectTextures
-                    val candidate = if (normalized.substringAfterLast('/').contains('.')) normalized
-                        else "$normalized.png"
-                    val target = runCatching { File(packRoot, candidate).canonicalFile }.getOrNull()
-                    if (target == null || !target.path.startsWith(packPath)) return@inspectTextures
-                    if (target !in packTextures) {
-                        issues += ValidationIssue(
-                            IssueSeverity.WARNING,
-                            relative(projectRoot, file),
-                            message = "Texture reference '$reference' does not match a PNG file in this pack. Verify the path and extension."
-                        )
+                    val candidates = if (normalized.substringAfterLast('/').contains('.')) {
+                        listOf(normalized)
+                    } else {
+                        listOf("$normalized.png", "$normalized.tga", "$normalized.jpg", "$normalized.jpeg", "$normalized.webp")
+                    }
+                    val localMatches = candidates.mapNotNull { candidate ->
+                        runCatching { File(packRoot, candidate).canonicalFile }.getOrNull()
+                    }.filter { it.path.startsWith(packPath) }
+                    if (localMatches.none { it in packTextures }) {
+                        val knownVanilla = candidates.any { candidate ->
+                            VanillaResourceIndex.normalizePath(candidate) in vanillaResourcePaths
+                        }
+                        if (!knownVanilla) {
+                            issues += ValidationIssue(
+                                IssueSeverity.INFO,
+                                relative(projectRoot, file),
+                                message = "Texture reference '$reference' is not present in this pack or the downloaded vanilla reference index. It may be provided by Minecraft vanilla or another active resource pack; verify in-game before treating it as broken."
+                            )
+                        }
                     }
                 }
             }

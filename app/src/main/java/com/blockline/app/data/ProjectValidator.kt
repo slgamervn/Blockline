@@ -22,7 +22,7 @@ object ProjectValidator {
     private val semanticVersionPattern = Regex("""^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$""")
     private val jsonExtensions = setOf("json", "mcmeta")
 
-    fun validate(projectRoot: File): List<ValidationIssue> {
+    fun validate(projectRoot: File, vanillaResourcePaths: Set<String> = emptySet()): List<ValidationIssue> {
         val issues = mutableListOf<ValidationIssue>()
         if (!projectRoot.isDirectory) {
             return listOf(ValidationIssue(IssueSeverity.ERROR, "", message = "Project folder is missing."))
@@ -258,7 +258,7 @@ object ProjectValidator {
             }
         }
 
-        issues += ResourceReferenceChecker.check(projectRoot, files)
+        issues += ResourceReferenceChecker.check(projectRoot, files, vanillaResourcePaths)
 
         return issues.distinctBy { listOf(it.severity, it.path, it.line, it.column, it.message) }
             .sortedWith(compareBy<ValidationIssue> { it.severity.ordinal }.thenBy { it.path }.thenBy { it.line ?: 0 })

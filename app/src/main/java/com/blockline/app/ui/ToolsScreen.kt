@@ -105,6 +105,9 @@ fun ToolsScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
         item { CreatorResourcesCard(vm) }
         item { BatchRenameToolCard(vm) }
         item { DiffToolCard(vm) }
+        item { VanillaReferenceCard() }
+        item { UnicodeEscapeToolCard() }
+        item { BrarchiveToolCard() }
         item { ScriptApiReferenceCard(vm, onOpenEditor) }
         item {
             Card(Modifier.fillMaxWidth()) {

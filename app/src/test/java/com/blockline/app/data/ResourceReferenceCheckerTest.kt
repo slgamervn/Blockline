@@ -8,7 +8,7 @@ import org.junit.Test
 
 class ResourceReferenceCheckerTest {
     @Test
-    fun warnsWhenExplicitTexturePathIsMissing() {
+    fun reportsUnbundledTextureAsInformationalInsteadOfFalseWarning() {
         val root = Files.createTempDirectory("blockline-texture-missing-").toFile()
         try {
             val entityDir = File(root, "entities").apply { mkdirs() }
@@ -19,7 +19,27 @@ class ResourceReferenceCheckerTest {
 
             assertEquals(1, issues.size)
             assertTrue(issues.single().message.contains("textures/entity/missing"))
+            assertEquals(IssueSeverity.INFO, issues.single().severity)
             assertEquals("entities/client_entity.json", issues.single().path)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun knownVanillaTextureIsNotReportedMissing() {
+        val root = Files.createTempDirectory("blockline-vanilla-texture-").toFile()
+        try {
+            val entity = File(root, "entity/client_entity.json").apply {
+                parentFile?.mkdirs()
+                writeText("""{"description":{"textures":{"default":"textures/entity/endercrystal/endercrystal"}}}""")
+            }
+            val issue = ResourceReferenceChecker.check(
+                root,
+                listOf(entity),
+                setOf("textures/entity/endercrystal/endercrystal.png")
+            )
+            assertTrue("Known vanilla texture should resolve without an issue: $issue", issue.isEmpty())
         } finally {
             root.deleteRecursively()
         }
@@ -61,6 +81,7 @@ class ResourceReferenceCheckerTest {
             val issues = ResourceReferenceChecker.check(root, listOf(firstManifest, entity, secondManifest, otherPackTexture))
 
             assertEquals(1, issues.size)
+            assertEquals(IssueSeverity.INFO, issues.single().severity)
             assertTrue(issues.single().message.contains("textures/entity/mob"))
         } finally {
             root.deleteRecursively()

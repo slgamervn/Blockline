@@ -62,6 +62,7 @@ import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
 
 private const val LARGE_FILE_PAGE_CHARS = 12_000
+private const val LIVE_TEXT_ANALYSIS_MAX_CHARS = 12_000
 
 private fun largeFilePageOffsets(text: String): List<Int> {
     if (text.isEmpty()) return listOf(0)
@@ -116,15 +117,27 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
     LaunchedEffect(path, editorValue.text, lang) {
-        if (lang == null || editorValue.text.length > 48_000) {
+        if (lang == null || editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
             highlightSource = ""
         } else {
-            delay(180)
-            highlightSource = editorValue.text
+            delay(240)
+            if (editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightSource = editorValue.text
+        }
+    }
+    LaunchedEffect(path, editorValue.text, vm.readOnly, vm.isOpeningFile) {
+        if (path == null || vm.readOnly || vm.isOpeningFile || editorValue.text == vm.content) return@LaunchedEffect
+        val snapshot = editorValue.text
+        delay(260)
+        if (path == vm.activeFile && !vm.readOnly && !vm.isOpeningFile &&
+            editorValue.text == snapshot && vm.content != snapshot
+        ) {
+            vm.updateContent(snapshot)
         }
     }
     LaunchedEffect(path, editorValue.text, lang, vm.readOnly) {
-        if (lang != Lang.JSON || vm.readOnly || editorValue.text.isBlank()) {
+        if (lang != Lang.JSON || vm.readOnly || editorValue.text.isBlank() ||
+            editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS
+        ) {
             syntaxIssue = null
             checkingJson = false
         } else {
@@ -181,13 +194,32 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) } },
-                actions = {
-                    IconButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.editor_undo_cd)) }
-                    IconButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.editor_redo_cd)) }
-                    IconButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
+                navigationIcon = {
                     IconButton(onClick = {
-                        if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content))
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.saveCurrent(showMessage = false)
+                        onBack()
+                    }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.undo()
+                    }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.editor_undo_cd)) }
+                    IconButton(onClick = {
+                        if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.redo()
+                    }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.editor_redo_cd)) }
+                    IconButton(onClick = {
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        showFind = true
+                    }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
+                    IconButton(onClick = {
+                        if (!vm.readOnly && !vm.isOpeningFile) {
+                            val next = if (lang == Lang.JSON) JsonTools.format(editorValue.text) else editorValue.text
+                            editorValue = TextFieldValue(next, TextRange(next.length))
+                            vm.updateContent(next)
+                        }
                         vm.saveCurrent()
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
@@ -195,10 +227,25 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         },
         bottomBar = {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, null); Text(stringResource(R.string.undo)) }
-                TextButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, null); Text(stringResource(R.string.redo)) }
-                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
-                TextButton(onClick = { vm.saveCurrent() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
+                TextButton(onClick = {
+                    if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                    vm.undo()
+                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, null); Text(stringResource(R.string.undo)) }
+                TextButton(onClick = {
+                    if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                    vm.redo()
+                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, null); Text(stringResource(R.string.redo)) }
+                TextButton(onClick = {
+                    if (lang == Lang.JSON) {
+                        val next = JsonTools.format(editorValue.text)
+                        editorValue = TextFieldValue(next, TextRange(next.length))
+                        vm.updateContent(next)
+                    } else vm.message = context.getString(R.string.format_json_only)
+                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
+                TextButton(onClick = {
+                    if (!vm.isOpeningFile && !vm.readOnly && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                    vm.saveCurrent()
+                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
                 TextButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
             }
         }
@@ -214,12 +261,17 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 if (vm.openTabs.isNotEmpty()) {
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Start) {
                         vm.openTabs.keys.toList().forEach { tab ->
-                            TextButton(onClick = { vm.openFile(tab) }) { Text(tab.substringAfterLast('/'), maxLines = 1) }
+                            TextButton(onClick = {
+                                if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                                vm.openFile(tab)
+                            }) { Text(tab.substringAfterLast('/'), maxLines = 1) }
                             IconButton(onClick = { vm.closeTab(tab) }) { Icon(Icons.Default.Close, stringResource(R.string.close_tab)) }
                         }
                     }
                 }
-                if (lang == Lang.JSON && !vm.readOnly && editorValue.text.isNotBlank()) {
+                if (lang == Lang.JSON && !vm.readOnly && editorValue.text.isNotBlank() &&
+                    editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS
+                ) {
                     val issue = syntaxIssue
                     val colors = MaterialTheme.colorScheme
                     val hasJsonError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
@@ -250,6 +302,14 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
+                }
+                if (!vm.readOnly && lang != null && editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
+                    Text(
+                        stringResource(R.string.editor_live_analysis_paused),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                 }
                 if (vm.readOnly) {
                     Text(
@@ -293,12 +353,12 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         value = editorValue,
                         onValueChange = {
                             editorValue = it
-                            vm.updateContent(it.text)
+                            if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightSource = ""
                         },
                         readOnly = vm.isOpeningFile,
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                        visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= 48_000) HighlightTransformation(lang, Palette(
+                        visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) HighlightTransformation(lang, Palette(
                             Color(0xFF8FC9FF),
                             Color(0xFFB5E7A0),
                             Color(0xFFE6B35A),
