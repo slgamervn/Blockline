@@ -484,5 +484,7 @@
     <string name="resource_trust_notice">Các website bên ngoài do đơn vị riêng quản lý. Blockline không sở hữu hoặc xác minh nội dung của họ; hãy kiểm tra phiên bản tương thích, giấy phép và tệp tải xuống trước khi sử dụng.</string>
     <string name="json_validation_checking">Đang kiểm tra cú pháp JSON…</string>
     <string name="json_validation_valid">Cú pháp JSON hợp lệ cho tệp Bedrock.</string>
+    <string name="json_validation_warning">Cảnh báo JSON tại dòng %1$d, cột %2$d: %3$s</string>
+    <string name="view_validation_report">Xem báo cáo kiểm tra chi tiết</string>
     <string name="json_validation_invalid">Lỗi JSON tại dòng %1$d, cột %2$d: %3$s</string>
 </resources>

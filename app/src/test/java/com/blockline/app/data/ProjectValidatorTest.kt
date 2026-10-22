@@ -105,6 +105,7 @@ class ProjectValidatorTest {
             val issue = ProjectValidator.validate(root).single { it.message.contains("Duplicate object key") }
             assertEquals(3, issue.line)
             assertEquals(10, issue.column)
+            assertEquals(IssueSeverity.WARNING, issue.severity)
         } finally {
             root.deleteRecursively()
         }
@@ -119,6 +120,7 @@ class ProjectValidatorTest {
             File(root, "settings.json").writeText(source)
             val issue = ProjectValidator.validate(root).single { it.message.contains("Duplicate object key") }
             assertTrue(issue.message.contains("\\" + escapedKey))
+            assertEquals(IssueSeverity.WARNING, issue.severity)
         } finally {
             root.deleteRecursively()
         }
@@ -147,6 +149,25 @@ class ProjectValidatorTest {
 
             val issues = ProjectValidator.validate(root)
             assertTrue("Scalar root JSON was rejected: $issues", issues.none { it.path == "texts/languages.json" && it.severity == IssueSeverity.ERROR })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun duplicateJsonKeysWarnButDoNotStopBedrockManifestValidation() {
+        val root = Files.createTempDirectory("blockline-duplicate-manifest-key-").toFile()
+        try {
+            val pack = File(root, "RP").apply { mkdirs() }
+            File(pack, "pack_icon.png").writeBytes(byteArrayOf(0))
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Resource Pack","description":"old","description":"current","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0]},"modules":[{"type":"resources","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}]}"""
+            )
+
+            val issues = ProjectValidator.validate(root)
+
+            assertFalse("Duplicate-key handling stopped manifest validation: $issues", issues.any { it.severity == IssueSeverity.ERROR })
+            assertTrue(issues.any { it.severity == IssueSeverity.WARNING && it.message.contains("Duplicate object key") })
         } finally {
             root.deleteRecursively()
         }

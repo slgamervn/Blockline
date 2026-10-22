@@ -43,7 +43,11 @@ internal object ProjectMetadataRecovery {
                     ?.optString("name")
                     ?.trim()
             }.getOrNull()
-            val localizedName = ManifestTextResolver.resolve(manifest.parentFile ?: projectDirectory, name)
+            val localizedName = ManifestTextResolver.resolve(
+                manifest.parentFile ?: projectDirectory,
+                name,
+                fallbackKey = "pack.name"
+            )
             if (!localizedName.isNullOrBlank()) return localizedName
         }
         return null

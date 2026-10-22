@@ -1,6 +1,9 @@
 package com.blockline.app
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.ExitTransition
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Button
@@ -34,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -82,15 +87,27 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 onDismissRequest = { vm.dismissUpdate(update.version) },
                 title = { Text(stringResource(R.string.update_dialog_title)) },
                 text = {
-                    androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.update_dialog_versions, BuildConfig.VERSION_NAME, update.version))
-                        Text(update.releaseName, style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                    androidx.compose.foundation.layout.Column(
+                        modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(stringResource(R.string.update_dialog_versions, BuildConfig.VERSION_NAME, update.version), style = MaterialTheme.typography.bodySmall)
+                        Text(update.releaseName, style = MaterialTheme.typography.titleSmall)
                         if (update.releaseNotes.isNotBlank()) {
-                            Text(update.releaseNotes.take(2_400), style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                            Text(
+                                update.releaseNotes.take(12_000),
+                                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 17.sp)
+                            )
                         } else {
-                            Text(stringResource(R.string.update_no_notes))
+                            Text(stringResource(R.string.update_no_notes), style = MaterialTheme.typography.bodySmall)
                         }
-                        if (update.apkSizeBytes > 0L) Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f", update.apkSizeBytes / 1_048_576.0)))
+                        if (update.apkSizeBytes > 0L) {
+                            Text(
+                                stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f", update.apkSizeBytes / 1_048_576.0)),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 },
                 confirmButton = {
@@ -161,7 +178,14 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 }
             ) {
                 composable("projects") { ProjectsScreen(vm) { nav.navigate("overview") } }
-                composable("overview") { OverviewScreen(vm, onBack = { nav.popBackStack() }, onExplorer = { goTab(nav, "explorer") }) }
+                composable("overview") {
+                    OverviewScreen(
+                        vm,
+                        onBack = { nav.popBackStack() },
+                        onExplorer = { goTab(nav, "explorer") },
+                        onTools = { goTab(nav, "tools") }
+                    )
+                }
                 composable("explorer") { ExplorerScreen(vm) { nav.navigate("editor") } }
                 composable("search") { SearchScreen(vm) { nav.navigate("editor") } }
                 composable("tools") { ToolsScreen(vm) { nav.navigate("editor") } }

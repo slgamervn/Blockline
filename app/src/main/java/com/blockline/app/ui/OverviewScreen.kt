@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -89,7 +91,7 @@ import java.io.OutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit) {
+fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit, onTools: () -> Unit) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val p = vm.current
@@ -104,10 +106,13 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     val manifestFiles = projectFiles.filter { it.name.equals("manifest.json", true) || it.name.equals("pack_manifest.json", true) }
     Scaffold(topBar = { TopAppBar(title = { Text(p?.name ?: stringResource(R.string.overview)) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.FolderOpen, stringResource(R.string.back_cd)) } }, actions = { IconButton(onClick = { showSwitcher = true }) { Icon(Icons.Default.SwapHoriz, stringResource(R.string.switch_project_cd)) } }) }) { pad ->
         if (p == null) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_project_selected), stringResource(R.string.choose_project_hint), Modifier.padding(pad))
-        else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        else LazyColumn(Modifier.padding(pad).fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Card(
+                    Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.project_overview), color = com.blockline.app.ui.theme.Emerald, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                         Text(p.name, style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
                         Text(stringResource(R.string.project_local_notice), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
@@ -131,8 +136,11 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
             }
             item {
                 val score = vm.packHealthScore
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Card(
+                    Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -158,6 +166,29 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                 color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            val previewIssues = vm.validationIssues
+                                .filter { it.severity == com.blockline.app.data.IssueSeverity.ERROR }
+                                .ifEmpty { vm.validationIssues.filter { it.severity == com.blockline.app.data.IssueSeverity.WARNING } }
+                                .take(2)
+                            previewIssues.forEach { issue ->
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        if (issue.line != null) stringResource(R.string.line_result, issue.path.ifBlank { stringResource(R.string.project_label) }, issue.line)
+                                        else issue.path.ifBlank { stringResource(R.string.project_label) },
+                                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        localizeValidationMessage(context, issue.message),
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                            if (vm.validationCompleted && vm.validationIssues.isNotEmpty()) {
+                                TextButton(onClick = onTools) { Text(stringResource(R.string.view_validation_report)) }
+                            }
                         }
                         Button(
                             onClick = { vm.validateCurrentProject() },
@@ -196,15 +227,17 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                         rawManifestName to rawManifestDescription
                     } else {
                         withContext(Dispatchers.IO) {
-                            ManifestTextResolver.resolve(packDirectory, rawManifestName, localeTag).orEmpty() to
-                                ManifestTextResolver.resolve(packDirectory, rawManifestDescription, localeTag).orEmpty()
+                            ManifestTextResolver.resolve(packDirectory, rawManifestName, localeTag, "pack.name").orEmpty() to
+                                ManifestTextResolver.resolve(packDirectory, rawManifestDescription, localeTag, "pack.description").orEmpty()
                         }
                     }
                 }
                 val modules = json?.optJSONArray("modules")
                 val dependencies = json?.optJSONArray("dependencies")
                 val capabilities = json?.optJSONArray("capabilities")
-                Card { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant)
+                ) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text(stringResource(R.string.manifest_title, file.parentFile?.name ?: stringResource(R.string.pack)), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
                     Text(
                         if (header == null) stringResource(R.string.manifest_parse_failed)
@@ -228,7 +261,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                     }
                     Text(stringResource(R.string.version_value, header?.opt("version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
                     Text(stringResource(R.string.manifest_format_value, json?.opt("format_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
-                    Text(stringResource(R.string.manifest_engine_value, json?.opt("min_engine_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
+                    Text(stringResource(R.string.manifest_engine_value, header?.opt("min_engine_version")?.let(::manifestValueText) ?: stringResource(R.string.unknown_value)))
                     Text(stringResource(R.string.modules_count, modules?.length() ?: 0), style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
                     if (modules != null) for (index in 0 until modules.length()) {
                         val module = modules.optJSONObject(index) ?: continue

@@ -42,8 +42,18 @@ object ProjectValidator {
             val withoutBom = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented
             val clean = JsonTools.stripTrailingCommas(withoutBom)
             try {
-                StrictJsonParser(clean).parse()
-                val tokener = JSONTokener(clean)
+                val parser = StrictJsonParser(clean)
+                parser.parse()
+                parser.duplicateKeys.forEach { duplicate ->
+                    issues += locationIssue(
+                        IssueSeverity.WARNING,
+                        path,
+                        source,
+                        "Invalid JSON: Duplicate object key ${duplicate.rawKey}.",
+                        duplicate.position
+                    )
+                }
+                val tokener = JSONTokener(parser.sourceForObjectParser())
                 val value = tokener.nextValue()
                 val isManifestFile = file.name.equals("manifest.json", true) || file.name.equals("pack_manifest.json", true)
                 if (value !is JSONObject && value !is JSONArray && isManifestFile) {
@@ -259,8 +269,18 @@ object ProjectValidator {
         val withoutBom = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented
         val clean = JsonTools.stripTrailingCommas(withoutBom)
         return try {
-            StrictJsonParser(clean).parse()
-            null
+            val parser = StrictJsonParser(clean)
+            parser.parse()
+            val duplicate = parser.duplicateKeys.firstOrNull()
+            if (duplicate != null) {
+                locationIssue(
+                    IssueSeverity.WARNING,
+                    "",
+                    source,
+                    "Invalid JSON: Duplicate object key ${duplicate.rawKey}.",
+                    duplicate.position
+                )
+            } else null
         } catch (e: StrictJsonException) {
             locationIssue(IssueSeverity.ERROR, "", source, "Invalid JSON: ${e.message}", e.position)
         } catch (e: JSONException) {
@@ -274,8 +294,23 @@ object ProjectValidator {
 
     private class StrictJsonException(val position: Int, message: String) : Exception(message)
 
+    private data class DuplicateJsonKey(val position: Int, val rawKey: String)
+
     private class StrictJsonParser(private val source: String) {
         private var index = 0
+        val duplicateKeys = mutableListOf<DuplicateJsonKey>()
+        private val shadowedKeyRanges = mutableListOf<Pair<Int, Int>>()
+
+        fun sourceForObjectParser(): String {
+            var normalized = source
+            var counter = 0
+            shadowedKeyRanges.sortedByDescending { it.first }.forEach { (start, end) ->
+                var key = "__blockline_shadow_" + counter++ + "__"
+                while (source.contains(JSONObject.quote(key))) key = "__" + key + "__"
+                normalized = normalized.substring(0, start) + JSONObject.quote(key) + normalized.substring(end)
+            }
+            return normalized
+        }
 
         fun parse() {
             whitespace()
@@ -304,14 +339,19 @@ object ProjectValidator {
             expect('{')
             whitespace()
             if (take('}')) return
-            val keys = HashSet<String>()
+            val keys = HashMap<String, Pair<Int, Int>>()
             while (true) {
                 whitespace()
                 if (index >= source.length || source[index] != '"') fail("Object keys must be double-quoted strings.")
                 val keyStart = index
                 val key = stringValue()
-                val rawKey = source.substring(keyStart, index)
-                if (!keys.add(key)) fail("Duplicate object key $rawKey.")
+                val keyEnd = index
+                val rawKey = source.substring(keyStart, keyEnd)
+                val previous = keys.put(key, keyStart to keyEnd)
+                if (previous != null) {
+                    duplicateKeys += DuplicateJsonKey(keyStart, rawKey)
+                    shadowedKeyRanges += previous
+                }
                 whitespace()
                 expect(':')
                 value()

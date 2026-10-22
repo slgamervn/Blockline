@@ -24,6 +24,20 @@ class ManifestTextResolverTest {
     }
 
     @Test
+    fun resolvesDefaultPackKeysWhenManifestValueIsBlank() {
+        val pack = Files.createTempDirectory("blockline-manifest-text-fallback-").toFile()
+        try {
+            val texts = File(pack, "texts").apply { mkdirs() }
+            File(texts, "en_US.lang").writeText("pack.name=Fallback pack\npack.description=Fallback description\n")
+
+            assertEquals("Fallback pack", ManifestTextResolver.resolve(pack, "", "vi-VN", "pack.name"))
+            assertEquals("Fallback description", ManifestTextResolver.resolve(pack, null, "vi-VN", "pack.description"))
+        } finally {
+            pack.deleteRecursively()
+        }
+    }
+
+    @Test
     fun leavesLiteralManifestTextUnchangedWhenNoLanguageKeyMatches() {
         val pack = Files.createTempDirectory("blockline-manifest-literal-").toFile()
         try {

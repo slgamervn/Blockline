@@ -222,15 +222,18 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 if (lang == Lang.JSON && !vm.readOnly && editorValue.text.isNotBlank()) {
                     val issue = syntaxIssue
                     val colors = MaterialTheme.colorScheme
+                    val hasJsonError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
+                    val hasJsonWarning = issue?.severity == com.blockline.app.data.IssueSeverity.WARNING
                     val statusText = when {
                         checkingJson -> stringResource(R.string.json_validation_checking)
-                        issue != null -> stringResource(R.string.json_validation_invalid, issue.line ?: 1, issue.column ?: 1, issue.message)
+                        hasJsonError -> stringResource(R.string.json_validation_invalid, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
+                        hasJsonWarning -> stringResource(R.string.json_validation_warning, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
                         else -> stringResource(R.string.json_validation_valid)
                     }
                     Surface(
                         color = when {
                             checkingJson -> colors.surfaceVariant
-                            issue != null -> colors.errorContainer
+                            hasJsonError -> colors.errorContainer
                             else -> colors.secondaryContainer
                         },
                         shape = RoundedCornerShape(9.dp),
@@ -240,7 +243,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             statusText,
                             color = when {
                                 checkingJson -> colors.onSurfaceVariant
-                                issue != null -> colors.onErrorContainer
+                                hasJsonError -> colors.onErrorContainer
                                 else -> colors.onSecondaryContainer
                             },
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
@@ -300,7 +303,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             Color(0xFFB5E7A0),
                             Color(0xFFE6B35A),
                             Emerald,
-                            Color(0xFF82958A)
+                            Color(0xFF82958A),
+                            if (syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING) Color(0x55E6B35A) else Color(0x55F44336)
                         ), if (lang == Lang.JSON) jsonErrorOffset else null) else VisualTransformation.None
                     )
                 }

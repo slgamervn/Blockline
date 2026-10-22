@@ -5,18 +5,28 @@ import java.io.File
 import java.util.Locale
 
 object ManifestTextResolver {
-    fun resolve(packDirectory: File, rawValue: String?, preferredLocale: String? = Locale.getDefault().toLanguageTag()): String? {
-        val value = rawValue?.trim()?.takeIf { it.isNotEmpty() } ?: return rawValue
+    fun resolve(
+        packDirectory: File,
+        rawValue: String?,
+        preferredLocale: String? = Locale.getDefault().toLanguageTag(),
+        fallbackKey: String? = null
+    ): String? {
+        val raw = rawValue?.trim()?.takeIf { it.isNotEmpty() }
+        val keys = listOfNotNull(raw, fallbackKey?.trim()?.takeIf { it.isNotEmpty() }).distinct()
+        if (keys.isEmpty()) return rawValue?.trim().orEmpty()
         val textsDirectory = File(packDirectory, "texts")
-        if (!textsDirectory.isDirectory) return value
+        if (!textsDirectory.isDirectory) return raw.orEmpty()
 
-        for (locale in languageCandidates(textsDirectory, preferredLocale)) {
-            val file = File(textsDirectory, "$locale.lang")
-            if (!file.isFile) continue
-            val translated = findTranslation(file, value)
-            if (!translated.isNullOrBlank()) return translated
+        val locales = languageCandidates(textsDirectory, preferredLocale)
+        for (key in keys) {
+            for (locale in locales) {
+                val file = File(textsDirectory, "$locale.lang")
+                if (!file.isFile) continue
+                val translated = findTranslation(file, key)
+                if (!translated.isNullOrBlank()) return translated
+            }
         }
-        return value
+        return raw.orEmpty()
     }
 
     private fun languageCandidates(textsDirectory: File, preferredLocale: String?): List<String> {

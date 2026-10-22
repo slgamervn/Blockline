@@ -484,5 +484,7 @@
     <string name="resource_trust_notice">External websites are independently maintained. Blockline does not own or verify their content; check version compatibility, licenses and downloaded files before using them.</string>
     <string name="json_validation_checking">Checking JSON syntax…</string>
     <string name="json_validation_valid">JSON syntax looks valid for Bedrock files.</string>
+    <string name="json_validation_warning">JSON warning at line %1$d, column %2$d: %3$s</string>
+    <string name="view_validation_report">View detailed validation report</string>
     <string name="json_validation_invalid">JSON issue at line %1$d, column %2$d: %3$s</string>
 </resources>
