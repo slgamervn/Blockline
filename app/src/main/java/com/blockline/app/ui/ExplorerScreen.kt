@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private data class IndexedExplorerEntry(
     val file: File,
@@ -71,38 +74,50 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
         contract = ActivityResultContracts.OpenDocument()
     ) { uri -> if (uri != null) vm.importTextDocument(uri) }
     val allEntries = project?.let { vm.projectEntries[it.id] }.orEmpty()
-    val indexedEntries = remember(allEntries, project?.id) {
+    var indexedEntries by remember(project?.id) { mutableStateOf(emptyList<IndexedExplorerEntry>()) }
+    LaunchedEffect(allEntries, project?.id) {
         val projectId = project?.id
-        allEntries.map { file ->
-            val path = projectId?.let { vm.repo.relative(it, file) }.orEmpty()
-            val segments = path.split('/')
-            IndexedExplorerEntry(
-                file = file,
-                path = path,
-                ancestors = (1 until segments.size).map { segments.take(it).joinToString("/") },
-                depth = path.count { it == '/' }
-            )
+        indexedEntries = if (projectId == null) {
+            emptyList()
+        } else {
+            withContext(Dispatchers.Default) {
+                allEntries.map { file ->
+                    val path = vm.repo.relative(projectId, file)
+                    val segments = path.split('/')
+                    IndexedExplorerEntry(
+                        file = file,
+                        path = path,
+                        ancestors = (1 until segments.size).map { segments.take(it).joinToString("/") },
+                        depth = path.count { it == '/' }
+                    )
+                }
+            }
         }
     }
     val recentPaths = project?.let { vm.repo.recentFiles(it.id) }.orEmpty()
-    val entries = remember(indexedEntries, filter, recentPaths, project?.id) {
-        indexedEntries.filter { entry ->
-            when (filter) {
-                "Favorites" -> entry.file.isFile && vm.isFavorite(entry.path)
-                "Recent" -> entry.file.isFile && entry.path in recentPaths
-                else -> true
-            }
-        }.let { filtered ->
-            if (filter == "Recent") {
-                filtered.sortedBy { entry ->
-                    recentPaths.indexOf(entry.path).let { if (it < 0) Int.MAX_VALUE else it }
+    var visibleEntries by remember(project?.id) { mutableStateOf(emptyList<IndexedExplorerEntry>()) }
+    LaunchedEffect(indexedEntries, filter, recentPaths, expanded, project?.id) {
+        val projectId = project?.id
+        visibleEntries = if (projectId == null) {
+            emptyList()
+        } else {
+            withContext(Dispatchers.Default) {
+                val filtered = indexedEntries.filter { entry ->
+                    when (filter) {
+                        "Favorites" -> entry.file.isFile && vm.repo.isFavorite(projectId, entry.path)
+                        "Recent" -> entry.file.isFile && entry.path in recentPaths
+                        else -> true
+                    }
                 }
-            } else filtered
+                val ordered = if (filter == "Recent") {
+                    filtered.sortedBy { entry ->
+                        recentPaths.indexOf(entry.path).let { if (it < 0) Int.MAX_VALUE else it }
+                    }
+                } else filtered
+                if (filter != "All") ordered
+                else ordered.filter { entry -> entry.ancestors.all { it in expanded } }
+            }
         }
-    }
-    val visibleEntries = remember(entries, expanded, filter, project?.id) {
-        if (filter != "All") entries
-        else entries.filter { entry -> entry.ancestors.all { it in expanded } }
     }
 
     Scaffold(topBar = {
