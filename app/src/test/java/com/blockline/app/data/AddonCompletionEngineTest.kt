@@ -92,6 +92,12 @@ class AddonCompletionEngineTest {
         assertTrue(result.items.none { it.label == "getItemCooldown" })
     }
 
+    @Test fun doesNotSuggestPreviewOnlyDimensionMethods() {
+        val text = "dimension.stop"
+        val result = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", text, text.length))
+        assertTrue(result.items.none { it.label == "stopAllSounds" || it.label == "stopSound" })
+    }
+
     @Test fun suggestsManifestModuleTypesAndStableUuid() {
         val moduleText = "\"type\": \"scr"
         val modules = engine.suggest(AddonCompletionEngine.Request("manifest.json", moduleText, moduleText.length))
