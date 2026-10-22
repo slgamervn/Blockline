@@ -401,13 +401,18 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }
                 },
                 update = { webView ->
-                    webView.loadDataWithBaseURL(
-                        "https://blockline.local/",
-                        editorValue.text,
-                        "text/html",
-                        "UTF-8",
-                        null
-                    )
+                    val html = editorValue.text
+                    val contentKey = html.hashCode()
+                    if (webView.tag != contentKey) {
+                        webView.tag = contentKey
+                        webView.loadDataWithBaseURL(
+                            "https://blockline.local/",
+                            html,
+                            "text/html",
+                            "UTF-8",
+                            null
+                        )
+                    }
                 }
             )
         },
