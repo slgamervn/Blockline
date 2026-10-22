@@ -82,7 +82,7 @@ const requiredApiMembers = {
 for (const [owner, members] of Object.entries(requiredApiMembers)) {
   for (const member of members) {
     if (!schema.js[owner]?.includes(member)) {
-      fail(\`js.\${owner} is missing required API member \${member}\`);
+      fail(`js.${owner} is missing required API member ${member}`);
     }
   }
 }
