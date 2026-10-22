@@ -490,7 +490,7 @@
 
     <string name="editor_live_analysis_paused">Đã tạm dừng tô cú pháp và kiểm tra trực tiếp cho tệp lớn để tránh lag. Dùng công cụ kiểm tra đầy đủ khi cần.</string>
     <string name="vanilla_reference_title">Tham chiếu tài nguyên vanilla</string>
-    <string name="vanilla_reference_hint">Tạo chỉ mục đường dẫn từ pack mặc định lưu trữ trên bedrock.dev và mẫu Bedrock hiện tại của Mojang. Không tải ảnh texture vào app.</string>
+    <string name="vanilla_reference_hint">Tạo chỉ mục đường dẫn từ pack mặc định lưu trữ trên bedrock.dev và các tệp mẫu hiện tại của Mojang. Không tải ảnh texture vào app.</string>
     <string name="vanilla_reference_refresh">Làm mới chỉ mục vanilla</string>
     <string name="vanilla_reference_open_source">Mở bedrock.dev/packs</string>
     <string name="vanilla_reference_cached">Đường dẫn texture vanilla đã lưu: %1$d</string>

@@ -490,7 +490,7 @@
 
     <string name="editor_live_analysis_paused">Live syntax analysis is paused for large files to keep editing responsive. Use the full validation tool when needed.</string>
     <string name="vanilla_reference_title">Vanilla resource reference</string>
-    <string name="vanilla_reference_hint">Build a cached path-only index from bedrock.dev's archived default packs and Mojang's current Bedrock samples. It does not download texture images.</string>
+    <string name="vanilla_reference_hint">Build a cached path-only index from archived default packs on bedrock.dev and current sample files from Mojang. It does not download texture images.</string>
     <string name="vanilla_reference_refresh">Refresh vanilla index</string>
     <string name="vanilla_reference_open_source">Open bedrock.dev/packs</string>
     <string name="vanilla_reference_cached">Cached vanilla texture paths: %1$d</string>
