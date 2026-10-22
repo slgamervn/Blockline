@@ -253,6 +253,24 @@ class ProjectValidatorTest {
     }
 
     @Test
+    fun rejectsMalformedSemanticVersionIdentifiers() {
+        val invalidVersions = listOf("01.2.3", "1.2.3-01", "1.2.3-alpha..1")
+        invalidVersions.forEach { version ->
+            val root = Files.createTempDirectory("blockline-invalid-semver-").toFile()
+            try {
+                val pack = File(root, "RP").apply { mkdirs() }
+                File(pack, "manifest.json").writeText(
+                    """{"format_version":3,"header":{"name":"Resource Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":"$version","min_engine_version":"1.21.0"},"modules":[{"type":"resources","uuid":"12345678-1234-1234-1234-123456789abd","version":"1.2.3"}]}"""
+                )
+                val issues = ProjectValidator.validate(root)
+                assertTrue("$version should be rejected: $issues", issues.any { it.severity == IssueSeverity.ERROR && it.message.contains("header.version must") })
+            } finally {
+                root.deleteRecursively()
+            }
+        }
+    }
+
+    @Test
     fun rejectsInvalidPackScopeAgainstCreatorToolsRules() {
         val root = Files.createTempDirectory("blockline-pack-scope-").toFile()
         try {
