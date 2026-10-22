@@ -274,8 +274,8 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 .copy-status{min-height:1.4em;margin:12px 0 0;color:var(--green-bright);font-size:.78rem}
 #scroll-progress{position:fixed;z-index:100;top:0;left:0;width:100%;height:2px;background:var(--green);transform:scaleX(0);transform-origin:left;pointer-events:none;opacity:0;transition:opacity .2s}
 #scroll-progress.is-active{opacity:1}
-.reveal{opacity:0;transform:translate3d(0,var(--reveal-y,22px),0);transition:opacity .42s var(--ease),transform .52s var(--ease);transition-delay:var(--reveal-delay,0ms)}
-.reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
+html.reveal-ready .reveal{opacity:0;transform:translate3d(0,var(--reveal-y,22px),0);transition:opacity .42s var(--ease),transform .52s var(--ease);transition-delay:var(--reveal-delay,0ms)}
+html.reveal-ready .reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
 @keyframes phone-enter{from{opacity:0;transform:perspective(1000px) translate3d(0,24px,0) rotateY(-1deg)}to{opacity:1;transform:perspective(1000px) rotateY(-4deg) rotateX(1deg)}}
 @keyframes cursor-blink{50%{opacity:0}}
 @keyframes panel-enter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
@@ -528,8 +528,3 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 @media(max-width:560px){.resource-grid{grid-template-columns:1fr}.resource-card{padding:19px}.resource-notice{padding:13px 14px}}
 @media(prefers-reduced-motion:reduce){.resource-card{transition:none}}
 
-#resources .reveal{opacity:1;transform:none}
-
-#resources .resource-groups,#resources .resource-group,#resources .resource-grid,#resources .resource-card{display:grid;visibility:visible;opacity:1;transform:none}
-#resources .resource-group{display:block}
-#resources .resource-card{display:flex}

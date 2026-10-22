@@ -23,9 +23,10 @@ assert(/body\.menu-open\{overflow:hidden\}/.test(css) && !/body\.menu-open\{[^}]
 assert(/\.mobile-menu\{position:fixed;[^}]*padding:calc\(88px \+ env\(safe-area-inset-top\)\)/.test(css), "Mobile menu clears the fixed header and safe-area inset");
 assert(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present");
 assert(/IntersectionObserver/.test(js), "Scroll reveal uses IntersectionObserver");
-assert(js.includes("querySelectorAll('.reveal,") && html.includes('class="resource-group reveal"'), "All pre-marked reveal sections are observed so content cannot remain permanently hidden");
-assert(/#resources\s+\.reveal\s*\{\s*opacity:\s*1\s*;\s*transform:\s*none\s*\}/.test(css), "Resource reference content remains visible even if scroll-reveal JavaScript does not run");
-assert(/#resources\s+\.resource-groups,#resources\s+\.resource-group,#resources\s+\.resource-grid,#resources\s+\.resource-card\{display:grid;visibility:visible;opacity:1;transform:none\}/.test(css), "Resource groups and cards have an explicit visibility safeguard");
+assert(js.includes("querySelectorAll('.reveal,") && html.includes('class="resource-group reveal"'), "Pre-marked resource reveal sections are included in the observer targets");
+assert(/root\.classList\.add\('reveal-ready'\)/.test(js) && /html\.reveal-ready \.reveal\{opacity:0/.test(css), "Reveal hiding is enabled only after JavaScript initializes the observer");
+assert(/html\.reveal-ready \.reveal\.is-visible\{opacity:1/.test(css) && /else\s*\{\s*revealTargets\.forEach\(\(target\) => target\.classList\.add\('is-visible'\)\)/.test(js), "Scroll reveal has a visible fallback when reduced motion is enabled or IntersectionObserver is unavailable");
+assert(!/#resources\s+\.resource-groups/.test(css), "Resource visibility does not depend on section-specific CSS overrides");
 assert(/data-language-toggle/.test(html) && /const englishText = \{/.test(js), "Vietnamese and English language toggle is present");
 
 assert(/localStorage\.setItem\('blockline-language'/.test(js) && /localStorage\.getItem\('blockline-language'/.test(js), "Language choice persists between visits");

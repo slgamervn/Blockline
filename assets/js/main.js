@@ -404,6 +404,7 @@
       }
       revealObserver.observe(target);
     });
+    root.classList.add('reveal-ready');
   } else {
     revealTargets.forEach((target) => target.classList.add('is-visible'));
   }
