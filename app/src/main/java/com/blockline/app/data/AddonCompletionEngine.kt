@@ -3,6 +3,7 @@ package com.blockline.app.data
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 import java.util.UUID
 
 /** Schema-backed completion engine for Minecraft Bedrock add-on files. */
@@ -18,7 +19,7 @@ class AddonCompletionEngine private constructor(
         val text = request.text
         val cursor = request.cursor.coerceIn(0, text.length)
         val before = text.substring(0, cursor)
-        val normalizedPath = request.path.replace('\\', '/').lowercase()
+        val normalizedPath = request.path.replace('\\', '/').lowercase(Locale.ROOT)
         val isJavaScript = normalizedPath.endsWith(".js") || normalizedPath.endsWith(".mjs")
         val token = Regex("[A-Za-z0-9_$:.-]*$").find(before)?.value.orEmpty()
         var replaceStart = cursor - token.length
