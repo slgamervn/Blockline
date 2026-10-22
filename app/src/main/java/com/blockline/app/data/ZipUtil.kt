@@ -11,9 +11,9 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 object ZipUtil {
-    private const val MAX_ENTRIES = 20_000
-    private const val MAX_ENTRY_BYTES = 128L * 1024 * 1024
-    private const val MAX_TOTAL_BYTES = 512L * 1024 * 1024
+    private const val MAX_ENTRIES = 10_000
+    private const val MAX_ENTRY_BYTES = 64L * 1024 * 1024
+    private const val MAX_TOTAL_BYTES = 256L * 1024 * 1024
 
     fun unzip(input: InputStream, destDir: File) {
         check(destDir.mkdirs() || destDir.isDirectory) { "Could not create extraction directory." }
@@ -63,10 +63,10 @@ object ZipUtil {
                             entryBytes += count
                             totalBytes += count
                             if (entryBytes > MAX_ENTRY_BYTES) {
-                                throw IllegalArgumentException("Archive entry exceeds the 128 MiB extraction limit: $name")
+                                throw IllegalArgumentException("Archive entry exceeds the 64 MiB extraction limit: $name")
                             }
                             if (totalBytes > MAX_TOTAL_BYTES) {
-                                throw IllegalArgumentException("Archive exceeds the 512 MiB total extraction limit.")
+                                throw IllegalArgumentException("Archive exceeds the 256 MiB total extraction limit.")
                             }
                             output.write(buffer, 0, count)
                         }
