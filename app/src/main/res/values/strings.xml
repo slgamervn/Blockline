@@ -482,4 +482,7 @@
     <string name="resource_open">Open</string>
     <string name="resource_open_failed">Could not open this resource. Check that a browser is available.</string>
     <string name="resource_trust_notice">External websites are independently maintained. Blockline does not own or verify their content; check version compatibility, licenses and downloaded files before using them.</string>
+    <string name="json_validation_checking">Checking JSON syntax…</string>
+    <string name="json_validation_valid">JSON syntax looks valid for Bedrock files.</string>
+    <string name="json_validation_invalid">JSON issue at line %1$d, column %2$d: %3$s</string>
 </resources>

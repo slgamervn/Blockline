@@ -39,13 +39,15 @@ object ProjectValidator {
                 return@forEach
             }
             val uncommented = JsonTools.stripComments(source)
-            val clean = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented
+            val withoutBom = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented
+            val clean = JsonTools.stripTrailingCommas(withoutBom)
             try {
                 StrictJsonParser(clean).parse()
                 val tokener = JSONTokener(clean)
                 val value = tokener.nextValue()
-                if (value !is JSONObject && value !is JSONArray) {
-                    issues += ValidationIssue(IssueSeverity.ERROR, path, 1, 1, "JSON root must be an object or array.")
+                val isManifestFile = file.name.equals("manifest.json", true) || file.name.equals("pack_manifest.json", true)
+                if (value !is JSONObject && value !is JSONArray && isManifestFile) {
+                    issues += ValidationIssue(IssueSeverity.ERROR, path, 1, 1, "Manifest JSON root must be an object.")
                 } else if (tokener.nextClean() != '\u0000') {
                     issues += ValidationIssue(IssueSeverity.ERROR, path, message = "Unexpected content after the JSON value.")
                 } else {
@@ -250,6 +252,24 @@ object ProjectValidator {
 
         return issues.distinctBy { listOf(it.severity, it.path, it.line, it.column, it.message) }
             .sortedWith(compareBy<ValidationIssue> { it.severity.ordinal }.thenBy { it.path }.thenBy { it.line ?: 0 })
+    }
+
+    fun inspectJsonSyntax(source: String): ValidationIssue? {
+        val uncommented = JsonTools.stripComments(source)
+        val withoutBom = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented
+        val clean = JsonTools.stripTrailingCommas(withoutBom)
+        return try {
+            StrictJsonParser(clean).parse()
+            null
+        } catch (e: StrictJsonException) {
+            locationIssue(IssueSeverity.ERROR, "", source, "Invalid JSON: ${e.message}", e.position)
+        } catch (e: JSONException) {
+            val message = e.message ?: "Invalid JSON syntax."
+            val index = Regex("(?i)(?:character|index|position)\\s*(?:at)?\\s*(\\d+)").find(message)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            locationIssue(IssueSeverity.ERROR, "", source, "Invalid JSON: $message", index)
+        } catch (e: Exception) {
+            ValidationIssue(IssueSeverity.ERROR, "", message = "Invalid JSON: ${e.message ?: "unknown error"}")
+        }
     }
 
     private class StrictJsonException(val position: Int, message: String) : Exception(message)

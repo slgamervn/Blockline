@@ -70,6 +70,7 @@ import com.blockline.app.data.ExportMode
 import com.blockline.app.data.SearchFileFilter
 import com.blockline.app.data.GeneratedPackType
 import com.blockline.app.data.PackManifestGenerator
+import com.blockline.app.data.ManifestTextResolver
 import com.blockline.app.data.DependencyKind
 import com.blockline.app.data.BatchRenameCandidate
 import com.blockline.app.data.BatchRenameEngine
@@ -92,6 +93,7 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val p = vm.current
+    val localeTag = context.resources.configuration.locales[0].toLanguageTag()
     var showSwitcher by remember { mutableStateOf(false) }
     var exportMode by remember { mutableStateOf(ExportMode.BOTH) }
     var chooseExport by remember { mutableStateOf(false) }
@@ -181,13 +183,38 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit)
                     }
                 }
                 val header = json?.optJSONObject("header")
+                val rawManifestName = header?.optString("name").orEmpty()
+                val rawManifestDescription = header?.optString("description").orEmpty()
+                val localizedManifestText by produceState(
+                    initialValue = rawManifestName to rawManifestDescription,
+                    key1 = file.absolutePath,
+                    key2 = file.lastModified() + file.length(),
+                    key3 = localeTag
+                ) {
+                    val packDirectory = file.parentFile
+                    value = if (packDirectory == null) {
+                        rawManifestName to rawManifestDescription
+                    } else {
+                        withContext(Dispatchers.IO) {
+                            ManifestTextResolver.resolve(packDirectory, rawManifestName, localeTag).orEmpty() to
+                                ManifestTextResolver.resolve(packDirectory, rawManifestDescription, localeTag).orEmpty()
+                        }
+                    }
+                }
                 val modules = json?.optJSONArray("modules")
                 val dependencies = json?.optJSONArray("dependencies")
                 val capabilities = json?.optJSONArray("capabilities")
                 Card { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(stringResource(R.string.manifest_title, file.parentFile?.name ?: stringResource(R.string.pack)), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                    Text(header?.optString("name", stringResource(R.string.unknown_pack)) ?: stringResource(R.string.manifest_parse_failed), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
-                    Text(header?.optString("description", stringResource(R.string.no_description)) ?: stringResource(R.string.check_manifest_json))
+                    Text(
+                        if (header == null) stringResource(R.string.manifest_parse_failed)
+                        else localizedManifestText.first.ifBlank { stringResource(R.string.unknown_pack) },
+                        style = androidx.compose.material3.MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        if (header == null) stringResource(R.string.check_manifest_json)
+                        else localizedManifestText.second.ifBlank { stringResource(R.string.no_description) }
+                    )
                     val uuidValue = header?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Text(stringResource(R.string.uuid_value, uuidValue), Modifier.weight(1f))

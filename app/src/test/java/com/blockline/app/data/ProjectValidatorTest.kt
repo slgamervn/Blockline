@@ -124,13 +124,29 @@ class ProjectValidatorTest {
         }
     }
     @Test
-    fun rejectsTrailingCommasAndReportsTheAffectedLine() {
+    fun acceptsBedrockTrailingCommasWithoutReportingFalseErrors() {
         val root = Files.createTempDirectory("blockline-trailing-comma-").toFile()
         try {
             File(root, "settings.json").writeText("{\n  \"value\": 1,\n}")
-            val issue = ProjectValidator.validate(root).single { it.message.contains("Trailing commas") }
-            assertEquals(3, issue.line)
-            assertTrue((issue.column ?: 0) > 0)
+
+            val issues = ProjectValidator.validate(root)
+            assertTrue("Bedrock-compatible trailing comma was rejected: $issues", issues.none { it.path == "settings.json" && it.severity == IssueSeverity.ERROR })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun acceptsScalarRootJsonOutsideManifestFiles() {
+        val root = Files.createTempDirectory("blockline-scalar-json-").toFile()
+        try {
+            File(root, "texts/languages.json").apply {
+                parentFile?.mkdirs()
+                writeText("\"en_US\"")
+            }
+
+            val issues = ProjectValidator.validate(root)
+            assertTrue("Scalar root JSON was rejected: $issues", issues.none { it.path == "texts/languages.json" && it.severity == IssueSeverity.ERROR })
         } finally {
             root.deleteRecursively()
         }

@@ -15,7 +15,8 @@ class Palette(
     val string: Color,
     val number: Color,
     val keyword: Color,
-    val comment: Color
+    val comment: Color,
+    val errorBackground: Color = Color(0x55F44336)
 )
 
 private val jsonRx = Regex(
@@ -41,7 +42,7 @@ private fun isKey(s: String, from: Int): Boolean {
     return i < s.length && s[i] == ':'
 }
 
-fun highlight(src: String, lang: Lang, p: Palette): AnnotatedString = buildAnnotatedString {
+fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): AnnotatedString = buildAnnotatedString {
     append(src)
     val rx = when (lang) {
         Lang.JSON -> jsonRx
@@ -60,9 +61,20 @@ fun highlight(src: String, lang: Lang, p: Palette): AnnotatedString = buildAnnot
         }
         addStyle(SpanStyle(color = color), m.range.first, m.range.last + 1)
     }
+    if (lang == Lang.JSON && errorOffset != null && src.isNotEmpty()) {
+        val position = errorOffset.coerceIn(0, src.lastIndex)
+        val lineStart = src.lastIndexOf('\n', position - 1) + 1
+        val lineBreak = src.indexOf('\n', position)
+        val lineEnd = if (lineBreak >= 0) lineBreak else src.length
+        if (lineStart < lineEnd) addStyle(SpanStyle(background = p.errorBackground), lineStart, lineEnd)
+    }
 }
 
-class HighlightTransformation(private val lang: Lang, private val p: Palette) : VisualTransformation {
+class HighlightTransformation(
+    private val lang: Lang,
+    private val p: Palette,
+    private val errorOffset: Int? = null
+) : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText =
-        TransformedText(highlight(text.text, lang, p), OffsetMapping.Identity)
+        TransformedText(highlight(text.text, lang, p, errorOffset), OffsetMapping.Identity)
 }

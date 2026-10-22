@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
@@ -26,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -40,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -52,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
 import com.blockline.app.data.JsonTools
+import com.blockline.app.data.ProjectValidator
+import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
 
@@ -85,6 +91,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var matchCount by remember(path) { mutableStateOf(0) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
     var highlightSource by remember(path) { mutableStateOf("") }
+    var syntaxIssue by remember(path) { mutableStateOf<ValidationIssue?>(null) }
+    var checkingJson by remember(path) { mutableStateOf(false) }
     val largeOffsets = remember(vm.content, vm.readOnly) {
         if (vm.readOnly) largeFilePageOffsets(vm.content) else listOf(0)
     }
@@ -115,6 +123,32 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             highlightSource = editorValue.text
         }
     }
+    LaunchedEffect(path, editorValue.text, lang, vm.readOnly) {
+        if (lang != Lang.JSON || vm.readOnly || editorValue.text.isBlank()) {
+            syntaxIssue = null
+            checkingJson = false
+        } else {
+            checkingJson = true
+            delay(320)
+            val source = editorValue.text
+            val issue = withContext(Dispatchers.Default) { ProjectValidator.inspectJsonSyntax(source) }
+            if (source == editorValue.text) {
+                syntaxIssue = issue
+                checkingJson = false
+            }
+        }
+    }
+    val jsonErrorOffset = remember(editorValue.text, syntaxIssue) {
+        syntaxIssue?.line?.let { targetLine ->
+            var currentLine = 1
+            var offset = 0
+            while (offset < editorValue.text.length && currentLine < targetLine) {
+                if (editorValue.text[offset] == '\n') currentLine++
+                offset++
+            }
+            (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, editorValue.text.length)
+        }
+    }
     LaunchedEffect(path, vm.content, vm.readOnly) {
         if (vm.readOnly) {
             if (editorValue.text.isNotEmpty()) editorValue = TextFieldValue()
@@ -143,6 +177,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         vm.consumePendingEditorLine()
     }
     Scaffold(
+        modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
                 title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
@@ -159,7 +194,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             )
         },
         bottomBar = {
-            Row(Modifier.fillMaxWidth().imePadding().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TextButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, null); Text(stringResource(R.string.undo)) }
                 TextButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, null); Text(stringResource(R.string.redo)) }
                 TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
@@ -168,7 +203,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     ) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().imePadding().padding(12.dp)) {
+        Column(Modifier.padding(pad).fillMaxSize().padding(12.dp)) {
             if (vm.isOpeningFile) {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
                 Text(stringResource(R.string.opening_file), style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
@@ -182,6 +217,35 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             TextButton(onClick = { vm.openFile(tab) }) { Text(tab.substringAfterLast('/'), maxLines = 1) }
                             IconButton(onClick = { vm.closeTab(tab) }) { Icon(Icons.Default.Close, stringResource(R.string.close_tab)) }
                         }
+                    }
+                }
+                if (lang == Lang.JSON && !vm.readOnly && editorValue.text.isNotBlank()) {
+                    val issue = syntaxIssue
+                    val colors = MaterialTheme.colorScheme
+                    val statusText = when {
+                        checkingJson -> stringResource(R.string.json_validation_checking)
+                        issue != null -> stringResource(R.string.json_validation_invalid, issue.line ?: 1, issue.column ?: 1, issue.message)
+                        else -> stringResource(R.string.json_validation_valid)
+                    }
+                    Surface(
+                        color = when {
+                            checkingJson -> colors.surfaceVariant
+                            issue != null -> colors.errorContainer
+                            else -> colors.secondaryContainer
+                        },
+                        shape = RoundedCornerShape(9.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        Text(
+                            statusText,
+                            color = when {
+                                checkingJson -> colors.onSurfaceVariant
+                                issue != null -> colors.onErrorContainer
+                                else -> colors.onSecondaryContainer
+                            },
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
                 if (vm.readOnly) {
@@ -232,12 +296,12 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
                         visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= 48_000) HighlightTransformation(lang, Palette(
-                            androidx.compose.ui.graphics.Color(0xFF8FC9FF),
-                            androidx.compose.ui.graphics.Color(0xFFB5E7A0),
-                            androidx.compose.ui.graphics.Color(0xFFE6B35A),
+                            Color(0xFF8FC9FF),
+                            Color(0xFFB5E7A0),
+                            Color(0xFFE6B35A),
                             Emerald,
-                            androidx.compose.ui.graphics.Color(0xFF82958A)
-                        )) else VisualTransformation.None
+                            Color(0xFF82958A)
+                        ), if (lang == Lang.JSON) jsonErrorOffset else null) else VisualTransformation.None
                     )
                 }
             }

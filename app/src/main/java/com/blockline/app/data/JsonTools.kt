@@ -46,6 +46,33 @@ object JsonTools {
         return sb.toString()
     }
 
+    /** Replaces commas immediately before a closing array/object delimiter without changing offsets. */
+    fun stripTrailingCommas(s: String): String {
+        val chars = s.toCharArray()
+        var inString = false
+        var escaped = false
+        var i = 0
+        while (i < s.length) {
+            val ch = s[i]
+            if (inString) {
+                if (escaped) escaped = false
+                else when (ch) {
+                    '\\' -> escaped = true
+                    '"' -> inString = false
+                }
+            } else when (ch) {
+                '"' -> inString = true
+                ',' -> {
+                    var next = i + 1
+                    while (next < s.length && s[next].isWhitespace()) next++
+                    if (next < s.length && (s[next] == '}' || s[next] == ']')) chars[i] = ' '
+                }
+            }
+            i++
+        }
+        return String(chars)
+    }
+
     /** Pretty-prints JSON without removing comments. Works on text that is not strictly valid JSON. */
     fun format(s: String, unit: String = "  "): String {
         val out = StringBuilder()
