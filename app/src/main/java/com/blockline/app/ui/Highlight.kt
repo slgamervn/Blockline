@@ -78,3 +78,14 @@ class HighlightTransformation(
     override fun filter(text: AnnotatedString): TransformedText =
         TransformedText(highlight(text.text, lang, p, errorOffset), OffsetMapping.Identity)
 }
+
+class PrecomputedHighlightTransformation(
+    private val sourceText: String,
+    private val highlightedText: AnnotatedString
+) : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText =
+        TransformedText(
+            if (text.text == sourceText) highlightedText else text,
+            OffsetMapping.Identity
+        )
+}
