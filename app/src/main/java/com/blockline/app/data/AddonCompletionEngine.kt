@@ -48,6 +48,9 @@ class AddonCompletionEngine private constructor(
                         "player" -> "Player"
                         "entity" -> "Entity"
                         "dim", "dimension" -> "Dimension"
+                        "block" -> "Block"
+                        "permutation", "blockPermutation" -> "BlockPermutation"
+                        "itemStack", "itemstack", "stack" -> "ItemStack"
                         else -> it
                     }
                 }
@@ -64,8 +67,9 @@ class AddonCompletionEngine private constructor(
                 add(schema.optJSONArray("javascriptKeywords").asStrings(), "JavaScript")
             }
         } else {
+            val isManifest = normalizedPath.endsWith("/manifest.json") || normalizedPath == "manifest.json"
             val fileSchema = when {
-                normalizedPath.endsWith("/manifest.json") || normalizedPath == "manifest.json" ->
+                isManifest ->
                     schema.optJSONObject("files")?.optJSONObject("manifest.json")
                 pathContains(normalizedPath, "entities") ->
                     schema.optJSONObject("files")?.optJSONObject("entities/")

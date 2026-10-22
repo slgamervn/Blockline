@@ -62,11 +62,29 @@ for (const [path, requirements] of Object.entries(requiredEntries)) {
 }
 
 assertStringArray(schema.js?.globals, "js.globals");
-for (const owner of ["world", "system", "Player", "Entity", "Dimension"]) {
+for (const owner of ["world", "system", "Player", "Entity", "Dimension", "Block", "BlockPermutation", "ItemStack"]) {
   if (!schema.js.globals.includes(owner)) {
     fail(`js.globals is missing ${owner}`);
   }
   assertStringArray(schema.js[owner], `js.${owner}`);
+}
+
+const requiredApiMembers = {
+  world: ["getAimAssist"],
+  Player: ["getAimAssist", "setPropertyOverrideForEntity"],
+  Entity: ["getBlockStandingOn"],
+  Dimension: ["getGeneratedStructures", "getWeather"],
+  Block: ["getLightLevel", "setPermutation"],
+  BlockPermutation: ["resolve", "withState"],
+  ItemStack: ["clone", "getLore"],
+};
+
+for (const [owner, members] of Object.entries(requiredApiMembers)) {
+  for (const member of members) {
+    if (!schema.js[owner]?.includes(member)) {
+      fail(\`js.\${owner} is missing required API member \${member}\`);
+    }
+  }
 }
 
 console.log("Validated Minecraft Bedrock add-on completion schema.");

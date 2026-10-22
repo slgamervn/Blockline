@@ -14,11 +14,44 @@ class AddonCompletionEngineTest {
             "items/":{"keys":["minecraft:item","components"],"values":{"components":["minecraft:icon","minecraft:max_stack_size"],"format_version":["1.21.0"]}},
             "blocks/":{"keys":["minecraft:block","components"],"values":{"components":["minecraft:geometry","minecraft:material_instances"],"format_version":["1.21.0"]}}
           },
-          "js":{"globals":["world","system","Player","Entity"],"world":["getDimension","getPlayers"],"system":["run","runInterval"],"Player":["name","teleport","getItemCooldown"],"Entity":["getComponent","getHeadLocation"],"Dimension":["getBlock","spawnEntity"]}
+          "js":{"globals":["world","system","Player","Entity","Dimension","Block","BlockPermutation","ItemStack"],"world":["getDimension","getPlayers","getAimAssist"],"system":["run","runInterval"],"Player":["name","teleport","getItemCooldown","getAimAssist"],"Entity":["getComponent","getHeadLocation","getBlockStandingOn"],"Dimension":["getBlock","spawnEntity","getWeather"],"Block":["getLightLevel"],"BlockPermutation":["resolve","withState"],"ItemStack":["getLore","clone"]}
         }
     """.trimIndent()
 
     private val engine = AddonCompletionEngine.fromSchemaJson(schema, "123e4567-e89b-12d3-a456-426614174000")
+
+
+    @Test fun suggestsAdditionalServerApiMembers() {
+        val worldText = "world.getA"
+        val worldResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", worldText, worldText.length))
+        assertTrue(worldResult.items.any { it.label == "getAimAssist" })
+
+        val playerText = "player.getA"
+        val playerResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", playerText, playerText.length))
+        assertTrue(playerResult.items.any { it.label == "getAimAssist" })
+
+        val dimensionText = "dimension.getWe"
+        val dimensionResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", dimensionText, dimensionText.length))
+        assertTrue(dimensionResult.items.any { it.label == "getWeather" })
+
+        val entityText = "entity.getBlockS"
+        val entityResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", entityText, entityText.length))
+        assertTrue(entityResult.items.any { it.label == "getBlockStandingOn" })
+    }
+
+    @Test fun suggestsBlockPermutationAndItemStackMembers() {
+        val blockText = "block.getLi"
+        val blockResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", blockText, blockText.length))
+        assertTrue(blockResult.items.any { it.label == "getLightLevel" })
+
+        val permutationText = "permutation.res"
+        val permutationResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", permutationText, permutationText.length))
+        assertTrue(permutationResult.items.any { it.label == "resolve" })
+
+        val stackText = "itemStack.getLo"
+        val stackResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", stackText, stackText.length))
+        assertTrue(stackResult.items.any { it.label == "getLore" })
+    }
 
     @Test fun detectsEntityPathAndFiltersPrefix() {
         val text = "{\"minecraft:en"
