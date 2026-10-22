@@ -82,10 +82,14 @@ class AddonCompletionEngine private constructor(
                 }
                 val values = fileSchema.optJSONObject("values")
                 when {
-                    normalizedPath.endsWith("manifest.json") &&
-                        Regex("\"uuid\"\\s*:\\s*\"?[^\"]*$").containsMatchIn(before) ->
+                    isManifest && isCurrentStringValueForKey(before, "uuid") ->
                         add(listOf(uuidSuggestion), "Generated UUID")
-                    isInsideObjectForKey(before, "components") || isInsideObjectForKey(before, "component_groups") -> {
+                    isManifest && isCurrentStringValueForKey(before, "type") ->
+                        add((values?.optJSONArray("module_type").asStrings().orEmpty() +
+                            values?.optJSONArray("type").asStrings().orEmpty()).distinct(), "Manifest module type")
+                    isCurrentStringValueForKey(before, "format_version") ->
+                        add(values?.optJSONArray("format_version").asStrings(), "Supported format version")
+                    !isManifest && isJsonKeyContext(before) && isInsideComponentKeyMap(before) -> {
                         val detail = when {
                             pathContains(normalizedPath, "items") -> "Item component"
                             pathContains(normalizedPath, "blocks") -> "Block component"
@@ -93,10 +97,6 @@ class AddonCompletionEngine private constructor(
                         }
                         add(values?.optJSONArray("components").asStrings(), detail)
                     }
-                    before.contains("\"module_type\"") || before.contains("\"type\"") ->
-                        add((values?.optJSONArray("module_type").asStrings().orEmpty() + values?.optJSONArray("type").asStrings().orEmpty()).distinct(), "Manifest module type")
-                    before.contains("\"format_version\"") ->
-                        add(values?.optJSONArray("format_version").asStrings(), "Supported format version")
                 }
             }
         }
@@ -127,8 +127,20 @@ class AddonCompletionEngine private constructor(
         return trimmed.endsWith("{") || trimmed.endsWith(",")
     }
 
-    private fun isInsideObjectForKey(before: String, key: String): Boolean {
-        val stack = mutableListOf<Pair<Int, String?>>()
+    private fun isInsideComponentKeyMap(before: String): Boolean {
+        val keys = openObjectKeys(before)
+        return keys.lastOrNull() == "components" ||
+            (keys.size >= 2 && keys.lastOrNull() != null &&
+                keys[keys.lastIndex - 1] == "component_groups")
+    }
+
+    private fun isCurrentStringValueForKey(before: String, key: String): Boolean {
+        val pattern = "\"" + Regex.escape(key) + "\"\\s*:\\s*\"(?:[^\"\\\\]|\\\\.)*$"
+        return Regex(pattern).containsMatchIn(before)
+    }
+
+    private fun openObjectKeys(before: String): List<String?> {
+        val stack = mutableListOf<String?>()
         var inString = false
         var escaped = false
         before.forEachIndexed { index, ch ->
@@ -136,17 +148,16 @@ class AddonCompletionEngine private constructor(
                 escaped = false
             } else if (ch == '\\' && inString) {
                 escaped = true
-            } else if (ch == '"' ) {
+            } else if (ch == '"') {
                 inString = !inString
             } else if (!inString && ch == '{') {
-                val prefix = before.substring(0, index)
-                val keyMatch = Regex("\"([^\"\\\\]+)\"\\s*:\\s*$").find(prefix)
-                stack.add(index to keyMatch?.groupValues?.getOrNull(1))
+                val keyMatch = Regex("\"([^\"\\\\]+)\"\\s*:\\s*$").find(before.substring(0, index))
+                stack.add(keyMatch?.groupValues?.getOrNull(1))
             } else if (!inString && ch == '}') {
                 if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
             }
         }
-        return stack.any { it.second == key }
+        return stack
     }
 
     private fun pathContains(path: String, folder: String): Boolean =

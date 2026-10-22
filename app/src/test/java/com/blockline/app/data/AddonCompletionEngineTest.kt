@@ -98,6 +98,31 @@ class AddonCompletionEngineTest {
         assertTrue(result.items.none { it.label == "minecraft:icon" })
     }
 
+
+    @Test fun doesNotSuggestComponentsInsideComponentValueObject() {
+        val text = "{\"components\":{\"minecraft:health\":{\"value\":1,\"minecraft:he"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
+        assertTrue(result.items.none { it.detail == "Entity component" })
+    }
+
+    @Test fun suggestsComponentsInsideComponentGroups() {
+        val text = "{\"component_groups\":{\"minecraft:angry\":{\"minecraft:he"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
+        assertTrue(result.items.any { it.label == "minecraft:health" && it.detail == "Entity component" })
+    }
+
+    @Test fun doesNotSuggestManifestTypesOutsideTypeValue() {
+        val text = "\"type\": \"data\", \"description\": \"scr"
+        val result = engine.suggest(AddonCompletionEngine.Request("manifest.json", text, text.length))
+        assertTrue(result.items.none { it.detail == "Manifest module type" })
+    }
+
+    @Test fun doesNotSuggestFormatVersionsOutsideFormatVersionValue() {
+        val text = "\"format_version\": \"1.21.0\", \"description\": \"1.21"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
+        assertTrue(result.items.none { it.detail == "Supported format version" })
+    }
+
     @Test fun suggestsBlockComponentsInBlockFiles() {
         val text = "{\"components\":{\"minecraft:ge"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/blocks/custom_block.json", text, text.length))
