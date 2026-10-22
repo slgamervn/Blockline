@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FindInPage
-import androidx.compose.material.icons.filled.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.automirrored.filled.Undo
@@ -162,7 +162,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             Row(Modifier.fillMaxWidth().imePadding().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TextButton(onClick = { vm.undo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, null); Text(stringResource(R.string.undo)) }
                 TextButton(onClick = { vm.redo() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, null); Text(stringResource(R.string.redo)) }
-                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
+                TextButton(onClick = { if (lang == Lang.JSON) vm.updateContent(JsonTools.format(vm.content)) else vm.message = context.getString(R.string.format_json_only) }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
                 TextButton(onClick = { vm.saveCurrent() }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
                 TextButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
             }
