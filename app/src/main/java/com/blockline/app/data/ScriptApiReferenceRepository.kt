@@ -34,10 +34,9 @@ class ScriptApiReferenceRepository(context: Context) {
     ): ScriptApiLoadResult = withContext(Dispatchers.IO) {
         require(packageName in supportedPackages) { "Unsupported Script API package." }
         if (requestedVersion != null) {
-            require(Regex("""^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$""").matches(requestedVersion)) {
+            require(SemanticVersion.isValid(requestedVersion)) {
                 "Invalid package version."
-            }
-        }
+            }        }
         check(cacheDirectory.mkdirs() || cacheDirectory.isDirectory) { "Could not create API cache." }
 
         var metadata = readMetadata(packageName)
