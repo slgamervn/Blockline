@@ -265,6 +265,44 @@ class ProjectValidatorTest {
     }
 
     @Test
+    fun rejectsMalformedDependencyUuidAndMissingModuleVersion() {
+        val root = Files.createTempDirectory("blockline-invalid-dependency-fields-").toFile()
+        try {
+            val pack = File(root, "BP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Behavior Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0]},"modules":[{"type":"data","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"dependencies":[{"uuid":"not-a-uuid","version":[1,0,0]},{"module_name":"@minecraft/server"}]}"""
+            )
+
+            val issues = ProjectValidator.validate(root)
+            assertTrue(issues.any { it.message.contains("dependencies[0].uuid is not a valid UUID") && it.severity == IssueSeverity.ERROR })
+            assertTrue(issues.any { it.message.contains("dependencies[1].version is required when module_name is used") && it.severity == IssueSeverity.ERROR })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun acceptsWellFormedExternalModuleDependencyWithoutTreatingItAsMissingPack() {
+        val root = Files.createTempDirectory("blockline-valid-module-dependency-").toFile()
+        try {
+            val pack = File(root, "BP").apply { mkdirs() }
+            File(pack, "manifest.json").writeText(
+                """{"format_version":2,"header":{"name":"Behavior Pack","description":"Test pack","uuid":"12345678-1234-1234-1234-123456789abc","version":[1,0,0],"min_engine_version":[1,20,0]},"modules":[{"type":"script","language":"javascript","entry":"scripts/main.js","uuid":"12345678-1234-1234-1234-123456789abd","version":[1,0,0]}],"dependencies":[{"module_name":"@minecraft/server","version":"2.0.0"}]}"""
+            )
+            File(pack, "scripts/main.js").apply {
+                parentFile?.mkdirs()
+                writeText("import {} from '@minecraft/server';")
+            }
+
+            val issues = ProjectValidator.validate(root)
+            assertFalse("Unexpected errors: $issues", issues.any { it.severity == IssueSeverity.ERROR })
+            assertTrue(issues.any { it.message.contains("Module dependency '@minecraft/server' is declared") && it.severity == IssueSeverity.INFO })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun rejectsDependencyWithBothUuidAndModuleName() {
         val root = Files.createTempDirectory("blockline-dependency-identifiers-").toFile()
         try {
