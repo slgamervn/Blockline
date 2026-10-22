@@ -74,6 +74,10 @@ import com.blockline.app.ui.theme.OnSurface
 private const val LARGE_FILE_PAGE_CHARS = 12_000
 private const val LIVE_TEXT_ANALYSIS_MAX_CHARS = 12_000
 
+private val COMPLETION_TOKEN_REGEX = Regex("[A-Za-z0-9_$:.-]*$")
+private val MANIFEST_UUID_START_REGEX = Regex("\"uuid\"\\s*:\\s*\"$")
+private val MANIFEST_FORMAT_VERSION_START_REGEX = Regex("\"format_version\"\\s*:\\s*\\d*$")
+
 private fun largeFilePageOffsets(text: String): List<Int> {
     if (text.isEmpty()) return listOf(0)
     val offsets = ArrayList<Int>((text.length / LARGE_FILE_PAGE_CHARS) + 1)
@@ -144,33 +148,41 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             completionItems = emptyList()
             return@LaunchedEffect
         }
-        val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
-        val beforeCursor = editorValue.text.substring(0, cursor)
-        val currentToken = Regex("[A-Za-z0-9_$:.-]*$").find(beforeCursor)?.value.orEmpty()
-        val isManifest = activePath.substringAfterLast('/').equals("manifest.json", true)
-        val isManifestUuidStart = isManifest && Regex("\"uuid\"\\s*:\\s*\"$").containsMatchIn(beforeCursor)
-        val isManifestFormatVersionStart = isManifest &&
-            Regex("\"format_version\"\\s*:\\s*\\d*$").containsMatchIn(beforeCursor)
-        val shouldSuggest = currentToken.isNotEmpty() || beforeCursor.endsWith(".") ||
-            isManifestUuidStart || isManifestFormatVersionStart ||
-            (isManifest && beforeCursor.trimEnd().endsWith("{"))
-        if (!shouldSuggest) {
-            completionItems = emptyList()
-            return@LaunchedEffect
-        }
-        delay(140)
+        if (completionItems.isNotEmpty()) completionItems = emptyList()
         val snapshotText = editorValue.text
-        val snapshotCursor = cursor
+        val snapshotCursor = editorValue.selection.start.coerceIn(0, snapshotText.length)
+        val projectKey = "${vm.current?.id ?: "unknown"}:$activePath"
+        delay(140)
         val result = withContext(Dispatchers.Default) {
-            engine.suggest(AddonCompletionEngine.Request(activePath, snapshotText, snapshotCursor, "${vm.current?.id ?: "unknown"}:$activePath"))
+            val beforeCursor = snapshotText.substring(0, snapshotCursor)
+            val currentToken = COMPLETION_TOKEN_REGEX.find(beforeCursor)?.value.orEmpty()
+            val isManifest = activePath.substringAfterLast('/').equals("manifest.json", true)
+            val isManifestUuidStart = isManifest && MANIFEST_UUID_START_REGEX.containsMatchIn(beforeCursor)
+            val isManifestFormatVersionStart =
+                isManifest && MANIFEST_FORMAT_VERSION_START_REGEX.containsMatchIn(beforeCursor)
+            val shouldSuggest = currentToken.isNotEmpty() || beforeCursor.endsWith(".") ||
+                isManifestUuidStart || isManifestFormatVersionStart ||
+                (isManifest && beforeCursor.trimEnd().endsWith("{"))
+            if (shouldSuggest) {
+                engine.suggest(
+                    AddonCompletionEngine.Request(activePath, snapshotText, snapshotCursor, projectKey)
+                )
+            } else {
+                null
+            }
         }
         if (activePath == vm.activeFile && snapshotText == editorValue.text &&
             snapshotCursor == editorValue.selection.start
         ) {
-            completionRange = result.start to result.end
-            completionItems = result.items
+            if (result == null) {
+                completionItems = emptyList()
+            } else {
+                completionRange = result.start to result.end
+                completionItems = result.items
+            }
         }
     }
+
     LaunchedEffect(path, editorValue.text, vm.readOnly, vm.isOpeningFile) {
         if (path == null || vm.readOnly || vm.isOpeningFile || editorValue.text == vm.content) return@LaunchedEffect
         val snapshot = editorValue.text
@@ -433,6 +445,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             value = editorValue,
                             onValueChange = {
                                 editorValue = it
+                                if (completionItems.isNotEmpty()) completionItems = emptyList()
                                 if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightedText = null
                             },
                             readOnly = vm.isOpeningFile,

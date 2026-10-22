@@ -110,9 +110,8 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                     }
                 }
                 val ordered = if (filter == "Recent") {
-                    filtered.sortedBy { entry ->
-                        recentPaths.indexOf(entry.path).let { if (it < 0) Int.MAX_VALUE else it }
-                    }
+                    val recentOrder = recentPaths.withIndex().associate { it.value to it.index }
+                    filtered.sortedBy { entry -> recentOrder[entry.path] ?: Int.MAX_VALUE }
                 } else filtered
                 if (filter != "All") ordered
                 else ordered.filter { entry -> entry.ancestors.all { it in expanded } }

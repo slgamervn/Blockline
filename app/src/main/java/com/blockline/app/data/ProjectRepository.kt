@@ -262,7 +262,12 @@ class ProjectRepository(private val ctx: Context) {
     fun allEntries(id: String): List<File> {
         val base = projectDir(id)
         if (!base.isDirectory) return emptyList()
-        return base.walkTopDown().filter { it != base }.sortedBy { it.relativeTo(base).path.lowercase() }.toList()
+        return base.walkTopDown()
+            .filter { it != base }
+            .map { file -> file to file.relativeTo(base).path.lowercase(java.util.Locale.ROOT) }
+            .sortedBy { it.second }
+            .map { it.first }
+            .toList()
     }
     fun allFiles(id: String): List<File> = allEntries(id).filter { it.isFile }
     fun relative(id: String, file: File) = file.relativeTo(projectDir(id)).path.replace(File.separatorChar, '/')
