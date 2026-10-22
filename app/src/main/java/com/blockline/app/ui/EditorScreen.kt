@@ -140,7 +140,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         val beforeCursor = editorValue.text.substring(0, cursor)
         val currentToken = Regex("[A-Za-z0-9_$:.-]*$").find(beforeCursor)?.value.orEmpty()
         val isManifest = activePath.substringAfterLast('/').equals("manifest.json", true)
-        val isManifestUuidStart = isManifest && Regex("\\"uuid\\"\\s*:\\s*\\"$").containsMatchIn(beforeCursor)
+        val isManifestUuidStart = isManifest && Regex("\"uuid\"\\s*:\\s*\"$").containsMatchIn(beforeCursor)
         val shouldSuggest = currentToken.isNotEmpty() || beforeCursor.endsWith(".") ||
             isManifestUuidStart || (isManifest && beforeCursor.trimEnd().endsWith("{"))
         if (!shouldSuggest) {
