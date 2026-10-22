@@ -9,7 +9,7 @@ class AddonCompletionEngineTest {
         {
           "javascriptKeywords":["const","function"],
           "files":{
-            "manifest.json":{"keys":["format_version","header","modules","uuid"],"values":{"format_version":["2"],"module_type":["script","data"]}},
+            "manifest.json":{"keys":["format_version","header","modules","uuid"],"keysByContext":{"root":["format_version","header","modules","dependencies"],"header":["name","description","uuid","version","min_engine_version"],"modules":["type","uuid","version"]},"values":{"format_version":["2"],"module_type":["script","data"]}},
             "entities/":{"keys":["minecraft:entity","components","description"],"values":{"components":["minecraft:health","minecraft:movement"],"format_version":["1.21.0"]}},
             "items/":{"keys":["minecraft:item","components"],"values":{"components":["minecraft:icon","minecraft:max_stack_size"],"format_version":["1.21.0"]}},
             "blocks/":{"keys":["minecraft:block","components"],"values":{"components":["minecraft:geometry","minecraft:material_instances"],"format_version":["1.21.0"]}}
@@ -103,6 +103,23 @@ class AddonCompletionEngineTest {
         val text = "dimension.stop"
         val result = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", text, text.length))
         assertTrue(result.items.none { it.label == "stopAllSounds" || it.label == "stopSound" })
+    }
+
+    @Test fun suggestsManifestKeysForCurrentObjectContext() {
+        val rootText = "{"
+        val rootResult = engine.suggest(AddonCompletionEngine.Request("manifest.json", rootText, rootText.length))
+        assertTrue(rootResult.items.any { it.label == "header" })
+        assertTrue(rootResult.items.none { it.label == "name" })
+
+        val headerText = """{"header":{"""
+        val headerResult = engine.suggest(AddonCompletionEngine.Request("manifest.json", headerText, headerText.length))
+        assertTrue(headerResult.items.any { it.label == "name" })
+        assertTrue(headerResult.items.none { it.label == "modules" })
+
+        val moduleText = """{"modules":[{"""
+        val moduleResult = engine.suggest(AddonCompletionEngine.Request("manifest.json", moduleText, moduleText.length))
+        assertTrue(moduleResult.items.any { it.label == "type" })
+        assertTrue(moduleResult.items.none { it.label == "header" })
     }
 
     @Test fun suggestsManifestModuleTypesAndStableUuid() {
