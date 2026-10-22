@@ -49,6 +49,9 @@ class AddonCompletionEngineTest {
         val uuidText = "\"uuid\": \""
         val first = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val second = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
+        val uuidAfterType = "\"type\": \"data\", \"uuid\": \""
+        val afterType = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidAfterType, uuidAfterType.length))
+        assertTrue(afterType.items.any { it.detail == "Generated UUID" && it.label == "123e4567-e89b-12d3-a456-426614174000" })
         assertEquals("123e4567-e89b-12d3-a456-426614174000", first.items.first { it.detail == "Generated UUID" }.label)
         assertEquals(first.items.map { it.label }, second.items.map { it.label })
     }
@@ -70,21 +73,21 @@ class AddonCompletionEngineTest {
     @Test fun suggestsEntityComponentsInsideComponentsObject() {
         val text = "{\"components\":{\"minecraft:he"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
-        assertTrue(result.items.any { it.label == "minecraft:health" })
+        assertTrue(result.items.any { it.label == "minecraft:health" && it.detail == "Entity component" })
         assertTrue(result.items.none { it.label == "minecraft:movement" })
     }
 
     @Test fun suggestsItemComponentsInItemFiles() {
         val text = "{\"components\":{\"minecraft:ma"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/items/custom_item.json", text, text.length))
-        assertTrue(result.items.any { it.label == "minecraft:max_stack_size" })
+        assertTrue(result.items.any { it.label == "minecraft:max_stack_size" && it.detail == "Item component" })
         assertTrue(result.items.none { it.label == "minecraft:icon" })
     }
 
     @Test fun suggestsBlockComponentsInBlockFiles() {
         val text = "{\"components\":{\"minecraft:ge"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/blocks/custom_block.json", text, text.length))
-        assertTrue(result.items.any { it.label == "minecraft:geometry" })
+        assertTrue(result.items.any { it.label == "minecraft:geometry" && it.detail == "Block component" })
         assertTrue(result.items.none { it.label == "minecraft:material_instances" })
     }
 }
