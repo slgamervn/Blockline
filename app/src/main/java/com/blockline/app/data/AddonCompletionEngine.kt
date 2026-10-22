@@ -69,7 +69,9 @@ class AddonCompletionEngine private constructor(
             if (fileSchema != null) {
                 val isLikelyKeyPosition = isJsonKeyContext(before)
                 if (isLikelyKeyPosition) {
-                    add(fileSchema.optJSONArray("keys").asStrings(), "Bedrock JSON key")
+                    val keys = if (isManifest) manifestKeysForContext(before, fileSchema)
+                    else fileSchema.optJSONArray("keys").asStrings()
+                    add(keys, "Bedrock JSON key")
                 }
                 val values = fileSchema.optJSONObject("values")
                 when {
@@ -118,6 +120,14 @@ class AddonCompletionEngine private constructor(
         }
     }
 
+    private fun manifestKeysForContext(before: String, fileSchema: JSONObject): List<String> {
+        val contexts = fileSchema.optJSONObject("keysByContext")
+            ?: return fileSchema.optJSONArray("keys").asStrings()
+        val context = openObjectKeys(before).lastOrNull() ?: "root"
+        return contexts.optJSONArray(context).asStrings()
+            .ifEmpty { contexts.optJSONArray("root").asStrings() }
+    }
+
     private fun isJsonKeyContext(before: String): Boolean {
         var inString = false
         var escaped = false
@@ -163,24 +173,62 @@ class AddonCompletionEngine private constructor(
     }
 
     private fun openObjectKeys(before: String): List<String?> {
-        val stack = mutableListOf<String?>()
-        var inString = false
-        var escaped = false
-        before.forEachIndexed { index, ch ->
-            if (escaped) {
-                escaped = false
-            } else if (ch == '\\' && inString) {
-                escaped = true
-            } else if (ch == '"') {
-                inString = !inString
-            } else if (!inString && ch == '{') {
-                val keyMatch = Regex("\"([^\"\\\\]+)\"\\s*:\\s*$").find(before.substring(0, index))
-                stack.add(keyMatch?.groupValues?.getOrNull(1))
-            } else if (!inString && ch == '}') {
-                if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+        data class Container(val isArray: Boolean, val key: String?)
+        val stack = mutableListOf<Container>()
+        var pendingKey: String? = null
+        var index = 0
+        while (index < before.length) {
+            when (before[index]) {
+                '"' -> {
+                    val start = index + 1
+                    index++
+                    val value = StringBuilder()
+                    var escaped = false
+                    var closed = false
+                    while (index < before.length) {
+                        val ch = before[index]
+                        if (escaped) {
+                            value.append(ch)
+                            escaped = false
+                        } else if (ch == '\\') {
+                            escaped = true
+                        } else if (ch == '"') {
+                            closed = true
+                            break
+                        } else {
+                            value.append(ch)
+                        }
+                        index++
+                    }
+                    if (!closed) {
+                        pendingKey = null
+                        break
+                    }
+                    var next = index + 1
+                    while (next < before.length && before[next].isWhitespace()) next++
+                    pendingKey = if (next < before.length && before[next] == ':') value.toString() else null
+                    index++
+                    continue
+                }
+                '{' -> {
+                    val arrayParentKey = stack.lastOrNull()?.takeIf { it.isArray }?.key
+                    stack.add(Container(false, pendingKey ?: arrayParentKey))
+                    pendingKey = null
+                }
+                '[' -> {
+                    stack.add(Container(true, pendingKey))
+                    pendingKey = null
+                }
+                '}', ']' -> {
+                    if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+                    pendingKey = null
+                }
+                ',' -> pendingKey = null
+                else -> if (!before[index].isWhitespace() && before[index] != ':') pendingKey = null
             }
+            index++
         }
-        return stack
+        return stack.filterNot { it.isArray }.map { it.key }
     }
 
     private fun pathContains(path: String, folder: String): Boolean =
