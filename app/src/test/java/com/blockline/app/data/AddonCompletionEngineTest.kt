@@ -85,6 +85,12 @@ class AddonCompletionEngineTest {
         assertTrue(result.items.none { it.label == "minecraft:movement" })
     }
 
+    @Test fun doesNotSuggestComponentsOutsideComponentsObject() {
+        val text = "{\"components\":{},\"description\":\"minecraft:he"
+        val result = engine.suggest(AddonCompletionEngine.Request("BP/entities/zombie.json", text, text.length))
+        assertTrue(result.items.none { it.detail == "Entity component" })
+    }
+
     @Test fun suggestsItemComponentsInItemFiles() {
         val text = "{\"components\":{\"minecraft:ma"
         val result = engine.suggest(AddonCompletionEngine.Request("BP/items/custom_item.json", text, text.length))

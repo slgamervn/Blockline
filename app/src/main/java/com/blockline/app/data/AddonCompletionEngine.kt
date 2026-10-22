@@ -85,7 +85,7 @@ class AddonCompletionEngine private constructor(
                     normalizedPath.endsWith("manifest.json") &&
                         Regex("\"uuid\"\\s*:\\s*\"?[^\"]*$").containsMatchIn(before) ->
                         add(listOf(uuidSuggestion), "Generated UUID")
-                    before.contains("\"components\"") || before.contains("\"component_groups\"") -> {
+                    isInsideObjectForKey(before, "components") || isInsideObjectForKey(before, "component_groups") -> {
                         val detail = when {
                             pathContains(normalizedPath, "items") -> "Item component"
                             pathContains(normalizedPath, "blocks") -> "Block component"
@@ -125,6 +125,28 @@ class AddonCompletionEngine private constructor(
         if (inString) return lastColonOutsideString < lastQuoteStart
         val trimmed = before.trimEnd()
         return trimmed.endsWith("{") || trimmed.endsWith(",")
+    }
+
+    private fun isInsideObjectForKey(before: String, key: String): Boolean {
+        val stack = mutableListOf<Pair<Int, String?>>()
+        var inString = false
+        var escaped = false
+        before.forEachIndexed { index, ch ->
+            if (escaped) {
+                escaped = false
+            } else if (ch == '\\\\' && inString) {
+                escaped = true
+            } else if (ch == '"' ) {
+                inString = !inString
+            } else if (!inString && ch == '{') {
+                val prefix = before.substring(0, index)
+                val keyMatch = Regex("\"([^\"\\\\]+)\"\\s*:\\s*$").find(prefix)
+                stack.add(index to keyMatch?.groupValues?.getOrNull(1))
+            } else if (!inString && ch == '}') {
+                if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+            }
+        }
+        return stack.any { it.second == key }
     }
 
     private fun pathContains(path: String, folder: String): Boolean =
