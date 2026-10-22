@@ -1,5 +1,7 @@
 package com.blockline.app.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -64,6 +67,9 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     var dialog by remember { mutableStateOf<String?>(null) }
     var name by remember { mutableStateOf("") }
     var targetPath by remember { mutableStateOf("") }
+    val importTextLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri -> if (uri != null) vm.importTextDocument(uri) }
     val allEntries = project?.let { vm.projectEntries[it.id] }.orEmpty()
     val indexedEntries = remember(allEntries, project?.id) {
         val projectId = project?.id
@@ -103,6 +109,10 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
         TopAppBar(title = { Text(project?.name ?: stringResource(R.string.nav_explorer)) }, actions = {
             IconButton(onClick = { dialog = "folder"; name = "" }) { Icon(Icons.Default.CreateNewFolder, stringResource(R.string.new_folder_cd)) }
             IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.AutoMirrored.Filled.InsertDriveFile, stringResource(R.string.new_file_cd)) }
+            IconButton(
+                onClick = { importTextLauncher.launch(arrayOf("text/*", "application/json", "application/javascript", "application/xml")) },
+                enabled = project != null && !vm.isFileOperationRunning
+            ) { Icon(Icons.Default.FileOpen, "Import text file") }
         })
     }) { pad ->
         if (project == null) {

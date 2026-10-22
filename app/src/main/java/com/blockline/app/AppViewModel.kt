@@ -807,6 +807,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var isOpeningFile by mutableStateOf(false)
         private set
 
+    fun importTextDocument(uri: Uri) {
+        val project = current ?: run {
+            message = text(R.string.no_project_selected)
+            return
+        }
+        if (isFileOperationRunning) return
+        isFileOperationRunning = true
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) { repo.importTextDocument(project.id, uri) }
+            }
+            isFileOperationRunning = false
+            result.onSuccess { importedPath ->
+                refreshProjectEntries(project.id)
+                openFile(importedPath)
+                message = "Imported $importedPath"
+            }.onFailure { error ->
+                message = error.message ?: "Could not import text file."
+            }
+        }
+    }
+
     fun openFile(path: String) = openFile(path, null)
 
     fun openFile(path: String, line: Int?) {
