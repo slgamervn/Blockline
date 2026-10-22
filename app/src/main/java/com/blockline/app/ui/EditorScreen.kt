@@ -54,6 +54,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
@@ -101,7 +102,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var largeFilePage by remember(path) { mutableStateOf(0) }
     var matchCount by remember(path) { mutableStateOf(0) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
-    var highlightSource by remember(path) { mutableStateOf("") }
+    var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     var syntaxIssue by remember(path) { mutableStateOf<ValidationIssue?>(null) }
     var checkingJson by remember(path) { mutableStateOf(false) }
     val completionEngine = remember(context) { runCatching { AddonCompletionEngine.load(context) }.getOrNull() }
@@ -167,14 +168,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             completionItems = result.items
         }
     }
-    LaunchedEffect(path, editorValue.text, lang) {
-        if (lang == null || editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
-            highlightSource = ""
-        } else {
-            delay(240)
-            if (editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightSource = editorValue.text
-        }
-    }
     LaunchedEffect(path, editorValue.text, vm.readOnly, vm.isOpeningFile) {
         if (path == null || vm.readOnly || vm.isOpeningFile || editorValue.text == vm.content) return@LaunchedEffect
         val snapshot = editorValue.text
@@ -211,6 +204,33 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 offset++
             }
             (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, editorValue.text.length)
+        }
+    }
+    LaunchedEffect(path, editorValue.text, lang, jsonErrorOffset, syntaxIssue?.severity) {
+        val source = editorValue.text
+        if (lang == null || source.isEmpty() || source.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
+            highlightedText = null
+            return@LaunchedEffect
+        }
+        delay(320)
+        val palette = Palette(
+            Color(0xFF8FC9FF),
+            Color(0xFFB5E7A0),
+            Color(0xFFE6B35A),
+            Emerald,
+            Color(0xFF82958A),
+            if (lang == Lang.JSON && syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING) {
+                Color(0x55E6B35A)
+            } else {
+                Color(0x55F44336)
+            }
+        )
+        val errorOffset = if (lang == Lang.JSON) jsonErrorOffset else null
+        val highlighted = withContext(Dispatchers.Default) {
+            highlight(source, lang, palette, errorOffset)
+        }
+        if (source == editorValue.text && path == vm.activeFile) {
+            highlightedText = source to highlighted
         }
     }
     LaunchedEffect(path, vm.content, vm.readOnly) {
@@ -415,14 +435,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             readOnly = vm.isOpeningFile,
                             modifier = Modifier.fillMaxSize(),
                             textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                            visualTransformation = if (lang != null && highlightSource == editorValue.text && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) HighlightTransformation(lang, Palette(
-                                Color(0xFF8FC9FF),
-                                Color(0xFFB5E7A0),
-                                Color(0xFFE6B35A),
-                                Emerald,
-                                Color(0xFF82958A),
-                                if (syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING) Color(0x55E6B35A) else Color(0x55F44336)
-                            ), if (lang == Lang.JSON) jsonErrorOffset else null) else VisualTransformation.None
+                            visualTransformation = highlightedText
+                                ?.takeIf { lang != null && it.first == editorValue.text }
+                                ?.let { PrecomputedHighlightTransformation(it.first, it.second) }
+                                ?: VisualTransformation.None
                         )
                         DropdownMenu(
                             expanded = completionItems.isNotEmpty(),
