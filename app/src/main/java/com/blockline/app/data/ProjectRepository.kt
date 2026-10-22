@@ -166,10 +166,11 @@ class ProjectRepository(private val ctx: Context) {
         val tmp = File(ctx.cacheDir, "import_${UUID.randomUUID()}").apply { check(mkdirs() || isDirectory) }
         var dest: File? = null
         try {
+            val budget = ZipExtractionBudget()
             val input = ctx.contentResolver.openInputStream(uri)
                 ?: error("Cannot open the selected file. Choose the pack archive again.")
-            input.use { ZipUtil.unzip(it, tmp) }
-            expandNested(tmp, 0)
+            input.use { ZipUtil.unzip(it, tmp, budget) }
+            expandNested(tmp, 0, budget)
             val packs = findPackRoots(tmp)
             if (packs.isEmpty()) {
                 error("No supported pack manifest was found. Select a valid .mcpack, .mcaddon, or ZIP containing manifest.json or pack_manifest.json.")
@@ -212,19 +213,43 @@ class ProjectRepository(private val ctx: Context) {
         }
     }
 
-    private fun expandNested(dir: File, depth: Int) {
+    private fun expandNested(dir: File, depth: Int, budget: ZipExtractionBudget) {
         if (depth >= 3) return
-        dir.walkTopDown().filter { it.isFile && it.extension.lowercase() in setOf("mcpack", "mcaddon") }.toList().forEach { archive ->
+        val archives = dir.walkTopDown()
+            .filter { it.isFile && it.extension.lowercase(java.util.Locale.ROOT) in setOf("mcpack", "mcaddon") }
+            .take(65)
+            .toList()
+        require(archives.size <= 64) { "The add-on contains too many nested pack archives (limit: 64)." }
+        archives.forEach { archive ->
+            budget.nestedArchiveCount++
+            require(budget.nestedArchiveCount <= 64) {
+                "The add-on contains too many nested pack archives (limit: 64)."
+            }
             val target = File(archive.parentFile, archive.nameWithoutExtension + "_unpacked")
-            archive.inputStream().use { ZipUtil.unzip(it, target) }
-            archive.delete()
-            expandNested(target, depth + 1)
+            archive.inputStream().use { ZipUtil.unzip(it, target, budget) }
+            check(archive.delete()) { "Could not remove a temporary nested pack archive." }
+            expandNested(target, depth + 1, budget)
         }
     }
 
     private fun findPackRoots(dir: File): List<File> {
-        if (File(dir, "manifest.json").isFile || File(dir, "pack_manifest.json").isFile) return listOf(dir)
-        return dir.listFiles()?.filter { it.isDirectory && it.name != "__MACOSX" }?.flatMap { findPackRoots(it) } ?: emptyList()
+        val roots = mutableListOf<File>()
+        val pending = java.util.ArrayDeque<File>()
+        pending.addLast(dir)
+        var visited = 0
+        while (pending.isNotEmpty()) {
+            val current = pending.removeLast()
+            visited++
+            require(visited <= 10_000) { "The add-on contains too many folders to scan safely." }
+            if (File(current, "manifest.json").isFile || File(current, "pack_manifest.json").isFile) {
+                roots += current
+                continue
+            }
+            current.listFiles()
+                ?.filter { it.isDirectory && it.name != "__MACOSX" }
+                ?.forEach(pending::addLast)
+        }
+        return roots
     }
 
     private fun isResourcePack(packDir: File): Boolean = try {
