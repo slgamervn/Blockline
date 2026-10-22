@@ -14,7 +14,7 @@ class AddonCompletionEngineTest {
             "items/":{"keys":["minecraft:item","components"],"values":{"components":["minecraft:icon","minecraft:max_stack_size"],"format_version":["1.21.0"]}},
             "blocks/":{"keys":["minecraft:block","components"],"values":{"components":["minecraft:geometry","minecraft:material_instances"],"format_version":["1.21.0"]}}
           },
-          "js":{"globals":["world","system","Player","Entity","Dimension","Block","BlockPermutation","ItemStack"],"world":["getDimension","getPlayers","getAimAssist"],"system":["run","runInterval"],"Player":["name","teleport","getItemCooldown","getAimAssist"],"Entity":["getComponent","getHeadLocation","getBlockStandingOn"],"Dimension":["getBlock","spawnEntity","getWeather"],"Block":["getLightLevel"],"BlockPermutation":["resolve","withState"],"ItemStack":["getLore","clone"]}
+          "js":{"globals":["world","system","Player","Entity","Dimension","Block","BlockPermutation","ItemStack"],"world":["getDimension","getPlayers","getAimAssist"],"system":["run","runInterval"],"Player":["name","teleport","getItemCooldown","getAimAssist"],"Entity":["getComponent","getHeadLocation","getBlockStandingOn"],"Dimension":["getBlock","spawnEntity"],"Block":["getLightLevel"],"BlockPermutation":["resolve","withState"],"ItemStack":["getLore","clone"]}
         }
     """.trimIndent()
 
@@ -30,9 +30,10 @@ class AddonCompletionEngineTest {
         val playerResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", playerText, playerText.length))
         assertTrue(playerResult.items.any { it.label == "getAimAssist" })
 
-        val dimensionText = "dimension.getWe"
+        val dimensionText = "dimension.getBl"
         val dimensionResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", dimensionText, dimensionText.length))
-        assertTrue(dimensionResult.items.any { it.label == "getWeather" })
+        assertTrue(dimensionResult.items.any { it.label == "getBlock" })
+        assertTrue(dimensionResult.items.none { it.label == "getWeather" })
 
         val entityText = "entity.getBlockS"
         val entityResult = engine.suggest(AddonCompletionEngine.Request("scripts/main.js", entityText, entityText.length))
