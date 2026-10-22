@@ -15,7 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -88,7 +88,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     Scaffold(topBar = {
         TopAppBar(title = { Text(project?.name ?: stringResource(R.string.nav_explorer)) }, actions = {
             IconButton(onClick = { dialog = "folder"; name = "" }) { Icon(Icons.Default.CreateNewFolder, stringResource(R.string.new_folder_cd)) }
-            IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.Default.InsertDriveFile, stringResource(R.string.new_file_cd)) }
+            IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.AutoMirrored.Filled.InsertDriveFile, stringResource(R.string.new_file_cd)) }
         })
     }) { pad ->
         if (project == null) {
@@ -118,7 +118,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                             var menu by remember(path) { mutableStateOf(false) }
                                 val depth = path.count { it == '/' }
                                 ListItem(
-                                    leadingContent = { Icon(if (file.isDirectory) Icons.Default.Folder else Icons.Default.InsertDriveFile, null) },
+                                    leadingContent = { Icon(if (file.isDirectory) Icons.Default.Folder else Icons.AutoMirrored.Filled.InsertDriveFile, null) },
                                     headlineContent = { Text((if (file.isDirectory && expanded.contains(path)) "▾ " else if (file.isDirectory) "▸ " else "") + file.name) },
                                     supportingContent = { Text(path, maxLines = 1) },
                                     trailingContent = {
