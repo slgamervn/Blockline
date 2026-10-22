@@ -141,7 +141,7 @@ class AddonCompletionEngine private constructor(
     }
 
     private fun isCurrentNumericValueForKey(before: String, key: String): Boolean =
-        Regex("\\"" + Regex.escape(key) + "\\"\\s*:\\s*\\d*$").containsMatchIn(before)
+        Regex("""\"${Regex.escape(key)}\"\s*:\s*\d*$""").containsMatchIn(before)
 
     private fun isCurrentStringValueForKey(before: String, key: String): Boolean {
         val pattern = "\"" + Regex.escape(key) + "\"\\s*:\\s*\"(?:[^\"\\\\]|\\\\.)*$"
