@@ -126,7 +126,7 @@ class AddonCompletionEngineTest {
         val moduleText = """{"modules":[{"type": "scr"""
         val modules = engine.suggest(AddonCompletionEngine.Request("manifest.json", moduleText, moduleText.length))
         assertTrue(modules.items.any { it.label == "script" })
-        val uuidText = """{"header":{"uuid": """"
+        val uuidText = """{"header":{"uuid": """ + 34.toChar()
         val first = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val second = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val uuidAfterType = "{\"header\":{\"uuid\":\"first\"},\"modules\":[{\"type\":\"data\",\"uuid\":\""
