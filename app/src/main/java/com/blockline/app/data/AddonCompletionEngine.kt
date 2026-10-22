@@ -88,10 +88,12 @@ class AddonCompletionEngine private constructor(
                 when {
                     isManifest && isCurrentStringValueForKey(before, "uuid") ->
                         add(listOf(uuidSuggestion), "Generated UUID")
+                    isManifest && isCurrentNumericValueForKey(before, "format_version") ->
+                        add(values?.optJSONArray("format_version").asStrings(), "Manifest format version")
                     isManifest && isCurrentStringValueForKey(before, "type") ->
                         add((values?.optJSONArray("module_type").asStrings().orEmpty() +
                             values?.optJSONArray("type").asStrings().orEmpty()).distinct(), "Manifest module type")
-                    isCurrentStringValueForKey(before, "format_version") ->
+                    !isManifest && isCurrentStringValueForKey(before, "format_version") ->
                         add(values?.optJSONArray("format_version").asStrings(), "Supported format version")
                     !isManifest && isJsonKeyContext(before) && isInsideComponentKeyMap(before) -> {
                         val detail = when {
@@ -137,6 +139,9 @@ class AddonCompletionEngine private constructor(
             (keys.size >= 2 && keys.lastOrNull() != null &&
                 keys[keys.lastIndex - 1] == "component_groups")
     }
+
+    private fun isCurrentNumericValueForKey(before: String, key: String): Boolean =
+        Regex("\\"" + Regex.escape(key) + "\\"\\s*:\\s*\\d*$").containsMatchIn(before)
 
     private fun isCurrentStringValueForKey(before: String, key: String): Boolean {
         val pattern = "\"" + Regex.escape(key) + "\"\\s*:\\s*\"(?:[^\"\\\\]|\\\\.)*$"
