@@ -1,0 +1,59 @@
+name: Cleanup old releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_cleanup:
+        description: "Type yes to delete every published release except the GitHub Latest release"
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cleanup-old-releases
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: ${{ inputs.confirm_cleanup == 'yes' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete published releases except Latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_id="$(gh api "repos/${REPOSITORY}/releases/latest" --jq '.id')"
+          latest_tag="$(gh api "repos/${REPOSITORY}/releases/latest" --jq '.tag_name')"
+
+          echo "Keeping GitHub Latest release: ${latest_tag} (ID ${latest_id})"
+          mapfile -t releases < <(
+            gh api --paginate "repos/${REPOSITORY}/releases?per_page=100" \
+              --jq '.[] | select(.draft == false) | [.id, .tag_name] | @tsv'
+          )
+
+          deleted=0
+          kept=0
+          for release in "${releases[@]}"; do
+            IFS=$'\t' read -r release_id release_tag <<< "${release}"
+            if [[ "${release_id}" == "${latest_id}" ]]; then
+              echo "KEEP  ${release_tag} (GitHub Latest)"
+              kept=$((kept + 1))
+              continue
+            fi
+
+            echo "DELETE ${release_tag} (release ID ${release_id})"
+            gh api --method DELETE "repos/${REPOSITORY}/releases/${release_id}"
+            deleted=$((deleted + 1))
+          done
+
+          echo "Finished. Kept ${kept} Latest release; deleted ${deleted} older published releases."
+          echo "Draft releases and Git tags were not deleted."
