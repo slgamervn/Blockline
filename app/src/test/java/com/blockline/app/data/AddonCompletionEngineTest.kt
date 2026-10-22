@@ -123,10 +123,10 @@ class AddonCompletionEngineTest {
     }
 
     @Test fun suggestsManifestModuleTypesAndStableUuid() {
-        val moduleText = "\"type\": \"scr"
+        val moduleText = """{"modules":[{"type": "scr"""
         val modules = engine.suggest(AddonCompletionEngine.Request("manifest.json", moduleText, moduleText.length))
         assertTrue(modules.items.any { it.label == "script" })
-        val uuidText = "\"uuid\": \""
+        val uuidText = """{"header":{"uuid": """"
         val first = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val second = engine.suggest(AddonCompletionEngine.Request("manifest.json", uuidText, uuidText.length))
         val uuidAfterType = "{\"header\":{\"uuid\":\"first\"},\"modules\":[{\"type\":\"data\",\"uuid\":\""
