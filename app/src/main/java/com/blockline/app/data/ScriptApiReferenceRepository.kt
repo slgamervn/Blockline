@@ -36,7 +36,8 @@ class ScriptApiReferenceRepository(context: Context) {
         if (requestedVersion != null) {
             require(SemanticVersion.isValid(requestedVersion)) {
                 "Invalid package version."
-            }        }
+            }
+        }
         check(cacheDirectory.mkdirs() || cacheDirectory.isDirectory) { "Could not create API cache." }
 
         var metadata = readMetadata(packageName)
