@@ -113,8 +113,12 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val pageIndex = largeFilePage.coerceIn(0, (largeOffsets.size - 1).coerceAtLeast(0))
     val pageStart = largeOffsets[pageIndex]
     val pageEnd = largeOffsets.getOrNull(pageIndex + 1) ?: vm.content.length
-    val pageText = remember(vm.content, pageStart, pageEnd) {
-        vm.content.substring(pageStart.coerceAtMost(vm.content.length), pageEnd.coerceAtMost(vm.content.length))
+    val pageText = remember(vm.content, pageStart, pageEnd, vm.readOnly) {
+        if (vm.readOnly) {
+            vm.content.substring(pageStart.coerceAtMost(vm.content.length), pageEnd.coerceAtMost(vm.content.length))
+        } else {
+            ""
+        }
     }
     LaunchedEffect(showFind, findText, path, vm.content) {
         if (!showFind || findText.isBlank()) {
