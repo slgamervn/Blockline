@@ -139,7 +139,7 @@ class ProjectRepository(private val ctx: Context) {
             "Unsupported text file type. Choose TXT, HTML, CSS, JS, JSON, XML, Markdown, LOG, YAML or MCFunction."
         }
         require(display.isNotBlank() && display != "." && display != "..") { "Invalid file name." }
-        val safeName = display.replace(Regex("[\\\\/:*?\\"<>|]"), "_")
+        val safeName = display.map { ch -> if (ch.isLetterOrDigit() || ch in "._- ") ch else '_' }.joinToString("").trim()
         val target = resolve(projectId, safeName)
         require(!target.exists()) { "A file with this name already exists in the project." }
         val bytes = ctx.contentResolver.openInputStream(uri)?.use { input ->
