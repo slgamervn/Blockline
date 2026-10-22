@@ -140,16 +140,12 @@ class AddonCompletionEngine private constructor(
                 keys[keys.lastIndex - 1] == "component_groups")
     }
 
-    private val uuidSuggestions = mutableMapOf<String, String>()
-
     private fun uuidFor(path: String, before: String): String {
         val keyStart = before.lastIndexOf("\"uuid\"")
-        val identity = path.replace('\\', '/').lowercase(java.util.Locale.ROOT) + "\u0000" + before.substring(0, keyStart.coerceAtLeast(0))
-        return synchronized(uuidSuggestions) {
-            uuidSuggestions.getOrPut(identity) {
-                if (uuidSuggestions.isEmpty()) uuidSuggestion else UUID.randomUUID().toString()
-            }
-        }
+        val priorUuidCount = Regex("\"uuid\"").findAll(before.substring(0, keyStart.coerceAtLeast(0))).count()
+        if (priorUuidCount == 0) return uuidSuggestion
+        val identity = path.lowercase(java.util.Locale.ROOT) + ":" + priorUuidCount
+        return UUID.nameUUIDFromBytes((uuidSuggestion + ":" + identity).toByteArray(Charsets.UTF_8)).toString()
     }
 
     private fun isCurrentNumericValueForKey(before: String, key: String): Boolean =
