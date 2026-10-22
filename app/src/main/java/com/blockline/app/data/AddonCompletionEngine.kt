@@ -67,6 +67,7 @@ class AddonCompletionEngine private constructor(
                 else -> null
             }
             if (fileSchema != null) {
+                val manifestContext = if (isManifest) openObjectKeys(before).lastOrNull() else null
                 val isLikelyKeyPosition = isJsonKeyContext(before)
                 if (isLikelyKeyPosition) {
                     val keys = if (isManifest) manifestKeysForContext(before, fileSchema)
@@ -75,11 +76,11 @@ class AddonCompletionEngine private constructor(
                 }
                 val values = fileSchema.optJSONObject("values")
                 when {
-                    isManifest && isCurrentStringValueForKey(before, "uuid") ->
+                    isManifest && manifestContext in setOf("header", "modules", "dependencies") && isCurrentStringValueForKey(before, "uuid") ->
                         add(listOf(uuidFor(request.documentId, before)), "Generated UUID")
-                    isManifest && isCurrentNumericValueForKey(before, "format_version") ->
+                    isManifest && manifestContext == null && isCurrentNumericValueForKey(before, "format_version") ->
                         add(values?.optJSONArray("format_version").asStrings(), "Manifest format version")
-                    isManifest && isCurrentStringValueForKey(before, "type") ->
+                    isManifest && manifestContext == "modules" && isCurrentStringValueForKey(before, "type") ->
                         add((values?.optJSONArray("module_type").asStrings().orEmpty() +
                             values?.optJSONArray("type").asStrings().orEmpty()).distinct(), "Manifest module type")
                     !isManifest && isCurrentStringValueForKey(before, "format_version") ->
