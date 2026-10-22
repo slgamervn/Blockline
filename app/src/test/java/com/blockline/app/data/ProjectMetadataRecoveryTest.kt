@@ -45,6 +45,22 @@ class ProjectMetadataRecoveryTest {
     }
 
     @Test
+    fun ignoresDirectoriesThatCannotBeUsedAsProjectIds() {
+        val root = Files.createTempDirectory("blockline-metadata-unsafe-").toFile()
+        try {
+            val safe = File(root, "safe-project").apply { mkdirs() }
+            File(root, "unsafe\\project").mkdirs()
+
+            val recovered = ProjectMetadataRecovery.recover(root)
+
+            assertEquals(1, recovered.size)
+            assertEquals(safe.name, recovered.single().id)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun ignoresTemporaryRestoreAndRollbackDirectories() {
         val root = Files.createTempDirectory("blockline-metadata-temp-").toFile()
         try {
