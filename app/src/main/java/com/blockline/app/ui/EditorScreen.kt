@@ -430,7 +430,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             value = editorValue,
                             onValueChange = {
                                 editorValue = it
-                                if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightSource = ""
+                                if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightedText = null
                             },
                             readOnly = vm.isOpeningFile,
                             modifier = Modifier.fillMaxSize(),
