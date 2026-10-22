@@ -134,7 +134,7 @@ class AddonCompletionEngine private constructor(
         before.forEachIndexed { index, ch ->
             if (escaped) {
                 escaped = false
-            } else if (ch == '\\\\' && inString) {
+            } else if (ch == '\\' && inString) {
                 escaped = true
             } else if (ch == '"' ) {
                 inString = !inString
