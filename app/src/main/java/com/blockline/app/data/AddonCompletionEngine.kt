@@ -75,10 +75,8 @@ class AddonCompletionEngine private constructor(
                 else -> null
             }
             if (fileSchema != null) {
-                val trimmed = before.trimEnd()
-                val isLikelyKeyPosition = trimmed.endsWith("{") || trimmed.endsWith(",") ||
-                    (trimmed.endsWith("\"") && !trimmed.endsWith(": \"") && !trimmed.endsWith(":\""))
-                if (isLikelyKeyPosition || trimmed.isEmpty()) {
+                val isLikelyKeyPosition = isJsonKeyContext(before)
+                if (isLikelyKeyPosition) {
                     add(fileSchema.optJSONArray("keys").asStrings(), "Bedrock JSON key")
                 }
                 val values = fileSchema.optJSONObject("values")
@@ -108,7 +106,7 @@ class AddonCompletionEngine private constructor(
         before.forEachIndexed { index, ch ->
             if (escaped) {
                 escaped = false
-            } else if (ch == '\\\\' && inString) {
+            } else if (ch.code == 92 && inString) {
                 escaped = true
             } else if (ch == '"') {
                 if (!inString) lastQuoteStart = index
