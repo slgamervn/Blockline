@@ -81,6 +81,7 @@ import com.blockline.app.data.ScriptApiLoadResult
 import com.blockline.app.data.ScriptApiSource
 import com.blockline.app.data.TEXT_EXT
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
@@ -96,18 +97,33 @@ fun SearchScreen(vm: AppViewModel, onOpenEditor: () -> Unit = {}) {
     var showApplyReplaceConfirm by remember { mutableStateOf(false) }
     val p = vm.current
     val indexedFiles = p?.let { vm.projectEntries[it.id] }.orEmpty()
-    val searchCandidates = remember(p?.id, indexedFiles) {
-        if (p == null) emptyList()
-        else indexedFiles.asSequence()
-            .filter { it.isFile }
-            .map { file -> file to vm.repo.relative(p.id, file) }
-            .toList()
+    var searchCandidates by remember(p?.id) { mutableStateOf(emptyList<Pair<java.io.File, String>>()) }
+    LaunchedEffect(p?.id, indexedFiles) {
+        val projectId = p?.id
+        searchCandidates = if (projectId == null) {
+            emptyList()
+        } else {
+            withContext(Dispatchers.Default) {
+                indexedFiles.asSequence()
+                    .filter { it.isFile }
+                    .map { file -> file to vm.repo.relative(projectId, file) }
+                    .toList()
+            }
+        }
     }
-    val pathMatches = remember(searchCandidates, filter, query) {
-        searchCandidates.asSequence()
-            .filter { (file, path) -> filter.matches(file, path) && path.contains(query, true) }
-            .map { it.first }
-            .toList()
+    var pathMatches by remember(p?.id) { mutableStateOf(emptyList<java.io.File>()) }
+    LaunchedEffect(searchCandidates, filter, query) {
+        val snapshotQuery = query
+        val snapshotFilter = filter
+        delay(80)
+        pathMatches = withContext(Dispatchers.Default) {
+            searchCandidates.asSequence()
+                .filter { (file, path) ->
+                    snapshotFilter.matches(file, path) && path.contains(snapshotQuery, true)
+                }
+                .map { it.first }
+                .toList()
+        }
     }
     val filterOptions = listOf(
         SearchFileFilter.ALL to R.string.filter_all,
