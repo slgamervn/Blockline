@@ -23,6 +23,11 @@ class AddonCompletionEngine private constructor(
         val token = Regex("[A-Za-z0-9_$:.-]*$").find(before)?.value.orEmpty()
         var replaceStart = cursor - token.length
         var prefix = token
+        val jsDot = if (isJavaScript) before.lastIndexOf('.') else -1
+        if (jsDot >= 0) {
+            prefix = Regex("[A-Za-z0-9_$]*$").find(before)?.value.orEmpty()
+            replaceStart = cursor - prefix.length
+        }
         val candidates = linkedMapOf<String, Suggestion>()
 
         fun add(values: Iterable<String>, detail: String) {
@@ -93,6 +98,28 @@ class AddonCompletionEngine private constructor(
         return Result(replaceStart.coerceIn(0, cursor), cursor, candidates.values
             .sortedWith(compareBy<Suggestion> { it.label.lowercase() }.thenBy { it.label })
             .take(60))
+    }
+
+    private fun isJsonKeyContext(before: String): Boolean {
+        var inString = false
+        var escaped = false
+        var lastColonOutsideString = -1
+        var lastQuoteStart = -1
+        before.forEachIndexed { index, ch ->
+            if (escaped) {
+                escaped = false
+            } else if (ch == '\\\\' && inString) {
+                escaped = true
+            } else if (ch == '"') {
+                if (!inString) lastQuoteStart = index
+                inString = !inString
+            } else if (ch == ':' && !inString) {
+                lastColonOutsideString = index
+            }
+        }
+        if (inString) return lastColonOutsideString < lastQuoteStart
+        val trimmed = before.trimEnd()
+        return trimmed.endsWith("{") || trimmed.endsWith(",")
     }
 
     private fun pathContains(path: String, folder: String): Boolean =
