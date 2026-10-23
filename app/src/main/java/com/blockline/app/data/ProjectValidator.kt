@@ -263,6 +263,37 @@ object ProjectValidator {
             .sortedWith(compareBy<ValidationIssue> { it.severity.ordinal }.thenBy { it.path }.thenBy { it.line ?: 0 })
     }
 
+    fun inspectLangSyntax(source: String): ValidationIssue? {
+        val seenKeys = HashSet<String>()
+        var lineStart = 0
+        var lineNumber = 1
+        while (lineStart <= source.length) {
+            val newline = source.indexOf('\n', lineStart)
+            val lineEnd = if (newline >= 0) newline else source.length
+            val line = source.substring(lineStart, lineEnd).removeSuffix("\r")
+            val trimmed = line.trimStart(' ', '\t')
+            if (trimmed.isNotBlank() && !trimmed.startsWith("##")) {
+                val equals = line.indexOf('=')
+                if (equals < 0) {
+                    val column = (line.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 } ?: 0) + 1
+                    return ValidationIssue(IssueSeverity.ERROR, "", lineNumber, column, "Language entry must use key=value format.")
+                }
+                val key = line.substring(0, equals).trim()
+                if (key.isEmpty()) {
+                    return ValidationIssue(IssueSeverity.ERROR, "", lineNumber, equals + 1, "Language entry key must not be empty.")
+                }
+                if (!seenKeys.add(key)) {
+                    val keyStart = line.indexOf(key).coerceAtLeast(0)
+                    return ValidationIssue(IssueSeverity.WARNING, "", lineNumber, keyStart + 1, "Duplicate language key '$key'.")
+                }
+            }
+            if (newline < 0) break
+            lineStart = newline + 1
+            lineNumber++
+        }
+        return null
+    }
+
     fun inspectJsonSyntax(source: String): ValidationIssue? {
         val uncommented = JsonTools.stripComments(source)
         val withoutBom = if (uncommented.startsWith("\uFEFF")) " " + uncommented.substring(1) else uncommented

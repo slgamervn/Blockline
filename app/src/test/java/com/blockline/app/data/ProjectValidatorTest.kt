@@ -9,6 +9,31 @@ import org.junit.Test
 
 class ProjectValidatorTest {
     @Test
+    fun validatesLangKeyValueEntriesAndIgnoresComments() {
+        val source = "## Translator note\nitem.example.name=Example Name\nitem.example.description=Line %1\t## Context\n"
+        assertEquals(null, ProjectValidator.inspectLangSyntax(source))
+    }
+
+    @Test
+    fun reportsDuplicateLangKeysWithLineAndColumn() {
+        val source = "item.example.name=First\nitem.example.name=Second"
+        val issue = ProjectValidator.inspectLangSyntax(source)
+        assertEquals(IssueSeverity.WARNING, issue?.severity)
+        assertEquals(2, issue?.line)
+        assertEquals(1, issue?.column)
+        assertTrue(issue?.message?.contains("Duplicate language key") == true)
+    }
+
+    @Test
+    fun reportsLangLinesWithoutEquals() {
+        val source = "## comment\nitem.example.name=Name\ninvalid entry"
+        val issue = ProjectValidator.inspectLangSyntax(source)
+        assertEquals(IssueSeverity.ERROR, issue?.severity)
+        assertEquals(3, issue?.line)
+        assertEquals(1, issue?.column)
+    }
+
+    @Test
     fun reportsMalformedDependenciesInsteadOfSilentlyIgnoringThem() {
         val root = Files.createTempDirectory("blockline-validator-").toFile()
         try {

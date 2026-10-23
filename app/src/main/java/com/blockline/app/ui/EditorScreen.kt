@@ -194,7 +194,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
     LaunchedEffect(path, editorValue.text, lang, vm.readOnly) {
-        if (lang != Lang.JSON || vm.readOnly || editorValue.text.isBlank() ||
+        if ((lang != Lang.JSON && lang != Lang.LANG) || vm.readOnly || editorValue.text.isBlank() ||
             editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS
         ) {
             syntaxIssue = null
@@ -203,8 +203,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             checkingJson = true
             delay(320)
             val source = editorValue.text
-            val issue = withContext(Dispatchers.Default) { ProjectValidator.inspectJsonSyntax(source) }
-            if (source == editorValue.text) {
+            val issue = withContext(Dispatchers.Default) {
+                if (lang == Lang.LANG) ProjectValidator.inspectLangSyntax(source)
+                else ProjectValidator.inspectJsonSyntax(source)
+            }
+            if (source == editorValue.text && path == vm.activeFile) {
                 syntaxIssue = issue
                 checkingJson = false
             }
@@ -240,7 +243,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 Color(0x55F44336)
             }
         )
-        val errorOffset = if (lang == Lang.JSON) jsonErrorOffset else null
+        val errorOffset = if (lang == Lang.JSON || lang == Lang.LANG) jsonErrorOffset else null
         val highlighted = withContext(Dispatchers.Default) {
             highlight(source, lang, palette, errorOffset)
         }
@@ -360,23 +363,27 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                 }
-                if (lang == Lang.JSON && !vm.readOnly && editorValue.text.isNotBlank() &&
+                if ((lang == Lang.JSON || lang == Lang.LANG) && !vm.readOnly && editorValue.text.isNotBlank() &&
                     editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS
                 ) {
                     val issue = syntaxIssue
                     val colors = MaterialTheme.colorScheme
-                    val hasJsonError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
-                    val hasJsonWarning = issue?.severity == com.blockline.app.data.IssueSeverity.WARNING
+                    val hasSyntaxError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
+                    val hasSyntaxWarning = issue?.severity == com.blockline.app.data.IssueSeverity.WARNING
                     val statusText = when {
+                        lang == Lang.LANG && checkingJson -> stringResource(R.string.lang_validation_checking)
+                        lang == Lang.LANG && hasSyntaxError -> stringResource(R.string.lang_validation_invalid, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
+                        lang == Lang.LANG && hasSyntaxWarning -> stringResource(R.string.lang_validation_warning, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
+                        lang == Lang.LANG -> stringResource(R.string.lang_validation_valid)
                         checkingJson -> stringResource(R.string.json_validation_checking)
-                        hasJsonError -> stringResource(R.string.json_validation_invalid, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
-                        hasJsonWarning -> stringResource(R.string.json_validation_warning, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
+                        hasSyntaxError -> stringResource(R.string.json_validation_invalid, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
+                        hasSyntaxWarning -> stringResource(R.string.json_validation_warning, issue?.line ?: 1, issue?.column ?: 1, issue?.message.orEmpty())
                         else -> stringResource(R.string.json_validation_valid)
                     }
                     Surface(
                         color = when {
                             checkingJson -> colors.surfaceVariant
-                            hasJsonError -> colors.errorContainer
+                            hasSyntaxError -> colors.errorContainer
                             else -> colors.secondaryContainer
                         },
                         shape = RoundedCornerShape(9.dp),
@@ -386,7 +393,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             statusText,
                             color = when {
                                 checkingJson -> colors.onSurfaceVariant
-                                hasJsonError -> colors.onErrorContainer
+                                hasSyntaxError -> colors.onErrorContainer
                                 else -> colors.onSecondaryContainer
                             },
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),

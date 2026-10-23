@@ -487,6 +487,10 @@
     <string name="json_validation_warning">JSON warning at line %1$d, column %2$d: %3$s</string>
     <string name="view_validation_report">View detailed validation report</string>
     <string name="json_validation_invalid">JSON issue at line %1$d, column %2$d: %3$s</string>
+    <string name="lang_validation_checking">Checking .lang entries…</string>
+    <string name="lang_validation_valid">.lang entries look valid.</string>
+    <string name="lang_validation_warning">.lang warning at line %1$d, column %2$d: %3$s</string>
+    <string name="lang_validation_invalid">.lang issue at line %1$d, column %2$d: %3$s</string>
 
     <string name="editor_live_analysis_paused">Live syntax analysis is paused for large files to keep editing responsive. Use the full validation tool when needed.</string>
     <string name="vanilla_reference_title">Vanilla resource reference</string>

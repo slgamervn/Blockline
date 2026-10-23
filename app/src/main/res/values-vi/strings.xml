@@ -487,6 +487,10 @@
     <string name="json_validation_warning">Cảnh báo JSON tại dòng %1$d, cột %2$d: %3$s</string>
     <string name="view_validation_report">Xem báo cáo kiểm tra chi tiết</string>
     <string name="json_validation_invalid">Lỗi JSON tại dòng %1$d, cột %2$d: %3$s</string>
+    <string name="lang_validation_checking">Đang kiểm tra mục .lang…</string>
+    <string name="lang_validation_valid">Các mục .lang có vẻ hợp lệ.</string>
+    <string name="lang_validation_warning">Cảnh báo .lang tại dòng %1$d, cột %2$d: %3$s</string>
+    <string name="lang_validation_invalid">Lỗi .lang tại dòng %1$d, cột %2$d: %3$s</string>
 
     <string name="editor_live_analysis_paused">Đã tạm dừng tô cú pháp và kiểm tra trực tiếp cho tệp lớn để tránh lag. Dùng công cụ kiểm tra đầy đủ khi cần.</string>
     <string name="vanilla_reference_title">Tham chiếu tài nguyên vanilla</string>

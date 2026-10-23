@@ -8,7 +8,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 
-enum class Lang { JSON, JS, MCFUNC }
+enum class Lang { JSON, JS, MCFUNC, LANG }
 
 class Palette(
     val key: Color,
@@ -29,10 +29,15 @@ private val mcRx = Regex(
     """#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
 )
 
+private val langRx = Regex(
+    """(?m)^[ \t]*##[^\r\n]*|^[ \t]*[^=\r\n]+(?==)|(?<==)[^\r\n]+"""
+)
+
 fun langFor(ext: String): Lang? = when (ext.lowercase()) {
     "json", "mcmeta", "json5" -> Lang.JSON
     "js", "mjs", "ts" -> Lang.JS
     "mcfunction" -> Lang.MCFUNC
+    "lang" -> Lang.LANG
     else -> null
 }
 
@@ -48,12 +53,31 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
         Lang.JSON -> jsonRx
         Lang.JS -> jsRx
         Lang.MCFUNC -> mcRx
+        Lang.LANG -> langRx
     }
     for (m in rx.findAll(src)) {
         val t = m.value
+        val lineStart = src.lastIndexOf('\n', m.range.first - 1) + 1
+        val prefix = src.substring(lineStart, m.range.first)
+        if (lang == Lang.LANG) {
+            when {
+                t.trimStart().startsWith("##") -> addStyle(SpanStyle(color = p.comment), m.range.first, m.range.last + 1)
+                '=' !in prefix -> addStyle(SpanStyle(color = p.key), m.range.first, m.range.last + 1)
+                else -> {
+                    val inlineComment = t.indexOf("\t##")
+                    if (inlineComment >= 0) {
+                        if (inlineComment > 0) addStyle(SpanStyle(color = p.string), m.range.first, m.range.first + inlineComment)
+                        addStyle(SpanStyle(color = p.comment), m.range.first + inlineComment, m.range.last + 1)
+                    } else {
+                        addStyle(SpanStyle(color = p.string), m.range.first, m.range.last + 1)
+                    }
+                }
+            }
+            continue
+        }
         val color = when {
             t.startsWith("//") || t.startsWith("/*") || (lang == Lang.MCFUNC && t.startsWith("#")) -> p.comment
-            t[0] == '"' || t[0] == '\'' || t[0] == '`' ->
+            t[0] == '"' || t[0] == '\'' || t[0] == 96.toChar() ->
                 if (lang == Lang.JSON && isKey(src, m.range.last + 1)) p.key else p.string
             t[0] == '@' -> p.key
             t[0].isDigit() || t[0] == '-' -> p.number
@@ -61,7 +85,7 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
         }
         addStyle(SpanStyle(color = color), m.range.first, m.range.last + 1)
     }
-    if (lang == Lang.JSON && errorOffset != null && src.isNotEmpty()) {
+    if ((lang == Lang.JSON || lang == Lang.LANG) && errorOffset != null && src.isNotEmpty()) {
         val position = errorOffset.coerceIn(0, src.lastIndex)
         val lineStart = src.lastIndexOf('\n', position - 1) + 1
         val lineBreak = src.indexOf('\n', position)
