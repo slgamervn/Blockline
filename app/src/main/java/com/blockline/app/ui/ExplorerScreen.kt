@@ -126,7 +126,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             IconButton(
                 onClick = { importTextLauncher.launch(arrayOf("text/*", "application/json", "application/javascript", "application/xml")) },
                 enabled = project != null && !vm.isFileOperationRunning
-            ) { Icon(Icons.Default.FileOpen, "Import text file") }
+            ) { Icon(Icons.Default.FileOpen, stringResource(R.string.import_text_file_cd)) }
         })
     }) { pad ->
         if (project == null) {
@@ -168,7 +168,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                                     supportingContent = { Text(path, maxLines = 1) },
                                     trailingContent = {
                                         Row {
-                                            if (vm.isFavorite(path)) Icon(Icons.Default.Favorite, "Favorite")
+                                            if (vm.isFavorite(path)) Icon(Icons.Default.Favorite, stringResource(R.string.favorite_cd))
                                             IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.file_actions_cd)) }
                                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                                 if (file.isFile && isPreviewSupported(file.name)) DropdownMenuItem(text = { Text(stringResource(R.string.preview_resource)) }, onClick = { vm.loadResourcePreview(path); menu = false })
