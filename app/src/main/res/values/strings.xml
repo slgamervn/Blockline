@@ -605,4 +605,5 @@
     <string name="chrome_saved_file">File saved</string>
     <string name="chrome_created_file">File created</string>
     <string name="chrome_recent_projects">Recent projects</string>
+    <string name="chrome_open_addon">Open add-on file</string>
 </resources>
