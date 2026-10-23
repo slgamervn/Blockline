@@ -38,6 +38,7 @@ private val jsKeywords = setOf(
     "get", "set", "static", "constructor"
 )
 private val jsBooleanLiterals = setOf("true", "false", "null", "undefined")
+private val jsonBooleanLiterals = setOf("true", "false", "null")
 private val mcRx = Regex(
     """#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
 )
@@ -70,9 +71,9 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
     }
     for (m in rx.findAll(src)) {
         val t = m.value
-        val lineStart = src.lastIndexOf('\n', m.range.first - 1) + 1
-        val prefix = src.substring(lineStart, m.range.first)
         if (lang == Lang.LANG) {
+            val lineStart = src.lastIndexOf('\n', m.range.first - 1) + 1
+            val prefix = src.substring(lineStart, m.range.first)
             when {
                 t.trimStart().startsWith("##") -> addStyle(SpanStyle(color = p.comment), m.range.first, m.range.last + 1)
                 '=' !in prefix -> addStyle(SpanStyle(color = p.key), m.range.first, m.range.last + 1)
@@ -88,11 +89,12 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
             }
             continue
         }
-        val afterToken = src.substring((m.range.last + 1).coerceAtMost(src.length))
-        val nextNonWhitespace = afterToken.firstOrNull { !it.isWhitespace() }
+        var nextIndex = (m.range.last + 1).coerceAtMost(src.length)
+        while (nextIndex < src.length && src[nextIndex].isWhitespace()) nextIndex++
+        val nextNonWhitespace = src.getOrNull(nextIndex)
         val color = when {
             t.startsWith("//") || t.startsWith("/*") || (lang == Lang.MCFUNC && t.startsWith("#")) -> p.comment
-            lang == Lang.JSON && t in setOf("true", "false", "null") -> p.boolean
+            lang == Lang.JSON && t in jsonBooleanLiterals -> p.boolean
             lang == Lang.JS && t in jsBooleanLiterals -> p.boolean
             t[0] == '"' || t[0] == '\'' || t[0] == 96.toChar() ->
                 if (lang == Lang.JSON && isKey(src, m.range.last + 1)) p.key
