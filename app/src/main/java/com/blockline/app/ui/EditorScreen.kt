@@ -483,7 +483,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 exit = slideOutHorizontally { -it }
             ) {
                 EditorSidebar(
-                    title = "Explorer",
+                    title = stringResource(R.string.chrome_explorer),
                     items = indexedFiles,
                     selectedPath = path,
                     tokens = tokens,
@@ -516,7 +516,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        Text("Project", modifier = Modifier.clickable { onBack() }, color = tokens.muted, fontSize = 11.sp)
+                        Text(stringResource(R.string.chrome_project), modifier = Modifier.clickable { onBack() }, color = tokens.muted, fontSize = 11.sp)
                         path.split('/').forEachIndexed { index, segment ->
                             Text("  ›  ", color = tokens.muted, fontSize = 11.sp)
                             Text(
@@ -822,29 +822,29 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             onSelect = { command ->
                 showCommandPalette = false
                 when {
-                    command == "Find" -> showFind = true
-                    command == "Go to Line" -> {
+                    command == findCommandLabel -> showFind = true
+                    command == goToLineLabel -> {
                         goToLineText = "1"
                         showGoToLine = true
                     }
-                    command == "Format Document" -> {
+                    command == formatCommandLabel -> {
                         if (!vm.readOnly && !vm.isOpeningFile && lang == Lang.JSON) {
                             val formatted = JsonTools.format(editorValue.text)
                             editorValue = TextFieldValue(formatted, TextRange(formatted.length))
                             vm.updateContent(formatted)
                         } else if (lang != Lang.JSON) vm.message = context.getString(R.string.format_json_only)
                     }
-                    command == "Save" -> {
+                    command == saveCommandLabel -> {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.saveCurrent()
                     }
-                    command == "Go to File" -> {
-                        commandQuery = "File: "
+                    command == goToFileLabel -> {
+                        commandQuery = "$filePrefix "
                         showCommandPalette = true
                     }
-                    command.startsWith("File: ") -> {
+                    command.startsWith("$filePrefix ") -> {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
-                        vm.openFile(command.removePrefix("File: "))
+                        vm.openFile(command.removePrefix("$filePrefix "))
                     }
                 }
             }
@@ -852,12 +852,12 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     }
     if (showGoToLine) AlertDialog(
         onDismissRequest = { showGoToLine = false },
-        title = { Text("Go to Line") },
+        title = { Text(stringResource(R.string.chrome_go_to_line)) },
         text = {
             OutlinedTextField(
                 value = goToLineText,
                 onValueChange = { goToLineText = it.filter(Char::isDigit).take(8) },
-                label = { Text("Line number") },
+                label = { Text(stringResource(R.string.chrome_line_number)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
@@ -869,24 +869,24 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     vm.pendingEditorLine = target
                     showGoToLine = false
                 } else {
-                    vm.message = "Enter a positive line number."
+                    vm.message = context.getString(R.string.chrome_enter_positive_line)
                 }
-            }) { Text("Go") }
+            }) { Text(stringResource(R.string.chrome_go)) }
         },
-        dismissButton = { TextButton(onClick = { showGoToLine = false }) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = { showGoToLine = false }) { Text(stringResource(R.string.chrome_cancel)) } }
     )
     if (showQuickSettings) AlertDialog(
         onDismissRequest = { showQuickSettings = false },
-        title = { Text("Quick Settings") },
+        title = { Text(stringResource(R.string.chrome_quick_settings)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Editor theme", style = MaterialTheme.typography.labelMedium)
-                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.DARK_PLUS }) { Text("Dark+ (VS Code)") }
-                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.LIGHT_PLUS }) { Text("Light+ (VS Code)") }
-                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.AMOLED }) { Text("AMOLED black") }
-                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.SYSTEM }) { Text("Follow system") }
+                Text(stringResource(R.string.chrome_editor_theme), style = MaterialTheme.typography.labelMedium)
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.DARK_PLUS }) { Text(stringResource(R.string.chrome_theme_dark_plus)) }
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.LIGHT_PLUS }) { Text(stringResource(R.string.chrome_theme_light_plus)) }
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.AMOLED }) { Text(stringResource(R.string.chrome_theme_amoled)) }
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.SYSTEM }) { Text(stringResource(R.string.chrome_theme_system)) }
             }
         },
-        confirmButton = { TextButton(onClick = { showQuickSettings = false }) { Text("Done") } }
+        confirmButton = { TextButton(onClick = { showQuickSettings = false }) { Text(stringResource(R.string.ok)) } }
     )
 }
