@@ -2,7 +2,7 @@ name: Build APK
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, test]
     tags: ['v*']
   workflow_dispatch:
 
@@ -29,7 +29,9 @@ jobs:
         id: version
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/test" ]]; then
+            VERSION_NAME="0.1.${GITHUB_RUN_NUMBER}-test"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             VERSION_NAME="${GITHUB_REF_NAME#v}"
           else
             VERSION_NAME="0.1.${GITHUB_RUN_NUMBER}"
@@ -89,8 +91,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.BLOCKLINE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.BLOCKLINE_KEY_PASSWORD }}
         run: |
+          if [[ "$GITHUB_REF" == "refs/heads/test" && -z "$KEYSTORE_BASE64" ]]; then
+            echo "::error::The test APK must be signed with the same keystore as stable Blockline. Configure all BLOCKLINE_KEYSTORE_* secrets."
+            exit 1
+          fi
           if [[ -z "$KEYSTORE_BASE64" ]]; then
-            echo "::notice::Signing secrets are not configured; this run will produce a debug APK artifact only."
+            echo "::notice::Signing secrets are not configured; this stable run will produce a debug APK artifact only."
             exit 0
           fi
           if [[ -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
@@ -104,7 +110,7 @@ jobs:
           gradle-version: 8.14.6
 
       - name: Run unit tests
-        run: gradle testDebugUnitTest --stacktrace --no-daemon
+        run: gradle testDebugUnitTest testTestUnitTest --stacktrace --no-daemon
 
       - name: Prepare stable signing key
         if: ${{ env.HAS_SIGNING_KEY == 'true' }}
@@ -128,7 +134,12 @@ jobs:
           BLOCKLINE_KEYSTORE_PASSWORD: ${{ secrets.BLOCKLINE_KEYSTORE_PASSWORD }}
           BLOCKLINE_KEY_ALIAS: ${{ secrets.BLOCKLINE_KEY_ALIAS }}
           BLOCKLINE_KEY_PASSWORD: ${{ secrets.BLOCKLINE_KEY_PASSWORD }}
-        run: gradle assembleRelease -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/test" ]]; then
+            gradle assembleTest -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
+          else
+            gradle assembleRelease -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
+          fi
 
       - name: Build debug APK (signing setup required for upgrade installs)
         if: ${{ env.HAS_SIGNING_KEY != 'true' }}
@@ -141,8 +152,13 @@ jobs:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
         run: |
           if [ "$HAS_SIGNING_KEY" = "true" ]; then
-            cp app/build/outputs/apk/release/app-release.apk "Blockline-v${VERSION_NAME}.apk"
-            echo "APK_BUILD_TYPE=Signed release" >> "$GITHUB_ENV"
+            if [[ "$GITHUB_REF" == "refs/heads/test" ]]; then
+              cp app/build/outputs/apk/test/app-test.apk "Blockline-v${VERSION_NAME}.apk"
+              echo "APK_BUILD_TYPE=Signed test APK" >> "$GITHUB_ENV"
+            else
+              cp app/build/outputs/apk/release/app-release.apk "Blockline-v${VERSION_NAME}.apk"
+              echo "APK_BUILD_TYPE=Signed release" >> "$GITHUB_ENV"
+            fi
           else
             cp app/build/outputs/apk/debug/app-debug.apk "Blockline-v${VERSION_NAME}.apk"
             echo "APK_BUILD_TYPE=Debug (unsigned release key not configured)" >> "$GITHUB_ENV"
@@ -150,11 +166,16 @@ jobs:
           echo "APK_FILE=Blockline-v${VERSION_NAME}.apk" >> "$GITHUB_ENV"
 
       - name: Generate release notes from actual commits
-        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))
+        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/test' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
         run: |
-          PREVIOUS_TAG="$(git tag --list 'v*' --sort=-version:refname | grep -v "^v${VERSION_NAME}$" | head -n 1)"
+          if [[ "$GITHUB_REF" == "refs/heads/test" ]]; then
+            TAG_PATTERN='v*-test'
+          else
+            TAG_PATTERN='v*'
+          fi
+          PREVIOUS_TAG="$(git tag --list "$TAG_PATTERN" --sort=-version:refname | grep -v "^v${VERSION_NAME}$" | head -n 1)"
           {
             echo "## Build"
             echo "- Version: ${VERSION_NAME}"
@@ -197,12 +218,12 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create Release with versioned APK and change summary
-        if: ${{ (startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))) && env.HAS_SIGNING_KEY == 'true' }}
+        if: ${{ ((startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))) || (github.ref == 'refs/heads/test' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))) && env.HAS_SIGNING_KEY == 'true' }}
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', steps.version.outputs.version_name) }}
           target_commitish: ${{ github.sha }}
-          name: Blockline v${{ steps.version.outputs.version_name }}
+          name: ${{ github.ref == 'refs/heads/test' && format('Blockline Test v{0}', steps.version.outputs.version_name) || format('Blockline v{0}', steps.version.outputs.version_name) }}
           body_path: RELEASE_NOTES.md
           files: Blockline-v${{ steps.version.outputs.version_name }}.apk
           generate_release_notes: false
