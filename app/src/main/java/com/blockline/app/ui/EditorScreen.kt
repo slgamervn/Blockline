@@ -240,16 +240,19 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         delay(320)
         val palette = Palette(
-            Color(0xFF8FC9FF),
-            Color(0xFFB5E7A0),
-            Color(0xFFE6B35A),
-            Emerald,
-            Color(0xFF82958A),
-            if (lang == Lang.JSON && syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING) {
-                Color(0x55E6B35A)
-            } else {
-                Color(0x55F44336)
-            }
+            key = Color(0xFF82AAFF),
+            string = Color(0xFFA5D6A7),
+            number = Color(0xFFFFCB6B),
+            keyword = Color(0xFFC792EA),
+            comment = Color(0xFF7F8C98),
+            errorBackground = if (
+                (lang == Lang.JSON || lang == Lang.LANG) &&
+                syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING
+            ) Color(0x55E6B35A) else Color(0x55F44336),
+            boolean = Color(0xFFFF9E64),
+            function = Color(0xFF80CBC4),
+            property = Color(0xFF82AAFF),
+            identifier = Color(0xFFE6EDF3)
         )
         val errorOffset = if (lang == Lang.JSON || lang == Lang.LANG) jsonErrorOffset else null
         val highlighted = withContext(Dispatchers.Default) {
