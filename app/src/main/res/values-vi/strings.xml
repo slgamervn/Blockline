@@ -552,4 +552,15 @@
     <string name="brarchive_failed">Thao tác archive thất bại: %1$s</string>
     <string name="validation_msg_texture_external">Tham chiếu texture %1$s không nằm trong pack hoặc chỉ mục vanilla đã lưu. Có thể Minecraft vanilla hoặc resource pack khác cung cấp.</string>
 
+
+    <string name="app_language_title">Ngôn ngữ ứng dụng</string>
+    <string name="app_language_hint">Chọn Tiếng Việt, English hoặc dùng ngôn ngữ của thiết bị. Ứng dụng sẽ khởi động lại để áp dụng thay đổi.</string>
+    <string name="language_english">English</string>
+    <string name="language_vietnamese">Tiếng Việt</string>
+    <string name="language_system">Theo thiết bị</string>
+    <string name="updates_hint_test">Bản kiểm thử này chỉ kiểm tra các bản phát hành thử nghiệm trên kênh test, không kiểm tra bản ổn định.</string>
+    <string name="latest_changelog">Ghi chú phát hành mới nhất</string>
+    <string name="release_notes_empty">Chưa có ghi chú phát hành được lưu. Hãy kiểm tra cập nhật khi có kết nối Internet.</string>
+    <string name="view_release_notes">Xem chi tiết bản phát hành</string>
+
 </resources>
