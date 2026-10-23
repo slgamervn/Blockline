@@ -56,6 +56,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
@@ -462,7 +463,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     EditText(viewContext).apply {
                                         typeface = Typeface.MONOSPACE
                                         textSize = vm.fontSize.toFloat()
-                                        setTextColor(android.graphics.Color.rgb(225, 232, 228))
+                                        setTextColor(OnSurface.toArgb())
                                         setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                         setPadding(
                                             (8 * resources.displayMetrics.density).toInt(),
