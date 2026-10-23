@@ -78,6 +78,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var isIndexingProjectFiles by mutableStateOf(false)
         private set
     var message by mutableStateOf<String?>(null)
+    var advancementEvent by mutableStateOf(0)
+        private set
+    var advancementEventIsCreation by mutableStateOf(false)
+        private set
+
+    private fun postAdvancement(isCreation: Boolean) {
+        advancementEventIsCreation = isCreation
+        advancementEvent++
+    }
+
     private val settingsPreferences = app.getSharedPreferences("blockline_settings", Application.MODE_PRIVATE)
     private val updateRepository = AppUpdateRepository()
     private val themeState = mutableStateOf(
@@ -1088,8 +1098,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 else -> openTabs[path]
             }
             if (latest == null || latest == snapshot) {
-                if (showMessage && current?.id == project.id && activeFile == path) {
-                    message = text(R.string.saved_path, path)
+                if (current?.id == project.id && activeFile == path) {
+                    if (showMessage) {
+                        message = text(R.string.saved_path, path)
+                        postAdvancement(isCreation = false)
+                    }
                 }
                 return true
             }
@@ -1169,6 +1182,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             result.onSuccess {
                 refreshProjectEntries(project.id)
                 generatedFileToOpen = path
+                postAdvancement(isCreation = true)
                 message = text(R.string.generated_manifest_created, path)
             }.onFailure { message = it.message ?: text(R.string.create_failed) }
         }
@@ -1193,6 +1207,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             isFileOperationRunning = false
             result.onSuccess {
                 refreshProjectEntries(p.id)
+                postAdvancement(isCreation = true)
                 message = if (directory) text(R.string.folder_created) else text(R.string.file_created)
             }.onFailure { message = it.message ?: text(R.string.create_failed) }
         }
