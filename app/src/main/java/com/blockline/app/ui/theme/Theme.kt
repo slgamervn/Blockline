@@ -13,11 +13,20 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
-enum class ThemeMode { DARK, LIGHT, SYSTEM }
+enum class ThemeMode {
+    /** Legacy preference retained for existing installs; visually maps to Dark+. */
+    DARK,
+    /** Legacy preference retained for existing installs; visually maps to Light+. */
+    LIGHT,
+    SYSTEM,
+    DARK_PLUS,
+    LIGHT_PLUS,
+    AMOLED
+}
 
-val Emerald = Color(0xFF9BE7B5)
+val Emerald = Color(0xFF3DBA7A)
 val Amber = Color(0xFFE6B35A)
-val OnSurface = Color(0xFFF3F6F2)
+val OnSurface = Color(0xFFD4D4D4)
 
 private val CompactTypography = Typography().let { base ->
     base.copy(
@@ -39,55 +48,77 @@ private val CompactTypography = Typography().let { base ->
     )
 }
 
-private val DarkColors = darkColorScheme(
-    primary = Emerald,
-    onPrimary = Color(0xFF04210F),
-    primaryContainer = Color(0xFF1C4A32),
-    onPrimaryContainer = Color(0xFFBFF0D4),
-    secondary = Amber,
-    onSecondary = Color(0xFF2A1C00),
-    secondaryContainer = Color(0xFF4A3A14),
-    onSecondaryContainer = Color(0xFFFFE2A8),
-    tertiary = Color(0xFF7FB8E8),
-    background = Color(0xFF080B0A),
-    onBackground = OnSurface,
-    surface = Color(0xFF101512),
-    onSurface = OnSurface,
-    surfaceVariant = Color(0xFF1A221C),
-    onSurfaceVariant = Color(0xFFA1ADA4),
-    outline = Color(0xFF34473A),
-    error = Color(0xFFFF8A80)
+private val DarkPlusColors = darkColorScheme(
+    primary = Color(0xFF007ACC),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF264F78),
+    onPrimaryContainer = Color(0xFFD7E9F8),
+    secondary = Emerald,
+    onSecondary = Color(0xFF071A10),
+    secondaryContainer = Color(0xFF20382A),
+    onSecondaryContainer = Color(0xFFC6F2D7),
+    tertiary = Color(0xFF4EC9B0),
+    background = Color(0xFF1E1E1E),
+    onBackground = Color(0xFFD4D4D4),
+    surface = Color(0xFF252526),
+    onSurface = Color(0xFFD4D4D4),
+    surfaceVariant = Color(0xFF333333),
+    onSurfaceVariant = Color(0xFFB5B5B5),
+    outline = Color(0xFF3C3C3C),
+    error = Color(0xFFF48771),
+    errorContainer = Color(0xFF5A1D1D),
+    onErrorContainer = Color(0xFFFFDAD4)
 )
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF1E8A55),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFBFF0D4),
-    onPrimaryContainer = Color(0xFF04210F),
-    secondary = Color(0xFF8A6200),
-    secondaryContainer = Color(0xFFFFE2A8),
-    tertiary = Color(0xFF2B6C9E),
-    background = Color(0xFFF4F8F5),
-    surface = Color(0xFFFFFFFF),
-    surfaceVariant = Color(0xFFE1EAE4),
-    onSurfaceVariant = Color(0xFF455249)
+private val LightPlusColors = lightColorScheme(
+    primary = Color(0xFF007ACC),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFCCE4F7),
+    onPrimaryContainer = Color(0xFF003A64),
+    secondary = Color(0xFF267F45),
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFD5F1DD),
+    onSecondaryContainer = Color(0xFF174A28),
+    tertiary = Color(0xFF267F99),
+    background = Color(0xFFFFFFFF),
+    onBackground = Color(0xFF1F1F1F),
+    surface = Color(0xFFF3F3F3),
+    onSurface = Color(0xFF1F1F1F),
+    surfaceVariant = Color(0xFFE5E5E5),
+    onSurfaceVariant = Color(0xFF515151),
+    outline = Color(0xFFB8B8B8),
+    error = Color(0xFFB00020)
+)
+
+private val AmoledColors = DarkPlusColors.copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceVariant = Color(0xFF0A0A0A),
+    outline = Color(0xFF242424)
 )
 
 @Composable
 fun BlocklineTheme(mode: ThemeMode, content: @Composable () -> Unit) {
+    val systemDark = isSystemInDarkTheme()
     val dark = when (mode) {
-        ThemeMode.DARK -> true
-        ThemeMode.LIGHT -> false
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT, ThemeMode.LIGHT_PLUS -> false
+        ThemeMode.SYSTEM -> systemDark
+        ThemeMode.DARK, ThemeMode.DARK_PLUS, ThemeMode.AMOLED -> true
+    }
+    val colors = when (mode) {
+        ThemeMode.AMOLED -> AmoledColors
+        ThemeMode.LIGHT, ThemeMode.LIGHT_PLUS -> LightPlusColors
+        ThemeMode.SYSTEM -> if (systemDark) DarkPlusColors else LightPlusColors
+        ThemeMode.DARK, ThemeMode.DARK_PLUS -> DarkPlusColors
     }
     val view = LocalView.current
     SideEffect {
         val window = (view.context as? Activity)?.window
         if (window != null) {
-            val c = WindowCompat.getInsetsController(window, view)
-            c.isAppearanceLightStatusBars = !dark
-            c.isAppearanceLightNavigationBars = !dark
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = !dark
+            controller.isAppearanceLightNavigationBars = !dark
         }
     }
-    MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, typography = CompactTypography, content = content)
+    MaterialTheme(colorScheme = colors, typography = CompactTypography, content = content)
 }
