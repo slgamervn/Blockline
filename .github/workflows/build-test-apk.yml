@@ -94,13 +94,13 @@ jobs:
       - name: Build test-channel APK with stable signing key
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
-        run: gradle assembleTest -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
+        run: gradle assembleQa -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
 
       - name: Verify output package and prepare APK
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
         run: |
-          APK_PATH="app/build/outputs/apk/test/app-test.apk"
+          APK_PATH="app/build/outputs/apk/qa/app-qa.apk"
           if [[ ! -s "$APK_PATH" ]]; then
             echo "::error::Expected signed test APK not found at $APK_PATH"
             find app/build/outputs/apk -maxdepth 3 -type f -print
