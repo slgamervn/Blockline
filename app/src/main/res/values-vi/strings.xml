@@ -288,7 +288,7 @@
     <string name="filter_json">JSON</string>
     <string name="filter_script">Script</string>
     <string name="filter_function">Function</string>
-    <string name="filter_manifest">Manifest</string>
+    <string name="filter_manifest">Tệp manifest</string>
     <string name="search_failed">Tìm kiếm thất bại. Hãy thử lại.</string>
     <string name="pack_health_score">Sức khỏe pack</string>
     <string name="pack_health_score_waiting">Chạy kiểm tra để tính điểm sức khỏe của pack.</string>
@@ -304,7 +304,7 @@
     <string name="snippet_mcfunction_description">Lệnh function cơ bản. Lưu thành tệp .mcfunction và chạy trong Minecraft.</string>
     <string name="snippet_javascript_title">Chào mừng khi vào thế giới lần đầu</string>
     <string name="snippet_javascript_description">Chỉ gửi thông báo chào mừng khi người chơi xuất hiện lần đầu trong thế giới.</string>
-    <string name="snippet_mcfunction_language">Minecraft function</string>
+    <string name="snippet_mcfunction_language">Hàm lệnh Minecraft</string>
     <string name="snippet_javascript_language">JavaScript · Script API</string>
     <string name="pack_manifest_generator_title">Tạo manifest cho pack</string>
     <string name="pack_manifest_generator_hint">Tạo manifest mới với UUID riêng. Tệp manifest đã tồn tại sẽ không bị ghi đè.</string>
