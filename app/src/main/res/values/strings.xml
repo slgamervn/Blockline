@@ -597,4 +597,12 @@
     <string name="chrome_theme_system">Follow system</string>
     <string name="chrome_enter_positive_line">Enter a positive line number.</string>
     <string name="chrome_file_prefix">File:</string>
+    <string name="chrome_game_effects">Game UI effects</string>
+    <string name="chrome_game_effects_hint">Pixel borders and advancement-style feedback. Code text stays plain and readable.</string>
+    <string name="chrome_click_sounds">UI click sounds</string>
+    <string name="chrome_click_sounds_hint">A small original sound. Off by default.</string>
+    <string name="chrome_advancement_title">Advancement Made!</string>
+    <string name="chrome_saved_file">File saved</string>
+    <string name="chrome_created_file">File created</string>
+    <string name="chrome_recent_projects">Recent projects</string>
 </resources>
