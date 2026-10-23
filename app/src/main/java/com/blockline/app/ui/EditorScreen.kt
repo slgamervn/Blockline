@@ -498,7 +498,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     ) { pad ->
-        Row(Modifier.padding(pad).fillMaxSize().background(tokens.editorBackground)) {
+        Box(Modifier.padding(pad).fillMaxSize().background(tokens.editorBackground)) {
+        Row(Modifier.fillMaxSize()) {
             if (!wideLayout) {
                 Box(
                     Modifier.width(10.dp).fillMaxSize().pointerInput(sidebarOpen) {
@@ -532,11 +533,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 gameEffectsEnabled = vm.gameEffectsEnabled,
                 onClickSound = playClickSound
             )
-            AnimatedVisibility(
-                visible = wideLayout || sidebarOpen,
-                enter = slideInHorizontally { -it },
-                exit = slideOutHorizontally { -it }
-            ) {
+            if (wideLayout) {
                 EditorSidebar(
                     title = stringResource(R.string.chrome_explorer),
                     items = indexedFiles,
@@ -549,7 +546,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             vm.updateContent(editorValue.text)
                         }
                         vm.openFile(selectedPath)
-                        sidebarOpen = false
                     }
                 )
             }
@@ -803,6 +799,31 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
             }
+        }
+        if (!wideLayout) {
+            AnimatedVisibility(
+                visible = sidebarOpen,
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 60.dp),
+                enter = slideInHorizontally { -it },
+                exit = slideOutHorizontally { -it }
+            ) {
+                EditorSidebar(
+                    title = stringResource(R.string.chrome_explorer),
+                    items = indexedFiles,
+                    selectedPath = path,
+                    tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound,
+                    onSelect = { selectedPath ->
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
+                            vm.updateContent(editorValue.text)
+                        }
+                        vm.openFile(selectedPath)
+                        sidebarOpen = false
+                    }
+                )
+            }
+        }
         }
     }
     if (showHtmlPreview) AlertDialog(
