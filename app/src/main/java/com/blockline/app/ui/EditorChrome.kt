@@ -5,6 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -242,28 +246,30 @@ fun EditorShortcutBar(
     onSave: () -> Unit,
     onFind: () -> Unit,
     onHideKeyboard: () -> Unit,
+    onShowColorPalette: () -> Unit = {},
     tokens: EditorTokens,
     gameEffectsEnabled: Boolean = true,
     onClickSound: () -> Unit = {}
 ) {
-    val keys = listOf("Tab", "{", "}", "[", "]", "(", ")", "\"", ":", ";", ",", "§")
+    val keys = listOf("Tab", "{", "}", "[", "]", "(", ")", "\"", ":", ";", ",")
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
             .background(tokens.sidebarBackground).padding(horizontal = 5.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        PixelKey("✓", enabled, tokens, stringResource(R.string.save), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.save)) { onSave() }
+        PixelKey("⌕", true, tokens, stringResource(R.string.find), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.find)) { onFind() }
+        PixelKey("§", true, tokens, stringResource(R.string.minecraft_palette_title), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.minecraft_palette_short)) { onShowColorPalette() }
+        PixelKey("↶", enabled, tokens, stringResource(R.string.undo), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.undo)) { onUndo() }
+        PixelKey("↷", enabled, tokens, stringResource(R.string.redo), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.redo)) { onRedo() }
+        PixelKey("≡", enabled, tokens, stringResource(R.string.format), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.format)) { onFormat() }
+        PixelKey("⌄", true, tokens, stringResource(R.string.chrome_hide_keyboard), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.chrome_hide_short)) { onHideKeyboard() }
         keys.forEach { key ->
-            PixelKey(key, enabled, tokens, gameEffectsEnabled = gameEffectsEnabled, onClickSound = onClickSound) {
+            PixelKey(key, enabled, tokens, key, gameEffectsEnabled, onClickSound) {
                 onInsert(if (key == "Tab") "    " else key)
             }
         }
-        PixelKey("↶", enabled, tokens, "Undo", gameEffectsEnabled, onClickSound) { onUndo() }
-        PixelKey("↷", enabled, tokens, "Redo", gameEffectsEnabled, onClickSound) { onRedo() }
-        PixelKey("FMT", enabled, tokens, "Format", gameEffectsEnabled, onClickSound) { onFormat() }
-        PixelKey("SAVE", enabled, tokens, "Save", gameEffectsEnabled, onClickSound) { onSave() }
-        PixelKey("FIND", true, tokens, "Find", gameEffectsEnabled, onClickSound) { onFind() }
-        PixelKey("⌄", true, tokens, "Hide keyboard", gameEffectsEnabled, onClickSound) { onHideKeyboard() }
     }
 }
 
@@ -275,6 +281,7 @@ private fun RowScope.PixelKey(
     description: String = text,
     gameEffectsEnabled: Boolean = true,
     onClickSound: () -> Unit = {},
+    caption: String? = null,
     onClick: () -> Unit
 ) {
     val borderModifier = if (gameEffectsEnabled) {
@@ -284,7 +291,7 @@ private fun RowScope.PixelKey(
         Modifier.border(1.dp, tokens.divider, RectangleShape)
     }
     Surface(
-        modifier = Modifier.heightIn(min = 48.dp).width(if (text.length > 4) 56.dp else 48.dp)
+        modifier = Modifier.heightIn(min = 48.dp).width(if (caption != null || text.length > 4) 58.dp else 48.dp)
             .then(borderModifier)
             .clip(RectangleShape)
             .clickable(enabled = enabled, onClick = { onClickSound(); onClick() })
@@ -292,14 +299,27 @@ private fun RowScope.PixelKey(
         color = if (enabled) tokens.tabInactive else tokens.sidebarBackground,
         shape = RectangleShape
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 3.dp)) {
+        Column(
+            modifier = Modifier.padding(horizontal = 2.dp, vertical = 3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text,
                 color = if (enabled) tokens.foreground else tokens.muted,
-                fontSize = if (text.length > 4) 10.sp else 13.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1
             )
+            if (caption != null) {
+                Text(
+                    caption,
+                    color = if (enabled) tokens.foreground else tokens.muted,
+                    fontSize = 8.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
@@ -417,3 +437,83 @@ fun EditorCommandPalette(
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.chrome_close)) } }
     )
 }
+@Composable
+fun MinecraftColorPaletteDialog(
+    tokens: EditorTokens,
+    onSelectCode: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.minecraft_palette_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    stringResource(R.string.minecraft_palette_hint),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 310.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    gridItems(minecraftColorPalette, key = { it.code }) { swatch ->
+                        val label = stringResource(swatch.labelRes)
+                        val ink = if (swatch.color.luminance() < 0.42f) Color.White else Color(0xFF151515)
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)
+                                .border(1.dp, tokens.divider, RectangleShape)
+                                .clip(RectangleShape)
+                                .clickable { onSelectCode("§${swatch.code}") }
+                                .semantics { contentDescription = "${swatch.code}: $label" },
+                            color = swatch.color,
+                            shape = RectangleShape
+                        ) {
+                            Column(
+                                Modifier.padding(horizontal = 3.dp, vertical = 7.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text("§${swatch.code}", color = ink, fontSize = 15.sp, fontFamily = FontFamily.Monospace)
+                                Text(label, color = ink, fontSize = 9.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+                Text(stringResource(R.string.minecraft_format_styles), style = MaterialTheme.typography.labelLarge)
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    minecraftFormatPalette.forEach { token ->
+                        val label = stringResource(token.labelRes)
+                        Surface(
+                            modifier = Modifier.width(66.dp).heightIn(min = 54.dp)
+                                .border(1.dp, tokens.divider, RectangleShape)
+                                .clip(RectangleShape)
+                                .clickable { onSelectCode("§${token.code}") }
+                                .semantics { contentDescription = "§${token.code}: $label" },
+                            color = tokens.tabInactive,
+                            shape = RectangleShape
+                        ) {
+                            Column(
+                                Modifier.padding(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text("§${token.code}", color = tokens.tokenKey, fontFamily = FontFamily.Monospace)
+                                Text(label, color = tokens.foreground, fontSize = 9.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.chrome_close)) }
+        }
+    )
+}
+

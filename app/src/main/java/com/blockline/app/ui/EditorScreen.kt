@@ -2,7 +2,10 @@ package com.blockline.app.ui
 
 import android.graphics.Typeface
 import android.text.Editable
+import android.text.Spannable
+import android.text.TextPaint
 import android.text.TextWatcher
+import android.text.style.CharacterStyle
 import android.view.Gravity
 import android.view.inputmethod.EditorInfo
 import android.text.InputType
@@ -85,6 +88,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
@@ -111,6 +115,86 @@ private const val LIVE_TEXT_ANALYSIS_MAX_CHARS = 12_000
 private val COMPLETION_TOKEN_REGEX = Regex("[A-Za-z0-9_$:.-]*$")
 private val MANIFEST_UUID_START_REGEX = Regex("\"uuid\"\\s*:\\s*\"$")
 private val MANIFEST_FORMAT_VERSION_START_REGEX = Regex("\"format_version\"\\s*:\\s*\\d*$")
+
+private class EditorCodeSpan(
+    private val color: Int?,
+    private val bold: Boolean,
+    private val italic: Boolean,
+    private val underline: Boolean,
+    private val strikeThrough: Boolean
+) : CharacterStyle() {
+    override fun updateDrawState(textPaint: TextPaint) {
+        color?.let { textPaint.color = it }
+        textPaint.isFakeBoldText = bold
+        textPaint.textSkewX = if (italic) -0.25f else 0f
+        textPaint.isUnderlineText = underline
+        textPaint.isStrikeThruText = strikeThrough
+    }
+}
+
+private data class VisibleCodeWindow(val start: Int, val text: String)
+
+private fun visibleCodeWindow(editor: EditText, source: String): VisibleCodeWindow? {
+    val layout = editor.layout ?: return null
+    if (source.isEmpty() || layout.lineCount == 0 || editor.height <= 0) return null
+    val maxVertical = (layout.height - 1).coerceAtLeast(0)
+    val firstVisible = layout.getLineForVertical(editor.scrollY.coerceIn(0, maxVertical))
+    val lastVisible = layout.getLineForVertical((editor.scrollY + editor.height).coerceIn(0, maxVertical))
+    val firstLine = (firstVisible - 8).coerceAtLeast(0)
+    val lastLine = (lastVisible + 16).coerceAtMost(layout.lineCount - 1)
+    val start = layout.getLineStart(firstLine).coerceIn(0, source.length)
+    val end = layout.getLineEnd(lastLine).coerceIn(start, source.length)
+    if (start >= end) return null
+    return VisibleCodeWindow(start, source.substring(start, end))
+}
+
+private fun clearEditorCodeSpans(editor: EditText) {
+    val editable = editor.text ?: return
+    editable.getSpans(0, editable.length, EditorCodeSpan::class.java).forEach(editable::removeSpan)
+}
+
+private fun applyEditorCodeSpans(
+    editor: EditText,
+    windowStart: Int,
+    windowText: String,
+    highlighted: AnnotatedString
+) {
+    val editable = editor.text ?: return
+    if (windowStart < 0 || windowStart + windowText.length > editable.length) return
+    if (editable.subSequence(windowStart, windowStart + windowText.length).toString() != windowText) return
+    editable.getSpans(0, editable.length, EditorCodeSpan::class.java).forEach(editable::removeSpan)
+    highlighted.spanStyles.forEach { range ->
+        val style = range.item
+        val color = style.color.takeUnless { it == Color.Unspecified }?.toArgb()
+        val bold = style.fontWeight == androidx.compose.ui.text.font.FontWeight.Bold
+        val italic = style.fontStyle == androidx.compose.ui.text.font.FontStyle.Italic
+        val underline = style.textDecoration?.contains(androidx.compose.ui.text.style.TextDecoration.Underline) == true
+        val strikeThrough = style.textDecoration?.contains(androidx.compose.ui.text.style.TextDecoration.LineThrough) == true
+        val start = (windowStart + range.start).coerceIn(windowStart, windowStart + windowText.length)
+        val end = (windowStart + range.end).coerceIn(start, windowStart + windowText.length)
+        if ((color != null || bold || italic || underline || strikeThrough) && start < end) {
+            editable.setSpan(
+                EditorCodeSpan(color, bold, italic, underline, strikeThrough),
+                start,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
+}
+
+private fun paletteFor(tokens: EditorTokens) = Palette(
+    key = tokens.tokenKey,
+    string = tokens.tokenString,
+    number = tokens.tokenNumber,
+    keyword = tokens.tokenKeyword,
+    comment = tokens.tokenComment,
+    errorBackground = tokens.errorBackground,
+    boolean = tokens.tokenKeyword,
+    function = tokens.tokenFunction,
+    property = tokens.tokenKey,
+    identifier = tokens.foreground
+)
 
 private fun largeFilePageOffsets(text: String): List<Int> {
     if (text.isEmpty()) return listOf(0)
@@ -184,8 +268,12 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     }
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
+    var showMinecraftPalette by remember { mutableStateOf(false) }
     var showHtmlPreview by remember(path) { mutableStateOf(false) }
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
+    var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
+    var visibleSyntaxRefresh by remember(path) { mutableStateOf(0) }
+    var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     var largeFilePage by remember(path) { mutableStateOf(0) }
     var matchCount by remember(path) { mutableStateOf(0) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
@@ -313,6 +401,51 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, editorValue.text.length)
         }
     }
+    LaunchedEffect(
+        path,
+        editorValue.text,
+        lang,
+        tokens,
+        largeEditText,
+        visibleSyntaxRefresh,
+        vm.readOnly
+    ) {
+        val source = editorValue.text
+        val activePath = path
+        val nativeEditor = largeEditText
+        if (activePath == null || lang == null || source.isEmpty() || vm.readOnly) {
+            highlightedText = null
+            nativeEditor?.let(::clearEditorCodeSpans)
+            return@LaunchedEffect
+        }
+        val palette = paletteFor(tokens)
+        if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) {
+            delay(180)
+            val colored = withContext(Dispatchers.Default) { highlight(source, lang, palette) }
+            if (activePath == vm.activeFile && source == editorValue.text) {
+                highlightedText = source to colored
+            }
+        } else {
+            highlightedText = null
+            val native = nativeEditor ?: return@LaunchedEffect
+            delay(280)
+            if (activePath != vm.activeFile || source != editorValue.text) return@LaunchedEffect
+            val window = withContext(Dispatchers.Main.immediate) { visibleCodeWindow(native, source) }
+            if (window == null) {
+                withContext(Dispatchers.Main.immediate) { clearEditorCodeSpans(native) }
+                return@LaunchedEffect
+            }
+            val coloredWindow = withContext(Dispatchers.Default) { highlight(window.text, lang, palette) }
+            withContext(Dispatchers.Main.immediate) {
+                if (activePath == vm.activeFile && source == editorValue.text && native === largeEditText) {
+                    applyEditorCodeSpans(native, window.start, window.text, coloredWindow)
+                }
+            }
+        }
+    }
+    val precomputedEditorText = remember(highlightedText, editorValue.text) {
+        highlightedText?.takeIf { it.first == editorValue.text }?.second
+    }
     LaunchedEffect(path, vm.content, vm.readOnly) {
         if (vm.readOnly) {
             if (editorValue.text.isNotEmpty()) editorValue = TextFieldValue()
@@ -340,6 +473,29 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         vm.consumePendingEditorLine()
     }
+    fun insertAtCursor(insertion: String) {
+        val native = largeEditText.takeIf { editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS }
+        if (native != null) {
+            val editable = native.text
+            val current = editable.toString()
+            val start = native.selectionStart.coerceIn(0, current.length)
+            val end = native.selectionEnd.coerceIn(start, current.length)
+            editable.replace(start, end, insertion)
+            val cursor = (start + insertion.length).coerceAtMost(editable.length)
+            native.setSelection(cursor)
+            val updated = editable.toString()
+            editorValue = TextFieldValue(updated, TextRange(cursor))
+            vm.updateContent(updated)
+        } else {
+            val source = editorValue.text
+            val start = editorValue.selection.start.coerceIn(0, source.length)
+            val end = editorValue.selection.end.coerceIn(start, source.length)
+            val updated = source.replaceRange(start, end, insertion)
+            editorValue = TextFieldValue(updated, TextRange(start + insertion.length))
+            vm.updateContent(updated)
+        }
+    }
+
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
@@ -420,14 +576,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             Column {
                 EditorShortcutBar(
                     enabled = !vm.isOpeningFile && !vm.readOnly,
-                    onInsert = { insertion ->
-                        val source = editorValue.text
-                        val start = editorValue.selection.start.coerceIn(0, source.length)
-                        val end = editorValue.selection.end.coerceIn(start, source.length)
-                        val updated = source.replaceRange(start, end, insertion)
-                        editorValue = TextFieldValue(updated, TextRange(start + insertion.length))
-                        vm.updateContent(updated)
-                    },
+                    onInsert = { insertion -> insertAtCursor(insertion) },
                     onUndo = {
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.undo()
@@ -449,6 +598,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     },
                     onFind = { showFind = true },
                     onHideKeyboard = { keyboardController?.hide() },
+                    onShowColorPalette = { showMinecraftPalette = true },
                     tokens = tokens,
                     gameEffectsEnabled = vm.gameEffectsEnabled,
                     onClickSound = playClickSound
@@ -693,6 +843,21 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 modifier = Modifier.fillMaxSize(),
                                 factory = { viewContext ->
                                     EditText(viewContext).apply {
+                                        largeEditText = this
+                                        var lastStyledLine = -1
+                                        setOnScrollChangeListener { view, _, scrollY, _, _ ->
+                                            val currentLayout = (view as? EditText)?.layout
+                                            if (currentLayout != null && currentLayout.lineCount > 0) {
+                                                val line = currentLayout.getLineForVertical(
+                                                    scrollY.coerceIn(0, (currentLayout.height - 1).coerceAtLeast(0))
+                                                )
+                                                if (line != lastStyledLine) {
+                                                    lastStyledLine = line
+                                                    visibleSyntaxRefresh++
+                                                }
+                                            }
+                                        }
+                                        post { visibleSyntaxRefresh++ }
                                         typeface = Typeface.MONOSPACE
                                         textSize = vm.fontSize.toFloat()
                                         setTextColor(tokens.foreground.toArgb())
@@ -728,6 +893,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     }
                                 },
                                 update = { editText ->
+                                    if (editText.currentTextColor != tokens.foreground.toArgb()) {
+                                        editText.setTextColor(tokens.foreground.toArgb())
+                                    }
                                     if (editText.text.toString() != editorValue.text) {
                                         val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
                                         editText.setText(editorValue.text)
@@ -749,7 +917,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 readOnly = vm.isOpeningFile,
                                 modifier = Modifier.fillMaxSize(),
                                 textStyle = TextStyle(color = tokens.foreground, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                                visualTransformation = androidx.compose.ui.text.input.VisualTransformation.None
+                                visualTransformation = precomputedEditorText
+                                    ?.takeIf { lang != null && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS }
+                                    ?.let { PrecomputedHighlightTransformation(editorValue.text, it) }
+                                    ?: androidx.compose.ui.text.input.VisualTransformation.None
                             )
                             DropdownMenu(
                                 expanded = completionItems.isNotEmpty(),
@@ -909,6 +1080,16 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         vm.openFile(command.removePrefix("$filePrefix "))
                     }
                 }
+            }
+        )
+    }
+    if (showMinecraftPalette) {
+        MinecraftColorPaletteDialog(
+            tokens = tokens,
+            onDismiss = { showMinecraftPalette = false },
+            onSelectCode = { code ->
+                insertAtCursor(code)
+                showMinecraftPalette = false
             }
         )
     }
