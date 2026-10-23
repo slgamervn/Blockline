@@ -173,7 +173,7 @@ fun MoreScreen(vm: AppViewModel) {
                     androidx.compose.material3.FilterChip(
                         selected = vm.appLanguage == "en",
                         onClick = {
-                            vm.setAppLanguage("en")
+                            vm.changeAppLanguage("en")
                             (context as? android.app.Activity)?.recreate()
                         },
                         label = { Text(stringResource(R.string.language_english)) }
@@ -181,7 +181,7 @@ fun MoreScreen(vm: AppViewModel) {
                     androidx.compose.material3.FilterChip(
                         selected = vm.appLanguage == "vi",
                         onClick = {
-                            vm.setAppLanguage("vi")
+                            vm.changeAppLanguage("vi")
                             (context as? android.app.Activity)?.recreate()
                         },
                         label = { Text(stringResource(R.string.language_vietnamese)) }
@@ -189,7 +189,7 @@ fun MoreScreen(vm: AppViewModel) {
                     androidx.compose.material3.FilterChip(
                         selected = vm.appLanguage == "system",
                         onClick = {
-                            vm.setAppLanguage("system")
+                            vm.changeAppLanguage("system")
                             (context as? android.app.Activity)?.recreate()
                         },
                         label = { Text(stringResource(R.string.language_system)) }

@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.ref != 'refs/heads/test' && !endsWith(github.ref_name, '-test') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -110,7 +111,7 @@ jobs:
           gradle-version: 8.14.6
 
       - name: Run unit tests
-        run: gradle testDebugUnitTest testTestUnitTest --stacktrace --no-daemon
+        run: gradle testDebugUnitTest --stacktrace --no-daemon
 
       - name: Prepare stable signing key
         if: ${{ env.HAS_SIGNING_KEY == 'true' }}

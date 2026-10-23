@@ -92,7 +92,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var appLanguage by mutableStateOf(settingsPreferences.getString("app_language", "system") ?: "system")
         private set
 
-    fun setAppLanguage(language: String) {
+    fun changeAppLanguage(language: String) {
         require(language in setOf("system", "en", "vi")) { "Unsupported app language: $language" }
         if (appLanguage == language) return
         appLanguage = language

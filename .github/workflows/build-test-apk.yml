@@ -107,7 +107,7 @@ jobs:
             exit 1
           fi
           cp "$APK_PATH" "Blockline-v$VERSION_NAME.apk"
-          apksigner verify --print-certs "Blockline-v$VERSION_NAME.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "Blockline-v$VERSION_NAME.apk"
 
       - name: Generate test-only release notes
         env:
