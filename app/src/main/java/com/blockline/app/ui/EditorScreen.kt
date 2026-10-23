@@ -148,6 +148,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showQuickSettings by remember { mutableStateOf(false) }
     var showGoToLine by remember { mutableStateOf(false) }
     var showAdvancementToast by remember { mutableStateOf(false) }
+    var explorerFolder by remember { mutableStateOf("") }
     var goToLineText by remember { mutableStateOf("1") }
     val projectId = vm.current?.id.orEmpty()
     val goToFileLabel = stringResource(R.string.chrome_go_to_file)
@@ -168,6 +169,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 .toList()
         }
         if (projectId == vm.current?.id.orEmpty()) indexedFiles = mapped
+    }
+    val explorerItems = remember(indexedFiles, explorerFolder) {
+        if (explorerFolder.isBlank()) indexedFiles
+        else indexedFiles.filter { it.startsWith("$explorerFolder/") }
     }
     LaunchedEffect(indexedFiles, vm.openTabs.keys.toList(), goToFileLabel, goToLineLabel, findCommandLabel, formatCommandLabel, saveCommandLabel, filePrefix) {
         val openTabs = vm.openTabs.keys.toList()
@@ -537,7 +542,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             if (wideLayout) {
                 EditorSidebar(
                     title = stringResource(R.string.chrome_explorer),
-                    items = indexedFiles,
+                    items = explorerItems,
                     selectedPath = path,
                     tokens = tokens,
                     gameEffectsEnabled = vm.gameEffectsEnabled,
@@ -570,12 +575,23 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        Text(stringResource(R.string.chrome_project), modifier = Modifier.clickable { onBack() }, color = tokens.muted, fontSize = 11.sp)
+                        Text(
+                            stringResource(R.string.chrome_project),
+                            modifier = Modifier.clickable {
+                                explorerFolder = ""
+                                sidebarOpen = true
+                            },
+                            color = tokens.muted,
+                            fontSize = 11.sp
+                        )
                         path.split('/').forEachIndexed { index, segment ->
                             Text("  ›  ", color = tokens.muted, fontSize = 11.sp)
                             Text(
                                 segment,
-                                modifier = Modifier.clickable(enabled = index < path.split('/').lastIndex) { onBack() },
+                                modifier = Modifier.clickable(enabled = index < path.split('/').lastIndex) {
+                                    explorerFolder = path.split('/').take(index + 1).joinToString("/")
+                                    sidebarOpen = true
+                                },
                                 color = if (index == path.split('/').lastIndex) tokens.foreground else tokens.muted,
                                 fontSize = 11.sp,
                                 maxLines = 1,
