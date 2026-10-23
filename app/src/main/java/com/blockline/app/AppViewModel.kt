@@ -2,6 +2,7 @@ package com.blockline.app
 
 import android.app.Application
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -44,9 +45,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.Locale
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
-    private fun text(id: Int, vararg args: Any): String = getApplication<Application>().getString(id, *args)
+    private fun text(id: Int, vararg args: Any): String {
+        val app = getApplication<Application>()
+        val language = app.getSharedPreferences("blockline_settings", Application.MODE_PRIVATE)
+            .getString("app_language", "system") ?: "system"
+        val localizedContext = if (language == "en" || language == "vi") {
+            val locale = Locale.forLanguageTag(language)
+            val configuration = Configuration(app.resources.configuration).apply {
+                setLocale(locale)
+                setLayoutDirection(locale)
+            }
+            app.createConfigurationContext(configuration)
+        } else {
+            app
+        }
+        return localizedContext.getString(id, *args)
+    }
 
     val repo = ProjectRepository(app)
     private val operationLogRepository = OperationLogRepository(File(app.filesDir, "operation-logs"))
