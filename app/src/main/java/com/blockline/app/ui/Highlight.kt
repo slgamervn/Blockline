@@ -167,3 +167,23 @@ class PrecomputedHighlightTransformation(
             OffsetMapping.Identity
         )
 }
+
+
+fun highlightCurrentLine(
+    source: String,
+    cursorPosition: Int,
+    syntax: AnnotatedString,
+    background: Color
+): AnnotatedString {
+    if (source.isEmpty() || syntax.text != source) return syntax
+    val cursor = cursorPosition.coerceIn(0, source.length)
+    val lineStart = if (cursor == 0) 0 else source.lastIndexOf('\n', cursor - 1) + 1
+    val foundLineEnd = source.indexOf('\n', cursor)
+    var lineEnd = if (foundLineEnd >= 0) foundLineEnd else source.length
+    if (lineEnd == lineStart && lineEnd < source.length) lineEnd++
+    if (lineStart >= lineEnd) return syntax
+    return buildAnnotatedString {
+        append(syntax)
+        addStyle(SpanStyle(background = background), lineStart, lineEnd)
+    }
+}
