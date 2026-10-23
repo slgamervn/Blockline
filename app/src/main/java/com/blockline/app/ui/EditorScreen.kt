@@ -1,5 +1,12 @@
 package com.blockline.app.ui
 
+import android.graphics.Typeface
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.Gravity
+import android.view.inputmethod.EditorInfo
+import android.text.InputType
+import android.widget.EditText
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -448,46 +455,98 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }
                 } else {
                     Box(Modifier.weight(1f).fillMaxWidth()) {
-                        BasicTextField(
-                            value = editorValue,
-                            onValueChange = {
-                                editorValue = it
-                                if (completionItems.isNotEmpty()) completionItems = emptyList()
-                                if (it.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) highlightedText = null
-                            },
-                            readOnly = vm.isOpeningFile,
-                            modifier = Modifier.fillMaxSize(),
-                            textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                            visualTransformation = highlightedText
-                                ?.takeIf { lang != null && it.first == editorValue.text }
-                                ?.let { PrecomputedHighlightTransformation(it.first, it.second) }
-                                ?: VisualTransformation.None
-                        )
-                        DropdownMenu(
-                            expanded = completionItems.isNotEmpty(),
-                            onDismissRequest = { completionItems = emptyList() }
-                        ) {
-                            completionItems.take(12).forEach { suggestion ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(suggestion.label, style = MaterialTheme.typography.bodyMedium)
-                                            if (suggestion.detail.isNotBlank()) {
-                                                Text(suggestion.detail, style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
+                            AndroidView(
+                                modifier = Modifier.fillMaxSize(),
+                                factory = { viewContext ->
+                                    EditText(viewContext).apply {
+                                        typeface = Typeface.MONOSPACE
+                                        textSize = vm.fontSize.toFloat()
+                                        setTextColor(android.graphics.Color.rgb(225, 232, 228))
+                                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                        setPadding(
+                                            (8 * resources.displayMetrics.density).toInt(),
+                                            (8 * resources.displayMetrics.density).toInt(),
+                                            (8 * resources.displayMetrics.density).toInt(),
+                                            (8 * resources.displayMetrics.density).toInt()
+                                        )
+                                        gravity = Gravity.TOP or Gravity.START
+                                        inputType = InputType.TYPE_CLASS_TEXT or
+                                            InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                                            InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+                                        imeOptions = EditorInfo.IME_ACTION_NONE or EditorInfo.IME_FLAG_NO_EXTRACT_UI
+                                        isVerticalScrollBarEnabled = true
+                                        setHorizontallyScrolling(false)
+                                        setLineSpacing(0f, 1.1f)
+                                        setText(editorValue.text)
+                                        setSelection(editorValue.selection.start.coerceIn(0, text.length))
+                                        addTextChangedListener(object : TextWatcher {
+                                            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                                            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+                                            override fun afterTextChanged(s: Editable?) {
+                                                val updated = s?.toString().orEmpty()
+                                                val cursor = selectionStart.coerceIn(0, updated.length)
+                                                if (updated != editorValue.text || cursor != editorValue.selection.start) {
+                                                    editorValue = TextFieldValue(updated, TextRange(cursor))
+                                                    if (completionItems.isNotEmpty()) completionItems = emptyList()
+                                                }
                                             }
-                                        }
-                                    },
-                                    onClick = {
-                                        val start = completionRange.first.coerceIn(0, editorValue.text.length)
-                                        val end = completionRange.second.coerceIn(start, editorValue.text.length)
-                                        val updated = editorValue.text.replaceRange(start, end, suggestion.insertText)
-                                        val cursor = start + suggestion.insertText.length
-                                        editorValue = TextFieldValue(updated, TextRange(cursor))
-                                        completionItems = emptyList()
-                                        vm.updateContent(updated)
+                                        })
                                     }
-                                )
+                                },
+                                update = { editText ->
+                                    if (editText.text.toString() != editorValue.text) {
+                                        val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
+                                        editText.setText(editorValue.text)
+                                        editText.setSelection(cursor.coerceIn(0, editText.text.length))
+                                    }
+                                    editText.isEnabled = !vm.isOpeningFile
+                                    if (editText.textSize != vm.fontSize.toFloat()) {
+                                        editText.textSize = vm.fontSize.toFloat()
+                                    }
+                                }
+                            )
+                        } else {
+                            BasicTextField(
+                                value = editorValue,
+                                onValueChange = {
+                                    editorValue = it
+                                    if (completionItems.isNotEmpty()) completionItems = emptyList()
+                                },
+                                readOnly = vm.isOpeningFile,
+                                modifier = Modifier.fillMaxSize(),
+                                textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
+                                visualTransformation = highlightedText
+                                    ?.takeIf { lang != null && it.first == editorValue.text }
+                                    ?.let { PrecomputedHighlightTransformation(it.first, it.second) }
+                                    ?: VisualTransformation.None
+                            )
+                            DropdownMenu(
+                                expanded = completionItems.isNotEmpty(),
+                                onDismissRequest = { completionItems = emptyList() }
+                            ) {
+                                completionItems.take(12).forEach { suggestion ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(suggestion.label, style = MaterialTheme.typography.bodyMedium)
+                                                if (suggestion.detail.isNotBlank()) {
+                                                    Text(suggestion.detail, style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            val start = completionRange.first.coerceIn(0, editorValue.text.length)
+                                            val end = completionRange.second.coerceIn(start, editorValue.text.length)
+                                            val updated = editorValue.text.replaceRange(start, end, suggestion.insertText)
+                                            val cursor = start + suggestion.insertText.length
+                                            editorValue = TextFieldValue(updated, TextRange(cursor))
+                                            completionItems = emptyList()
+                                            vm.updateContent(updated)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
