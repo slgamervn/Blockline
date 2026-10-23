@@ -303,7 +303,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             errorBackground = if (
                 (lang == Lang.JSON || lang == Lang.LANG) &&
                 syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING
-            ) Color(0x55E6B35A) else Color(0x55F44336),
+            ) tokens.warningBackground else tokens.errorBackground,
             boolean = tokens.tokenKeyword,
             function = tokens.tokenFunction,
             property = tokens.tokenKey,
