@@ -58,6 +58,25 @@ class EditorHistoryTest {
     }
 
     @Test
+    fun boundsStoredHistoryByCharacterBudget() {
+        val history = EditorHistory(maxCharsPerStack = 10L)
+        history.recordEdit("large.json", "aaaaaa", 1_000L)
+        history.recordEdit("large.json", "bbbbbb", 1_701L)
+        history.recordEdit("large.json", "cccccc", 2_402L)
+
+        assertEquals("cccccc", history.undo("large.json", "current"))
+        assertNull(history.undo("large.json", "cccccc"))
+    }
+
+    @Test
+    fun skipsSnapshotLargerThanHistoryBudget() {
+        val history = EditorHistory(maxCharsPerStack = 5L)
+        history.recordEdit("large.json", "too-large", 1_000L)
+
+        assertNull(history.undo("large.json", "current"))
+    }
+
+    @Test
     fun remapsHistoryAndCanResetOneFile() {
         val history = EditorHistory()
         history.recordEdit("old/main.js", "before", 1_000L)
