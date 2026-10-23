@@ -72,6 +72,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             themeState.value = value
             settingsPreferences.edit().putString("theme_mode", value.name).apply()
         }
+    var appLanguage by mutableStateOf(settingsPreferences.getString("app_language", "system") ?: "system")
+        private set
+
+    fun setAppLanguage(language: String) {
+        require(language in setOf("system", "en", "vi")) { "Unsupported app language: $language" }
+        if (appLanguage == language) return
+        appLanguage = language
+        settingsPreferences.edit().putString("app_language", language).apply()
+    }
     private val fontSizeState = mutableStateOf(settingsPreferences.getInt("editor_font_size", 14).coerceIn(10, 24))
     var fontSize: Int
         get() = fontSizeState.value
@@ -85,6 +94,36 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var updateInfo by mutableStateOf<AppUpdate?>(null)
         private set
+    var latestReleaseInfo by mutableStateOf(readSavedReleaseInfo())
+        private set
+
+    private fun readSavedReleaseInfo(): AppUpdate? {
+        val version = settingsPreferences.getString("latest_release_version", null) ?: return null
+        val releaseUrl = settingsPreferences.getString("latest_release_url", null) ?: return null
+        val apkUrl = settingsPreferences.getString("latest_release_apk_url", null) ?: return null
+        return AppUpdate(
+            version = version,
+            releaseName = settingsPreferences.getString("latest_release_name", "Blockline v$version") ?: "Blockline v$version",
+            releaseNotes = settingsPreferences.getString("latest_release_notes", "") ?: "",
+            apkUrl = apkUrl,
+            apkSizeBytes = settingsPreferences.getLong("latest_release_size", 0L).coerceAtLeast(0L),
+            releaseUrl = releaseUrl,
+            publishedAt = settingsPreferences.getString("latest_release_published_at", "") ?: ""
+        )
+    }
+
+    private fun rememberReleaseInfo(info: AppUpdate) {
+        latestReleaseInfo = info
+        settingsPreferences.edit()
+            .putString("latest_release_version", info.version)
+            .putString("latest_release_name", info.releaseName)
+            .putString("latest_release_notes", info.releaseNotes.take(12_000))
+            .putString("latest_release_apk_url", info.apkUrl)
+            .putLong("latest_release_size", info.apkSizeBytes)
+            .putString("latest_release_url", info.releaseUrl)
+            .putString("latest_release_published_at", info.publishedAt)
+            .apply()
+    }
     var lastUpdateCheck by mutableStateOf(settingsPreferences.getString("last_update_check", null))
         private set
     var updateCheckResult by mutableStateOf<String?>(null)
@@ -195,6 +234,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             lastUpdateCheck = java.time.Instant.now().toString()
             settingsPreferences.edit().putString("last_update_check", lastUpdateCheck).apply()
             result.onSuccess { available ->
+                if (available != null) rememberReleaseInfo(available)
                 val ignoredVersion = settingsPreferences.getString("dismissed_update_version", null)
                 updateInfo = if (available != null && (ignoredVersion != available.version || !automatic)) available else null
                 updateCheckResult = when {
@@ -217,11 +257,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openUpdateReleasePage(context: android.content.Context) {
         val info = updateInfo ?: return
+        openReleasePage(context, info)
+    }
+
+    fun openReleasePage(context: android.content.Context, info: AppUpdate) {
         runCatching {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AppUpdateRepository.LATEST_RELEASE_PAGE_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            val url = info.releaseUrl
+            require(url.startsWith("https://github.com/slgamervn/Blockline/releases/tag/")) {
+                "Unexpected release URL"
+            }
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }.onSuccess {
             settingsPreferences.edit().putString("dismissed_update_version", info.version).apply()
-            updateInfo = null
+            if (updateInfo?.version == info.version) updateInfo = null
         }.onFailure {
             message = text(R.string.update_open_failed)
         }
