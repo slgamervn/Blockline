@@ -1,5 +1,6 @@
 package com.blockline.app.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -55,6 +58,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.EditorTokens
+import com.blockline.app.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun EditorActivityBar(
@@ -71,10 +76,10 @@ fun EditorActivityBar(
             .border(1.dp, tokens.divider, RectangleShape),
         verticalArrangement = Arrangement.Top
     ) {
-        ActivityBarButton("Explorer", Icons.Default.FolderOpen, selected == "explorer", onExplorer, tokens)
-        ActivityBarButton("Search", Icons.Default.Search, selected == "search", onSearch, tokens)
+        ActivityBarButton(stringResource(R.string.chrome_explorer), Icons.Default.FolderOpen, selected == "explorer", onExplorer, tokens)
+        ActivityBarButton(stringResource(R.string.chrome_search), Icons.Default.Search, selected == "search", onSearch, tokens)
         Spacer(Modifier.weight(1f))
-        ActivityBarButton("Quick Settings", Icons.Default.Settings, selected == "settings", onSettings, tokens)
+        ActivityBarButton(stringResource(R.string.chrome_quick_settings), Icons.Default.Settings, selected == "settings", onSettings, tokens)
     }
 }
 
@@ -134,12 +139,7 @@ fun EditorSidebar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.InsertDriveFile,
-                        contentDescription = null,
-                        tint = fileTint(path, tokens),
-                        modifier = Modifier.size(16.dp)
-                    )
+                    PixelFileIcon(path, tokens)
                     Text(
                         path,
                         color = tokens.foreground,
@@ -154,13 +154,74 @@ fun EditorSidebar(
     }
 }
 
-private fun fileTint(path: String, tokens: EditorTokens): Color = when {
-    path.substringAfterLast('/', path).equals("manifest.json", true) -> tokens.tokenFunction
-    path.endsWith(".json", true) -> tokens.tokenKey
-    path.endsWith(".js", true) || path.endsWith(".ts", true) -> tokens.tokenKeyword
-    path.endsWith(".mcfunction", true) -> tokens.gameGreen
-    path.endsWith(".png", true) -> tokens.tokenString
-    else -> tokens.muted
+@Composable
+private fun PixelFileIcon(path: String, tokens: EditorTokens) {
+    Canvas(Modifier.size(18.dp).semantics { contentDescription = path }) {
+        val unit = size.width / 16f
+        fun pixel(x: Int, y: Int, w: Int, h: Int, color: Color) {
+            drawRect(
+                color = color,
+                topLeft = Offset(x * unit, y * unit),
+                size = Size(w * unit, h * unit)
+            )
+        }
+        val outline = Color(0xFF111111)
+        when {
+            path.substringAfterLast('/').equals("manifest.json", true) -> {
+                pixel(3, 1, 10, 14, outline)
+                pixel(4, 2, 8, 12, Color(0xFFB48E38))
+                pixel(7, 3, 2, 8, tokens.tokenString)
+                pixel(4, 6, 8, 2, tokens.tokenString)
+                pixel(7, 6, 2, 2, Color.White)
+            }
+            path.endsWith(".json", true) -> {
+                pixel(2, 1, 12, 14, outline)
+                pixel(4, 2, 8, 12, Color(0xFF2D7DA8))
+                pixel(5, 3, 6, 10, Color(0xFFE5F4FA))
+                pixel(5, 5, 5, 1, tokens.tokenKey)
+                pixel(5, 8, 4, 1, tokens.tokenKey)
+                pixel(5, 11, 5, 1, tokens.tokenKey)
+            }
+            path.endsWith(".js", true) || path.endsWith(".ts", true) -> {
+                pixel(2, 1, 12, 14, outline)
+                pixel(4, 2, 8, 12, Color(0xFF5B3D8A))
+                pixel(5, 3, 6, 10, Color(0xFFF3E8FF))
+                pixel(6, 5, 4, 1, tokens.tokenKeyword)
+                pixel(5, 8, 5, 1, tokens.tokenFunction)
+                pixel(7, 10, 3, 1, tokens.tokenKeyword)
+            }
+            path.endsWith(".mcfunction", true) -> {
+                pixel(1, 2, 14, 12, outline)
+                pixel(3, 4, 10, 8, Color(0xFF52645A))
+                pixel(4, 5, 8, 6, tokens.gameGreen)
+                pixel(5, 6, 2, 2, Color(0xFFD5F8E4))
+                pixel(9, 6, 2, 2, Color(0xFFD5F8E4))
+                pixel(7, 8, 2, 2, outline)
+            }
+            path.endsWith(".png", true) || path.endsWith(".jpg", true) || path.endsWith(".webp", true) -> {
+                pixel(1, 2, 14, 12, outline)
+                pixel(3, 4, 10, 8, Color(0xFFEADFC7))
+                pixel(4, 5, 3, 2, Color(0xFF52A3D9))
+                pixel(9, 5, 2, 2, Color(0xFFF0C05A))
+                pixel(4, 9, 7, 2, Color(0xFF3A8D57))
+            }
+            path.contains("behavior", true) || path.contains("resource", true) -> {
+                val tint = if (path.contains("behavior", true)) tokens.gameGreen else tokens.tokenType
+                pixel(1, 4, 14, 10, outline)
+                pixel(2, 5, 12, 8, tint)
+                pixel(3, 2, 10, 3, outline)
+                pixel(4, 3, 8, 2, tint)
+                pixel(7, 6, 2, 5, Color(0xFFB7A46B))
+            }
+            else -> {
+                pixel(1, 4, 14, 10, outline)
+                pixel(2, 5, 12, 8, Color(0xFF8F6A3B))
+                pixel(3, 2, 10, 3, outline)
+                pixel(4, 3, 8, 2, Color(0xFFB98B4F))
+                pixel(7, 6, 2, 5, Color(0xFFDAC38C))
+            }
+        }
+    }
 }
 
 @Composable
@@ -241,11 +302,11 @@ fun EditorStatusBar(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Ln $line, Col $column", color = Color.White, fontSize = 11.sp, maxLines = 1)
+        Text(stringResource(R.string.chrome_line_column, line, column), color = Color.White, fontSize = 11.sp, maxLines = 1)
         Text("UTF-8", color = Color.White, fontSize = 11.sp, maxLines = 1)
         Text(language, color = Color.White, fontSize = 11.sp, maxLines = 1)
-        Text("Spaces: 4", color = Color.White, fontSize = 11.sp, maxLines = 1)
-        Text(if (saved) "Saved" else "● Unsaved", color = Color.White, fontSize = 11.sp, maxLines = 1)
+        Text(stringResource(R.string.chrome_spaces_four), color = Color.White, fontSize = 11.sp, maxLines = 1)
+        Text(if (saved) stringResource(R.string.chrome_saved) else "● " + stringResource(R.string.chrome_unsaved), color = Color.White, fontSize = 11.sp, maxLines = 1)
     }
 }
 
@@ -270,14 +331,14 @@ fun EditorCommandPalette(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Command Palette", fontFamily = FontFamily.Monospace) },
+        title = { Text(stringResource(R.string.chrome_command_palette), fontFamily = FontFamily.Monospace) },
         text = {
             Column {
                 OutlinedTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     singleLine = true,
-                    label = { Text("Search commands and files") },
+                    label = { Text(stringResource(R.string.chrome_search_commands)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 LazyColumn(Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
@@ -297,6 +358,6 @@ fun EditorCommandPalette(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.chrome_close)) } }
     )
 }
