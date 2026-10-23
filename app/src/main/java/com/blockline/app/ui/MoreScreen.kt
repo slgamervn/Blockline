@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -141,19 +143,37 @@ fun MoreScreen(vm: AppViewModel) {
                         }
                     }
                 }
-                androidx.compose.material3.HorizontalDivider()
-                Text(stringResource(R.string.latest_changelog), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+
+            }
+        }
+        }
+        item {
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.latest_changelog), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                    vm.latestReleaseInfo?.let { info ->
+                        androidx.compose.material3.AssistChip(
+                            onClick = { vm.openReleasePage(context, info) },
+                            label = { Text(info.version) }
+                        )
+                    }
+                }
                 val changelog = vm.latestReleaseInfo
                 if (changelog == null) {
                     Text(stringResource(R.string.release_notes_empty), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                 } else {
-                    Text(changelog.releaseName, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                    Text(changelog.releaseName, style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
                     if (changelog.releaseNotes.isNotBlank()) {
-                        Text(
-                            changelog.releaseNotes.take(4_000),
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall
-                        )
+                        Column(
+                            Modifier.fillMaxWidth().heightIn(max = 320.dp).verticalScroll(rememberScrollState())
+                        ) {
+                            Text(
+                                changelog.releaseNotes.take(12_000),
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                            )
+                        }
                     } else {
                         Text(stringResource(R.string.update_no_notes), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                     }
