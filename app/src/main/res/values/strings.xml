@@ -596,4 +596,5 @@
     <string name="chrome_theme_amoled">AMOLED black</string>
     <string name="chrome_theme_system">Follow system</string>
     <string name="chrome_enter_positive_line">Enter a positive line number.</string>
+    <string name="chrome_file_prefix">File:</string>
 </resources>
