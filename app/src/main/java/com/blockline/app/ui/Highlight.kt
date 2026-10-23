@@ -27,7 +27,10 @@ class Palette(
     val identifier: Color = Color(0xFFE6EDF3)
 )
 
-private val minecraftColorCodeRegex = Regex("§([0-9a-fA-Fk-orK-OR])")
+private val minecraftColorCodeRegex = Regex(
+    """§([0-9a-fA-FklmnorKLMNOR])|\\u00a7([0-9a-fA-FklmnorKLMNOR])""",
+    RegexOption.IGNORE_CASE
+)
 
 data class MinecraftColorToken(val code: Char, val labelRes: Int, val color: Color)
 
@@ -100,7 +103,7 @@ private fun AnnotatedString.Builder.addMinecraftFormattingSpans(
 
     for (match in codes) {
         addCurrentStyle(segmentStart, match.range.first)
-        val code = match.groupValues[1].lowercase().first()
+        val code = (match.groupValues[1].ifBlank { match.groupValues[2] }).lowercase().first()
         when {
             minecraftColors.containsKey(code) -> {
                 color = minecraftColors.getValue(code)
@@ -144,7 +147,7 @@ private val jsKeywords = setOf(
 private val jsBooleanLiterals = setOf("true", "false", "null", "undefined")
 private val jsonBooleanLiterals = setOf("true", "false", "null")
 private val mcRx = Regex(
-    """"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
+    """"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
 )
 
 private val langRx = Regex(
@@ -153,7 +156,7 @@ private val langRx = Regex(
 
 fun langFor(ext: String): Lang? = when (ext.lowercase()) {
     "json", "mcmeta", "json5" -> Lang.JSON
-    "js", "mjs", "ts" -> Lang.JS
+    "js", "mjs", "ts", "html", "htm" -> Lang.JS
     "mcfunction" -> Lang.MCFUNC
     "lang" -> Lang.LANG
     else -> null
