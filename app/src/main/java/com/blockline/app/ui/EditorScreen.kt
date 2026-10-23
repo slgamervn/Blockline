@@ -381,7 +381,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { commandQuery = ""; showCommandPalette = true }) {
-                        Icon(Icons.Default.Search, "Command Palette")
+                        Icon(Icons.Default.Search, stringResource(R.string.chrome_command_palette))
                     }
                     IconButton(onClick = {
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
