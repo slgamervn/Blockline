@@ -89,6 +89,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             themeState.value = value
             settingsPreferences.edit().putString("theme_mode", value.name).apply()
         }
+
+    private val gameEffectsState = mutableStateOf(settingsPreferences.getBoolean("game_effects_enabled", true))
+    var gameEffectsEnabled: Boolean
+        get() = gameEffectsState.value
+        set(value) {
+            gameEffectsState.value = value
+            settingsPreferences.edit().putBoolean("game_effects_enabled", value).apply()
+        }
+
+    private val clickSoundsState = mutableStateOf(settingsPreferences.getBoolean("click_sounds_enabled", false))
+    var clickSoundsEnabled: Boolean
+        get() = clickSoundsState.value
+        set(value) {
+            clickSoundsState.value = value
+            settingsPreferences.edit().putBoolean("click_sounds_enabled", value).apply()
+        }
     var appLanguage by mutableStateOf(settingsPreferences.getString("app_language", "system") ?: "system")
         private set
 
