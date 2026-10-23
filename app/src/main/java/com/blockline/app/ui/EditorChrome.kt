@@ -246,7 +246,7 @@ fun EditorShortcutBar(
     onSave: () -> Unit,
     onFind: () -> Unit,
     onHideKeyboard: () -> Unit,
-    onShowColorPalette: () -> Unit,
+    onShowColorPalette: () -> Unit = {},
     tokens: EditorTokens,
     gameEffectsEnabled: Boolean = true,
     onClickSound: () -> Unit = {}
