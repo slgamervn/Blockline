@@ -238,7 +238,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             highlightedText = null
             return@LaunchedEffect
         }
-        delay(320)
+        delay(120)
         val palette = Palette(
             key = Color(0xFF82AAFF),
             string = Color(0xFFA5D6A7),
