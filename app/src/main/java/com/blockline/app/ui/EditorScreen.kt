@@ -116,9 +116,19 @@ private val COMPLETION_TOKEN_REGEX = Regex("[A-Za-z0-9_$:.-]*$")
 private val MANIFEST_UUID_START_REGEX = Regex("\"uuid\"\\s*:\\s*\"$")
 private val MANIFEST_FORMAT_VERSION_START_REGEX = Regex("\"format_version\"\\s*:\\s*\\d*$")
 
-private class EditorCodeSpan(private val color: Int) : CharacterStyle() {
+private class EditorCodeSpan(
+    private val color: Int?,
+    private val bold: Boolean,
+    private val italic: Boolean,
+    private val underline: Boolean,
+    private val strikeThrough: Boolean
+) : CharacterStyle() {
     override fun updateDrawState(textPaint: TextPaint) {
-        textPaint.color = color
+        color?.let { textPaint.color = it }
+        textPaint.isFakeBoldText = bold
+        textPaint.textSkewX = if (italic) -0.25f else 0f
+        textPaint.isUnderlineText = underline
+        textPaint.isStrikeThruText = strikeThrough
     }
 }
 
@@ -154,11 +164,21 @@ private fun applyEditorCodeSpans(
     if (editable.subSequence(windowStart, windowStart + windowText.length).toString() != windowText) return
     editable.getSpans(0, editable.length, EditorCodeSpan::class.java).forEach(editable::removeSpan)
     highlighted.spanStyles.forEach { range ->
-        val color = range.item.color
+        val style = range.item
+        val color = style.color.takeUnless { it == Color.Unspecified }?.toArgb()
+        val bold = style.fontWeight == androidx.compose.ui.text.font.FontWeight.Bold
+        val italic = style.fontStyle == androidx.compose.ui.text.font.FontStyle.Italic
+        val underline = style.textDecoration?.contains(androidx.compose.ui.text.style.TextDecoration.Underline) == true
+        val strikeThrough = style.textDecoration?.contains(androidx.compose.ui.text.style.TextDecoration.LineThrough) == true
         val start = (windowStart + range.start).coerceIn(windowStart, windowStart + windowText.length)
         val end = (windowStart + range.end).coerceIn(start, windowStart + windowText.length)
-        if (color != Color.Unspecified && start < end) {
-            editable.setSpan(EditorCodeSpan(color.toArgb()), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if ((color != null || bold || italic || underline || strikeThrough) && start < end) {
+            editable.setSpan(
+                EditorCodeSpan(color, bold, italic, underline, strikeThrough),
+                start,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         }
     }
 }
