@@ -5,14 +5,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Dashboard
@@ -49,6 +42,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.blockline.app.ui.EditorScreen
+import com.blockline.app.ui.EditorWorkspace
 import com.blockline.app.ui.ExplorerScreen
 import com.blockline.app.ui.MoreScreen
 import com.blockline.app.ui.OverviewScreen
@@ -131,9 +125,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                         NavigationBarItem(
                             selected = selected,
                             onClick = { goTab(nav, t.route) },
-                            icon = {
-                                Icon(t.icon, contentDescription = null)
-                            },
+                            icon = { Icon(t.icon, contentDescription = stringResource(t.label)) },
                             label = { Text(stringResource(t.label)) }
                         )
                     }
@@ -162,7 +154,11 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 composable("search") { SearchScreen(vm) { nav.navigate("editor") } }
                 composable("tools") { ToolsScreen(vm) { nav.navigate("editor") } }
                 composable("more") { MoreScreen(vm) }
-                composable("editor") { EditorScreen(vm) { nav.popBackStack() } }
+                composable("editor") {
+                    EditorWorkspace(vm, onBack = { nav.popBackStack() }) {
+                        EditorScreen(vm) { nav.popBackStack() }
+                    }
+                }
             }
         }
     }
