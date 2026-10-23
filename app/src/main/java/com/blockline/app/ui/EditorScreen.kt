@@ -498,7 +498,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     line = line,
                     column = column,
                     language = languageLabel,
-                    saved = editorValue.text == vm.activeFilePersistedContent && !vm.isOpeningFile,
+                    saved = path == null || (editorValue.text == vm.activeFilePersistedContent && !vm.isOpeningFile),
                     tokens = tokens
                 )
             }
