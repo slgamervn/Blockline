@@ -85,10 +85,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.TextRange
@@ -191,7 +189,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var largeFilePage by remember(path) { mutableStateOf(0) }
     var matchCount by remember(path) { mutableStateOf(0) }
     val lang = path?.substringAfterLast('.', "")?.let { langFor(it) }
-    var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     var syntaxIssue by remember(path) { mutableStateOf<ValidationIssue?>(null) }
     var checkingJson by remember(path) { mutableStateOf(false) }
     val completionEngine = remember(context) { runCatching { AddonCompletionEngine.load(context) }.getOrNull() }
@@ -305,11 +302,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     }
-    val highlightedForCursor = remember(highlightedText, editorValue.text, editorValue.selection.start, tokens.currentLine) {
-        highlightedText
-            ?.takeIf { it.first == editorValue.text }
-            ?.let { highlightCurrentLine(editorValue.text, editorValue.selection.start, it.second, tokens.currentLine) }
-    }
     val jsonErrorOffset = remember(editorValue.text, syntaxIssue) {
         syntaxIssue?.line?.let { targetLine ->
             var currentLine = 1
@@ -319,36 +311,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 offset++
             }
             (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, editorValue.text.length)
-        }
-    }
-    LaunchedEffect(path, editorValue.text, lang, jsonErrorOffset, syntaxIssue?.severity) {
-        val source = editorValue.text
-        if (lang == null || source.isEmpty() || source.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
-            highlightedText = null
-            return@LaunchedEffect
-        }
-        delay(120)
-        val palette = Palette(
-            key = tokens.tokenKey,
-            string = tokens.tokenString,
-            number = tokens.tokenNumber,
-            keyword = tokens.tokenKeyword,
-            comment = tokens.tokenComment,
-            errorBackground = if (
-                (lang == Lang.JSON || lang == Lang.LANG) &&
-                syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING
-            ) tokens.warningBackground else tokens.errorBackground,
-            boolean = tokens.tokenKeyword,
-            function = tokens.tokenFunction,
-            property = tokens.tokenKey,
-            identifier = tokens.foreground
-        )
-        val errorOffset = if (lang == Lang.JSON || lang == Lang.LANG) jsonErrorOffset else null
-        val highlighted = withContext(Dispatchers.Default) {
-            highlight(source, lang, palette, errorOffset)
-        }
-        if (source == editorValue.text && path == vm.activeFile) {
-            highlightedText = source to highlighted
         }
     }
     LaunchedEffect(path, vm.content, vm.readOnly) {
@@ -787,10 +749,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 readOnly = vm.isOpeningFile,
                                 modifier = Modifier.fillMaxSize(),
                                 textStyle = TextStyle(color = tokens.foreground, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                                visualTransformation = highlightedForCursor
-                                    ?.takeIf { lang != null }
-                                    ?.let { PrecomputedHighlightTransformation(editorValue.text, it) }
-                                    ?: VisualTransformation.None
+                                visualTransformation = androidx.compose.ui.text.input.VisualTransformation.None
                             )
                             DropdownMenu(
                                 expanded = completionItems.isNotEmpty(),
