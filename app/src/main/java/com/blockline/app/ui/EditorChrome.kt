@@ -328,6 +328,45 @@ fun EditorStatusBar(
 }
 
 @Composable
+fun PixelActionButton(
+    label: String,
+    tokens: EditorTokens,
+    enabled: Boolean = true,
+    gameEffectsEnabled: Boolean = true,
+    onClickSound: () -> Unit = {},
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val frame = if (gameEffectsEnabled) {
+        Modifier.border(1.dp, tokens.inventoryLight, RectangleShape)
+            .border(2.dp, tokens.inventoryDark, RectangleShape)
+    } else {
+        Modifier.border(1.dp, tokens.divider, RectangleShape)
+    }
+    Surface(
+        modifier = modifier.heightIn(min = 48.dp)
+            .then(frame)
+            .clip(RectangleShape)
+            .clickable(enabled = enabled, onClick = { onClickSound(); onClick() })
+            .semantics { contentDescription = label },
+        color = if (enabled) tokens.tabInactive else tokens.sidebarBackground,
+        shape = RectangleShape
+    ) {
+        Box(
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                label,
+                color = if (enabled) tokens.foreground else tokens.muted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable
 fun EditorCommandPalette(
     query: String,
     onQueryChange: (String) -> Unit,
