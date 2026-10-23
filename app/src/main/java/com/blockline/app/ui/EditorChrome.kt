@@ -98,7 +98,7 @@ private fun ActivityBarButton(
             .semantics { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.width(3.dp).height(28.dp).background(if (selected) tokens.statusBar else Color.Transparent))
+        Box(Modifier.width(if (selected && gameEffectsEnabled) 4.dp else 3.dp).height(28.dp).background(if (selected) tokens.statusBar else Color.Transparent))
         Box(
             Modifier.weight(1f).height(52.dp).clickable(onClick = onClick),
             contentAlignment = Alignment.Center
