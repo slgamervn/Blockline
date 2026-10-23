@@ -596,4 +596,5 @@
     <string name="chrome_theme_amoled">Đen AMOLED</string>
     <string name="chrome_theme_system">Theo hệ thống</string>
     <string name="chrome_enter_positive_line">Hãy nhập số dòng lớn hơn 0.</string>
+    <string name="chrome_file_prefix">Tệp:</string>
 </resources>
