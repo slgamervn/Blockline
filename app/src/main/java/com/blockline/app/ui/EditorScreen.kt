@@ -57,6 +57,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,6 +128,13 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val path = vm.activeFile
     val tokens = editorTokens(vm.themeMode, systemDark = isSystemInDarkTheme())
+    val clickSound = remember(context, vm.clickSoundsEnabled) {
+        if (vm.clickSoundsEnabled) runCatching { PixelClickSound(context) }.getOrNull() else null
+    }
+    DisposableEffect(clickSound) {
+        onDispose { clickSound?.close() }
+    }
+    val playClickSound = { if (vm.clickSoundsEnabled) clickSound?.play() }
     val wideLayout = LocalConfiguration.current.screenWidthDp >= 600
     val keyboardController = LocalSoftwareKeyboardController.current
     var sidebarOpen by remember { mutableStateOf(false) }
@@ -422,7 +430,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     },
                     onFind = { showFind = true },
                     onHideKeyboard = { keyboardController?.hide() },
-                    tokens = tokens
+                    tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound
                 )
                 val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
                 val beforeCursor = editorValue.text.substring(0, cursor)
@@ -475,7 +485,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 onExplorer = { sidebarOpen = !sidebarOpen },
                 onSearch = { showFind = true },
                 onSettings = { showQuickSettings = true },
-                tokens = tokens
+                tokens = tokens,
+                gameEffectsEnabled = vm.gameEffectsEnabled,
+                onClickSound = playClickSound
             )
             AnimatedVisibility(
                 visible = wideLayout || sidebarOpen,
@@ -487,6 +499,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     items = indexedFiles,
                     selectedPath = path,
                     tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound,
                     onSelect = { selectedPath ->
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
                             vm.updateContent(editorValue.text)
