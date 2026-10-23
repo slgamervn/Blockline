@@ -4,9 +4,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.blockline.app.R
 
 enum class Lang { JSON, JS, MCFUNC, LANG }
 
@@ -23,28 +27,104 @@ class Palette(
     val identifier: Color = Color(0xFFE6EDF3)
 )
 
-private val minecraftColorCodeRegex = Regex("§([0-9a-fA-F])")
-private val minecraftColors = mapOf(
-    '0' to Color(0xFF000000), '1' to Color(0xFF0000AA),
-    '2' to Color(0xFF00AA00), '3' to Color(0xFF00AAAA),
-    '4' to Color(0xFFAA0000), '5' to Color(0xFFAA00AA),
-    '6' to Color(0xFFFFAA00), '7' to Color(0xFFAAAAAA),
-    '8' to Color(0xFF555555), '9' to Color(0xFF5555FF),
-    'a' to Color(0xFF55FF55), 'b' to Color(0xFF55FFFF),
-    'c' to Color(0xFFFF5555), 'd' to Color(0xFFFF55FF),
-    'e' to Color(0xFFFFFF55), 'f' to Color(0xFFFFFFFF)
+private val minecraftColorCodeRegex = Regex("§([0-9a-fA-Fk-orK-OR])")
+
+data class MinecraftColorToken(val code: Char, val labelRes: Int, val color: Color)
+
+data class MinecraftFormatToken(val code: Char, val labelRes: Int)
+
+val minecraftColorPalette = listOf(
+    MinecraftColorToken('0', R.string.mc_color_black, Color(0xFF000000)),
+    MinecraftColorToken('1', R.string.mc_color_dark_blue, Color(0xFF0000AA)),
+    MinecraftColorToken('2', R.string.mc_color_dark_green, Color(0xFF00AA00)),
+    MinecraftColorToken('3', R.string.mc_color_dark_aqua, Color(0xFF00AAAA)),
+    MinecraftColorToken('4', R.string.mc_color_dark_red, Color(0xFFAA0000)),
+    MinecraftColorToken('5', R.string.mc_color_dark_purple, Color(0xFFAA00AA)),
+    MinecraftColorToken('6', R.string.mc_color_gold, Color(0xFFFFAA00)),
+    MinecraftColorToken('7', R.string.mc_color_gray, Color(0xFFAAAAAA)),
+    MinecraftColorToken('8', R.string.mc_color_dark_gray, Color(0xFF555555)),
+    MinecraftColorToken('9', R.string.mc_color_blue, Color(0xFF5555FF)),
+    MinecraftColorToken('a', R.string.mc_color_green, Color(0xFF55FF55)),
+    MinecraftColorToken('b', R.string.mc_color_aqua, Color(0xFF55FFFF)),
+    MinecraftColorToken('c', R.string.mc_color_red, Color(0xFFFF5555)),
+    MinecraftColorToken('d', R.string.mc_color_light_purple, Color(0xFFFF55FF)),
+    MinecraftColorToken('e', R.string.mc_color_yellow, Color(0xFFFFFF55)),
+    MinecraftColorToken('f', R.string.mc_color_white, Color(0xFFFFFFFF))
 )
 
-private fun AnnotatedString.Builder.addMinecraftColorSpans(value: String, absoluteStart: Int) {
+val minecraftFormatPalette = listOf(
+    MinecraftFormatToken('k', R.string.mc_style_obfuscated),
+    MinecraftFormatToken('l', R.string.mc_style_bold),
+    MinecraftFormatToken('m', R.string.mc_style_strikethrough),
+    MinecraftFormatToken('n', R.string.mc_style_underline),
+    MinecraftFormatToken('o', R.string.mc_style_italic),
+    MinecraftFormatToken('r', R.string.mc_style_reset)
+)
+
+private val minecraftColors = minecraftColorPalette.associate { it.code to it.color }
+
+private fun AnnotatedString.Builder.addMinecraftFormattingSpans(
+    value: String,
+    absoluteStart: Int,
+    baseColor: Color
+) {
     val codes = minecraftColorCodeRegex.findAll(value).toList()
     if (codes.isEmpty()) return
-    codes.forEachIndexed { index, match ->
-        val code = match.groupValues[1].lowercase().first()
-        val spanStart = absoluteStart + match.range.first
-        val spanEnd = absoluteStart + (codes.getOrNull(index + 1)?.range?.first ?: value.length)
-        val color = minecraftColors[code] ?: return@forEachIndexed
-        if (spanStart < spanEnd) addStyle(SpanStyle(color = color), spanStart, spanEnd)
+    var color = baseColor
+    var bold = false
+    var italic = false
+    var strike = false
+    var underline = false
+    var segmentStart = 0
+
+    fun addCurrentStyle(start: Int, end: Int) {
+        if (start >= end) return
+        addStyle(
+            SpanStyle(
+                color = color,
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
+                textDecoration = when {
+                    strike && underline -> TextDecoration.combine(
+                        listOf(TextDecoration.LineThrough, TextDecoration.Underline)
+                    )
+                    strike -> TextDecoration.LineThrough
+                    underline -> TextDecoration.Underline
+                    else -> TextDecoration.None
+                }
+            ),
+            absoluteStart + start,
+            absoluteStart + end
+        )
     }
+
+    for (match in codes) {
+        addCurrentStyle(segmentStart, match.range.first)
+        val code = match.groupValues[1].lowercase().first()
+        when {
+            minecraftColors.containsKey(code) -> {
+                color = minecraftColors.getValue(code)
+                bold = false
+                italic = false
+                strike = false
+                underline = false
+            }
+            code == 'r' -> {
+                color = baseColor
+                bold = false
+                italic = false
+                strike = false
+                underline = false
+            }
+            code == 'l' -> bold = true
+            code == 'o' -> italic = true
+            code == 'm' -> strike = true
+            code == 'n' -> underline = true
+            // §k changes glyph rendering in Minecraft itself; preserve its code in the editor.
+        }
+        segmentStart = match.range.first
+    }
+    addCurrentStyle(segmentStart, value.length)
 }
 
 private val jsonRx = Regex(
@@ -136,7 +216,11 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
         val isQuotedString = t.length >= 2 && (t.first() == '"' || t.first() == '\'' || t.first() == '`')
         val isJsonKey = lang == Lang.JSON && t.startsWith('"') && isKey(src, m.range.last + 1)
         if (isQuotedString && !isJsonKey) {
-            addMinecraftColorSpans(t.substring(1, t.length - 1), m.range.first + 1)
+            addMinecraftFormattingSpans(
+                t.substring(1, t.length - 1),
+                m.range.first + 1,
+                p.string
+            )
         }
     }
     if ((lang == Lang.JSON || lang == Lang.LANG) && errorOffset != null && src.isNotEmpty()) {
