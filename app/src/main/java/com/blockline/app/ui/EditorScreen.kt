@@ -14,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,6 +80,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
@@ -129,18 +133,29 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showCommandPalette by remember { mutableStateOf(false) }
     var commandQuery by remember { mutableStateOf("") }
     var showQuickSettings by remember { mutableStateOf(false) }
+    var showGoToLine by remember { mutableStateOf(false) }
+    var goToLineText by remember { mutableStateOf("1") }
     val projectId = vm.current?.id.orEmpty()
-    val indexedFiles = remember(projectId, vm.projectEntries[projectId]) {
-        vm.projectEntries[projectId].orEmpty()
-            .asSequence()
-            .filter { it.isFile }
-            .map { vm.repo.relative(projectId, it) }
-            .sorted()
-            .toList()
+    var indexedFiles by remember(projectId) { mutableStateOf<List<String>>(emptyList()) }
+    var commandCandidates by remember { mutableStateOf(listOf("Go to File", "Go to Line", "Find", "Format Document", "Save")) }
+    LaunchedEffect(projectId, vm.projectEntries[projectId]) {
+        val sourceFiles = vm.projectEntries[projectId].orEmpty()
+        val mapped = withContext(Dispatchers.Default) {
+            sourceFiles.asSequence()
+                .filter { it.isFile }
+                .map { vm.repo.relative(projectId, it) }
+                .sorted()
+                .toList()
+        }
+        if (projectId == vm.current?.id.orEmpty()) indexedFiles = mapped
     }
-    val commandCandidates = remember(indexedFiles, vm.openTabs.keys.toList()) {
-        listOf("Go to File", "Go to Line", "Find", "Format Document", "Save") +
-            indexedFiles.map { "File: $it" }
+    LaunchedEffect(indexedFiles, vm.openTabs.keys.toList()) {
+        val openTabs = vm.openTabs.keys.toList()
+        commandCandidates = withContext(Dispatchers.Default) {
+            listOf("Go to File", "Go to Line", "Find", "Format Document", "Save") +
+                indexedFiles.map { "File: $it" } +
+                openTabs.filter { it !in indexedFiles }.map { "File: $it" }
+        }
     }
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
@@ -426,6 +441,25 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     ) { pad ->
         Row(Modifier.padding(pad).fillMaxSize().background(tokens.editorBackground)) {
+            if (!wideLayout) {
+                Box(
+                    Modifier.width(10.dp).fillMaxSize().pointerInput(sidebarOpen) {
+                        var dragDistance = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { dragDistance = 0f },
+                            onDragEnd = {
+                                if (dragDistance > 35f) sidebarOpen = true
+                                if (dragDistance < -35f) sidebarOpen = false
+                                dragDistance = 0f
+                            },
+                            onHorizontalDrag = { change, delta ->
+                                dragDistance += delta
+                                change.consume()
+                            }
+                        )
+                    }
+                )
+            }
             EditorActivityBar(
                 selected = when {
                     showQuickSettings -> "settings"
@@ -784,7 +818,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 showCommandPalette = false
                 when {
                     command == "Find" -> showFind = true
-                    command == "Go to Line" -> vm.pendingEditorLine = 1
+                    command == "Go to Line" -> {
+                        goToLineText = "1"
+                        showGoToLine = true
+                    }
                     command == "Format Document" -> {
                         if (!vm.readOnly && !vm.isOpeningFile && lang == Lang.JSON) {
                             val formatted = JsonTools.format(editorValue.text)
@@ -796,7 +833,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.saveCurrent()
                     }
-                    command == "Go to File" -> commandQuery = "File: "
+                    command == "Go to File" -> {
+                        commandQuery = "File: "
+                        showCommandPalette = true
+                    }
                     command.startsWith("File: ") -> {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.openFile(command.removePrefix("File: "))
@@ -805,6 +845,31 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         )
     }
+    if (showGoToLine) AlertDialog(
+        onDismissRequest = { showGoToLine = false },
+        title = { Text("Go to Line") },
+        text = {
+            OutlinedTextField(
+                value = goToLineText,
+                onValueChange = { goToLineText = it.filter(Char::isDigit).take(8) },
+                label = { Text("Line number") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val target = goToLineText.toIntOrNull()
+                if (target != null && target > 0) {
+                    vm.pendingEditorLine = target
+                    showGoToLine = false
+                } else {
+                    vm.message = "Enter a positive line number."
+                }
+            }) { Text("Go") }
+        },
+        dismissButton = { TextButton(onClick = { showGoToLine = false }) { Text("Cancel") } }
+    )
     if (showQuickSettings) AlertDialog(
         onDismissRequest = { showQuickSettings = false },
         title = { Text("Quick Settings") },
