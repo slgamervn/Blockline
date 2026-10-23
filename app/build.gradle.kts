@@ -41,7 +41,7 @@ android {
             buildConfigField("String", "UPDATE_CHANNEL", "\"stable\"")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
-        create("test") {
+        create("qa") {
             initWith(getByName("release"))
             applicationIdSuffix = ".test"
             signingConfig = signingConfigs.getByName("release")
