@@ -40,4 +40,33 @@ class AppUpdateRepositoryTest {
         assertFalse(AppUpdateRepository.isValidVersion("1.2.3-01"))
         assertFalse(AppUpdateRepository.isValidVersion("1.2.3-alpha..1"))
     }
+
+    @Test
+    fun testChannelUsesItsOwnEndpointAndFiltersOnlyTestPrereleases() {
+        assertTrue(AppUpdateRepository.endpointForChannel("test").contains("/releases?per_page="))
+        assertTrue(AppUpdateRepository.endpointForChannel("stable").endsWith("/releases/latest"))
+        assertTrue(AppUpdateRepository.isTestRelease("v0.1.101-test", prerelease = true, draft = false))
+        assertFalse(AppUpdateRepository.isTestRelease("v0.1.101", prerelease = false, draft = false))
+        assertFalse(AppUpdateRepository.isTestRelease("v0.1.101-beta", prerelease = true, draft = false))
+        assertFalse(AppUpdateRepository.isTestRelease("v0.1.101-test", prerelease = true, draft = true))
+    }
+
+    @Test
+    fun selectsNewestTestPrereleaseWithoutMixingStableRelease() {
+        val releases = """[
+            {"tag_name":"v0.1.109-test","name":"Blockline Test 109","draft":false,"prerelease":true},
+            {"tag_name":"v0.1.999","name":"Blockline Stable","draft":false,"prerelease":false},
+            {"tag_name":"v0.1.110-test","name":"Blockline Test 110","draft":false,"prerelease":true},
+            {"tag_name":"v0.1.111-test","name":"Draft test build","draft":true,"prerelease":true},
+            {"tag_name":"v0.1.120-beta","name":"Other prerelease","draft":false,"prerelease":true}
+        ]"""
+        val release = AppUpdateRepository.selectReleaseForChannel(releases, "test")
+        assertEquals("v0.1.110-test", release?.optString("tag_name"))
+        val stable = AppUpdateRepository.selectReleaseForChannel(
+            """{"tag_name":"v0.1.999","draft":false,"prerelease":false}""",
+            "stable"
+        )
+        assertEquals("v0.1.999", stable?.optString("tag_name"))
+    }
+
 }
