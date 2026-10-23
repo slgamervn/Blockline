@@ -68,6 +68,8 @@ fun EditorActivityBar(
     onSearch: () -> Unit,
     onSettings: () -> Unit,
     tokens: EditorTokens,
+    gameEffectsEnabled: Boolean = true,
+    onClickSound: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -76,10 +78,10 @@ fun EditorActivityBar(
             .border(1.dp, tokens.divider, RectangleShape),
         verticalArrangement = Arrangement.Top
     ) {
-        ActivityBarButton(stringResource(R.string.chrome_explorer), Icons.Default.FolderOpen, selected == "explorer", onExplorer, tokens)
-        ActivityBarButton(stringResource(R.string.chrome_search), Icons.Default.Search, selected == "search", onSearch, tokens)
+        ActivityBarButton(stringResource(R.string.chrome_explorer), Icons.Default.FolderOpen, selected == "explorer", { onClickSound(); onExplorer() }, tokens)
+        ActivityBarButton(stringResource(R.string.chrome_search), Icons.Default.Search, selected == "search", { onClickSound(); onSearch() }, tokens)
         Spacer(Modifier.weight(1f))
-        ActivityBarButton(stringResource(R.string.chrome_quick_settings), Icons.Default.Settings, selected == "settings", onSettings, tokens)
+        ActivityBarButton(stringResource(R.string.chrome_quick_settings), Icons.Default.Settings, selected == "settings", { onClickSound(); onSettings() }, tokens)
     }
 }
 
@@ -113,6 +115,8 @@ fun EditorSidebar(
     selectedPath: String?,
     tokens: EditorTokens,
     onSelect: (String) -> Unit,
+    gameEffectsEnabled: Boolean = true,
+    onClickSound: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -133,7 +137,11 @@ fun EditorSidebar(
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 40.dp)
                         .background(if (active) tokens.selection else Color.Transparent)
-                        .clickable { onSelect(path) }
+                        .then(
+                            if (active && gameEffectsEnabled) Modifier.border(1.dp, tokens.statusBar, RectangleShape)
+                            else Modifier
+                        )
+                        .clickable { onClickSound(); onSelect(path) }
                         .padding(horizontal = 9.dp, vertical = 8.dp)
                         .semantics { contentDescription = path },
                     verticalAlignment = Alignment.CenterVertically,
@@ -234,7 +242,9 @@ fun EditorShortcutBar(
     onSave: () -> Unit,
     onFind: () -> Unit,
     onHideKeyboard: () -> Unit,
-    tokens: EditorTokens
+    tokens: EditorTokens,
+    gameEffectsEnabled: Boolean = true,
+    onClickSound: () -> Unit = {}
 ) {
     val keys = listOf("Tab", "{", "}", "[", "]", "(", ")", "\"", ":", ";", ",", "§")
     Row(
@@ -244,16 +254,16 @@ fun EditorShortcutBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         keys.forEach { key ->
-            PixelKey(key, enabled, tokens) {
+            PixelKey(key, enabled, tokens, gameEffectsEnabled = gameEffectsEnabled, onClickSound = onClickSound) {
                 onInsert(if (key == "Tab") "    " else key)
             }
         }
-        PixelKey("↶", enabled, tokens, "Undo") { onUndo() }
-        PixelKey("↷", enabled, tokens, "Redo") { onRedo() }
-        PixelKey("FMT", enabled, tokens, "Format") { onFormat() }
-        PixelKey("SAVE", enabled, tokens, "Save") { onSave() }
-        PixelKey("FIND", true, tokens, "Find") { onFind() }
-        PixelKey("⌄", true, tokens, "Hide keyboard") { onHideKeyboard() }
+        PixelKey("↶", enabled, tokens, "Undo", gameEffectsEnabled, onClickSound) { onUndo() }
+        PixelKey("↷", enabled, tokens, "Redo", gameEffectsEnabled, onClickSound) { onRedo() }
+        PixelKey("FMT", enabled, tokens, "Format", gameEffectsEnabled, onClickSound) { onFormat() }
+        PixelKey("SAVE", enabled, tokens, "Save", gameEffectsEnabled, onClickSound) { onSave() }
+        PixelKey("FIND", true, tokens, "Find", gameEffectsEnabled, onClickSound) { onFind() }
+        PixelKey("⌄", true, tokens, "Hide keyboard", gameEffectsEnabled, onClickSound) { onHideKeyboard() }
     }
 }
 
@@ -263,14 +273,21 @@ private fun RowScope.PixelKey(
     enabled: Boolean,
     tokens: EditorTokens,
     description: String = text,
+    gameEffectsEnabled: Boolean = true,
+    onClickSound: () -> Unit = {},
     onClick: () -> Unit
 ) {
+    val borderModifier = if (gameEffectsEnabled) {
+        Modifier.border(1.dp, tokens.inventoryLight, RectangleShape)
+            .border(2.dp, tokens.inventoryDark, RectangleShape)
+    } else {
+        Modifier.border(1.dp, tokens.divider, RectangleShape)
+    }
     Surface(
         modifier = Modifier.heightIn(min = 48.dp).width(if (text.length > 4) 56.dp else 48.dp)
-            .border(1.dp, tokens.inventoryLight, RectangleShape)
-            .border(2.dp, tokens.inventoryDark, RectangleShape)
+            .then(borderModifier)
             .clip(RectangleShape)
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(enabled = enabled, onClick = { onClickSound(); onClick() })
             .semantics { contentDescription = description },
         color = if (enabled) tokens.tabInactive else tokens.sidebarBackground,
         shape = RectangleShape
