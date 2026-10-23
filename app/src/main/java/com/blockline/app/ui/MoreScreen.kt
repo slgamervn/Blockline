@@ -100,7 +100,11 @@ fun MoreScreen(vm: AppViewModel) {
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.updates_title), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.updates_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(if (BuildConfig.UPDATE_CHANNEL == "test") R.string.updates_hint_test else R.string.updates_hint),
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                )
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.auto_check_updates), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
@@ -136,6 +140,60 @@ fun MoreScreen(vm: AppViewModel) {
                             Button(onClick = { vm.openUpdateReleasePage(context) }) { Text(stringResource(R.string.update_now)) }
                         }
                     }
+                }
+                androidx.compose.material3.HorizontalDivider()
+                Text(stringResource(R.string.latest_changelog), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                val changelog = vm.latestReleaseInfo
+                if (changelog == null) {
+                    Text(stringResource(R.string.release_notes_empty), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                } else {
+                    Text(changelog.releaseName, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                    if (changelog.releaseNotes.isNotBlank()) {
+                        Text(
+                            changelog.releaseNotes.take(4_000),
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        Text(stringResource(R.string.update_no_notes), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    TextButton(onClick = { vm.openReleasePage(context, changelog) }) {
+                        Text(stringResource(R.string.view_release_notes))
+                    }
+                }
+            }
+        }
+        }
+        item {
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.app_language_title), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.app_language_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.appLanguage == "en",
+                        onClick = {
+                            vm.setAppLanguage("en")
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        label = { Text(stringResource(R.string.language_english)) }
+                    )
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.appLanguage == "vi",
+                        onClick = {
+                            vm.setAppLanguage("vi")
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        label = { Text(stringResource(R.string.language_vietnamese)) }
+                    )
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.appLanguage == "system",
+                        onClick = {
+                            vm.setAppLanguage("system")
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        label = { Text(stringResource(R.string.language_system)) }
+                    )
                 }
             }
         }
