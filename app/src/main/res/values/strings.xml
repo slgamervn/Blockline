@@ -563,4 +563,9 @@
     <string name="release_notes_empty">No saved release notes yet. Check for updates while connected to the internet.</string>
     <string name="view_release_notes">View release details</string>
 
+
+    <string name="html_preview_title">HTML preview</string>
+    <string name="import_text_file_cd">Import text file</string>
+    <string name="favorite_cd">Favorite</string>
+
 </resources>
