@@ -35,6 +35,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +51,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.EditorTokens
 
 @Composable
@@ -249,6 +257,17 @@ fun EditorCommandPalette(
     onSelect: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var matches by remember(candidates) { mutableStateOf(emptyList<String>()) }
+    LaunchedEffect(query, candidates) {
+        delay(80)
+        val requested = query
+        matches = withContext(Dispatchers.Default) {
+            candidates.asSequence()
+                .filter { it.contains(requested, ignoreCase = true) }
+                .take(40)
+                .toList()
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Command Palette", fontFamily = FontFamily.Monospace) },
@@ -262,7 +281,7 @@ fun EditorCommandPalette(
                     modifier = Modifier.fillMaxWidth()
                 )
                 LazyColumn(Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
-                    items(candidates.filter { it.contains(query, ignoreCase = true) }.take(40), key = { it }) { candidate ->
+                    items(matches, key = { it }) { candidate ->
                         Text(
                             candidate,
                             Modifier.fillMaxWidth().heightIn(min = 44.dp)
