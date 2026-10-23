@@ -607,7 +607,7 @@
     <string name="chrome_recent_projects">Dự án gần đây</string>
     <string name="chrome_open_addon">Mở tệp add-on</string>
     <string name="minecraft_palette_title">Bảng màu Minecraft</string>
-    <string name="minecraft_palette_hint">Chạm vào ô màu để chèn mã § tại con trỏ. Màu chữ sẽ cập nhật trong trình soạn thảo.</string>
+    <string name="minecraft_palette_hint">Đặt con trỏ bên trong chuỗi chữ rồi chạm ô màu để chèn mã §. Màu chữ sẽ tự cập nhật.</string>
     <string name="minecraft_format_styles">Kiểu định dạng</string>
     <string name="chrome_hide_keyboard">Ẩn bàn phím</string>
     <string name="mc_color_black">Đen</string>
