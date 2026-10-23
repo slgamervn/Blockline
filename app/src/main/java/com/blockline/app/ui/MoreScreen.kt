@@ -153,8 +153,9 @@ fun MoreScreen(vm: AppViewModel) {
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text(stringResource(R.string.dark)) })
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text(stringResource(R.string.light)) })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text("Dark+") })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text("Light+") })
+                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.AMOLED, onClick = { vm.themeMode = ThemeMode.AMOLED }, label = { Text("AMOLED") })
                     androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.SYSTEM, onClick = { vm.themeMode = ThemeMode.SYSTEM }, label = { Text(stringResource(R.string.system)) })
                 }
             }
