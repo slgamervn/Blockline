@@ -497,7 +497,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     }
     if (showHtmlPreview) AlertDialog(
         onDismissRequest = { showHtmlPreview = false },
-        title = { Text("Xem trước HTML") },
+        title = { Text(stringResource(R.string.html_preview_title)) },
         text = {
             AndroidView(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 320.dp, max = 560.dp),
