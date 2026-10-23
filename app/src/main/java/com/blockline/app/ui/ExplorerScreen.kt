@@ -52,6 +52,8 @@ import com.blockline.app.AppViewModel
 import com.blockline.app.R
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 private data class IndexedExplorerEntry(
@@ -81,15 +83,28 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             emptyList()
         } else {
             withContext(Dispatchers.Default) {
-                allEntries.map { file ->
-                    val path = vm.repo.relative(projectId, file)
-                    val segments = path.split('/')
-                    IndexedExplorerEntry(
-                        file = file,
-                        path = path,
-                        ancestors = (1 until segments.size).map { segments.take(it).joinToString("/") },
-                        depth = path.count { it == '/' }
-                    )
+                val context = currentCoroutineContext()
+                buildList {
+                    allEntries.forEachIndexed { index, file ->
+                        if (index % 128 == 0) context.ensureActive()
+                        val path = vm.repo.relative(projectId, file)
+                        val segments = path.split('/')
+                        val ancestors = ArrayList<String>((segments.size - 1).coerceAtLeast(0))
+                        var ancestor = ""
+                        for (segmentIndex in 0 until segments.lastIndex) {
+                            ancestor = if (ancestor.isEmpty()) segments[segmentIndex]
+                            else "$ancestor/${segments[segmentIndex]}"
+                            ancestors += ancestor
+                        }
+                        add(
+                            IndexedExplorerEntry(
+                                file = file,
+                                path = path,
+                                ancestors = ancestors,
+                                depth = ancestors.size
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -102,19 +117,28 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             emptyList()
         } else {
             withContext(Dispatchers.Default) {
-                val filtered = indexedEntries.filter { entry ->
-                    when (filter) {
+                val context = currentCoroutineContext()
+                val filtered = ArrayList<IndexedExplorerEntry>()
+                indexedEntries.forEachIndexed { index, entry ->
+                    if (index % 128 == 0) context.ensureActive()
+                    val include = when (filter) {
                         "Favorites" -> entry.file.isFile && vm.repo.isFavorite(projectId, entry.path)
                         "Recent" -> entry.file.isFile && entry.path in recentPaths
                         else -> true
                     }
+                    if (include) filtered += entry
                 }
                 val ordered = if (filter == "Recent") {
                     val recentOrder = recentPaths.withIndex().associate { it.value to it.index }
                     filtered.sortedBy { entry -> recentOrder[entry.path] ?: Int.MAX_VALUE }
                 } else filtered
                 if (filter != "All") ordered
-                else ordered.filter { entry -> entry.ancestors.all { it in expanded } }
+                else buildList {
+                    ordered.forEachIndexed { index, entry ->
+                        if (index % 128 == 0) context.ensureActive()
+                        if (entry.ancestors.all { it in expanded }) add(entry)
+                    }
+                }
             }
         }
     }
