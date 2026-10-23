@@ -78,6 +78,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var isIndexingProjectFiles by mutableStateOf(false)
         private set
     var message by mutableStateOf<String?>(null)
+    var advancementEvent by mutableStateOf(0)
+        private set
+    var advancementEventIsCreation by mutableStateOf(false)
+        private set
+
+    private fun postAdvancement(isCreation: Boolean) {
+        advancementEventIsCreation = isCreation
+        advancementEvent++
+    }
+
     private val settingsPreferences = app.getSharedPreferences("blockline_settings", Application.MODE_PRIVATE)
     private val updateRepository = AppUpdateRepository()
     private val themeState = mutableStateOf(
@@ -88,6 +98,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         set(value) {
             themeState.value = value
             settingsPreferences.edit().putString("theme_mode", value.name).apply()
+        }
+
+    private val gameEffectsState = mutableStateOf(settingsPreferences.getBoolean("game_effects_enabled", true))
+    var gameEffectsEnabled: Boolean
+        get() = gameEffectsState.value
+        set(value) {
+            gameEffectsState.value = value
+            settingsPreferences.edit().putBoolean("game_effects_enabled", value).apply()
+        }
+
+    private val clickSoundsState = mutableStateOf(settingsPreferences.getBoolean("click_sounds_enabled", false))
+    var clickSoundsEnabled: Boolean
+        get() = clickSoundsState.value
+        set(value) {
+            clickSoundsState.value = value
+            settingsPreferences.edit().putBoolean("click_sounds_enabled", value).apply()
         }
     var appLanguage by mutableStateOf(settingsPreferences.getString("app_language", "system") ?: "system")
         private set
@@ -148,6 +174,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var updateCheckRequestId = 0
     var activeFile by mutableStateOf<String?>(null)
         private set
+    private val persistedEditorContents = mutableStateMapOf<String, String>()
+    val activeFilePersistedContent: String?
+        get() = current?.id?.let { projectId ->
+            activeFile?.let { path -> persistedEditorContents[editorSaveKey(projectId, path)] }
+        }
+
+    private fun editorSaveKey(projectId: String, path: String): String = "$projectId::$path"
     var generatedFileToOpen by mutableStateOf<String?>(null)
         private set
     var content by mutableStateOf("")
@@ -986,6 +1019,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 openTabs[path] = opened.text
                 if (buffered == null) {
                     editorHistory.reset(path)
+                    persistedEditorContents[editorSaveKey(project.id, path)] = opened.text
                 }
                 pendingEditorLine = line?.coerceAtLeast(1)
             }.onFailure {
@@ -1033,7 +1067,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             } catch (error: Exception) {
                 Result.failure(error)
             }
-            if (result.isFailure && current?.id == projectId && activeFile == path) {
+            if (result.isSuccess) {
+                persistedEditorContents[editorSaveKey(projectId, path)] = value
+            } else if (current?.id == projectId && activeFile == path) {
                 message = result.exceptionOrNull()?.message ?: text(R.string.save_failed)
             }
         }
@@ -1066,14 +1102,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 message = error.message ?: text(R.string.save_failed)
                 return false
             }
+            persistedEditorContents[editorSaveKey(project.id, path)] = snapshot
             val latest = when {
                 current?.id != project.id -> null
                 activeFile == path -> content
                 else -> openTabs[path]
             }
             if (latest == null || latest == snapshot) {
-                if (showMessage && current?.id == project.id && activeFile == path) {
-                    message = text(R.string.saved_path, path)
+                if (current?.id == project.id && activeFile == path) {
+                    if (showMessage) {
+                        message = text(R.string.saved_path, path)
+                        postAdvancement(isCreation = false)
+                    }
                 }
                 return true
             }
@@ -1153,6 +1193,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             result.onSuccess {
                 refreshProjectEntries(project.id)
                 generatedFileToOpen = path
+                postAdvancement(isCreation = true)
                 message = text(R.string.generated_manifest_created, path)
             }.onFailure { message = it.message ?: text(R.string.create_failed) }
         }
@@ -1177,6 +1218,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             isFileOperationRunning = false
             result.onSuccess {
                 refreshProjectEntries(p.id)
+                postAdvancement(isCreation = true)
                 message = if (directory) text(R.string.folder_created) else text(R.string.file_created)
             }.onFailure { message = it.message ?: text(R.string.create_failed) }
         }

@@ -13,12 +13,17 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +46,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -52,13 +58,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -88,25 +95,48 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
+import com.blockline.app.ui.theme.editorTokens
+import androidx.compose.ui.graphics.RectangleShape
 import java.io.OutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
     val animationsEnabled = rememberSystemAnimationsEnabled()
+    val context = LocalContext.current
+    val tokens = editorTokens(vm.themeMode, systemDark = isSystemInDarkTheme())
+    val clickSound = remember(context, vm.clickSoundsEnabled) {
+        if (vm.clickSoundsEnabled) runCatching { PixelClickSound(context) }.getOrNull() else null
+    }
+    DisposableEffect(clickSound) {
+        onDispose { clickSound?.close() }
+    }
+    val playClickSound = { if (vm.clickSoundsEnabled) clickSound?.play() }
     var actionProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameProject by remember { mutableStateOf<com.blockline.app.data.Project?>(null) }
     var renameValue by remember { mutableStateOf("") }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let(vm::importPack) }
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }, actions = {
-        IconButton(onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, stringResource(R.string.import_pack_cd)) }
+        IconButton(onClick = { playClickSound(); importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }) { Icon(Icons.Default.Add, stringResource(R.string.import_pack_cd)) }
     }) }, floatingActionButton = {
-        FloatingActionButton(onClick = { vm.createSample(onOpen) }) { Icon(Icons.Default.Add, stringResource(R.string.create_sample_cd)) }
+        PixelActionButton(
+            label = stringResource(R.string.create_sample_cd),
+            tokens = tokens,
+            gameEffectsEnabled = vm.gameEffectsEnabled,
+            onClickSound = playClickSound,
+            onClick = { vm.createSample(onOpen) }
+        )
     }) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().padding(horizontal = 16.dp)) {
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column { Text(stringResource(R.string.nav_projects), style = androidx.compose.material3.MaterialTheme.typography.headlineSmall); Text(stringResource(R.string.projects_subtitle)) }
-                Button(onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text(stringResource(R.string.import_pack)) }
+                PixelActionButton(
+                    label = stringResource(R.string.import_pack),
+                    tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound,
+                    onClick = { importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }
+                )
             }
             if (animationsEnabled) {
                 AnimatedVisibility(
@@ -124,15 +154,67 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                     textAlign = TextAlign.Center
                 )
             }
-            if (vm.projects.isEmpty()) EmptyState(Icons.Default.FolderOpen, stringResource(R.string.no_projects), stringResource(R.string.no_projects_hint), Modifier.weight(1f))
-            else LazyColumn(Modifier.weight(1f)) {
+            if (vm.projects.isEmpty()) {
+                Column(
+                    Modifier.weight(1f).fillMaxWidth().padding(horizontal = 12.dp, vertical = 18.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(88.dp)
+                            .border(1.dp, tokens.inventoryLight, RectangleShape)
+                            .border(2.dp, tokens.inventoryDark, RectangleShape),
+                        color = tokens.tabInactive,
+                        shape = RectangleShape
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.FolderOpen, contentDescription = null, tint = tokens.gameGreen, modifier = Modifier.size(44.dp))
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.no_projects),
+                        modifier = Modifier.padding(top = 18.dp),
+                        color = tokens.foreground,
+                        style = androidx.compose.material3.MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        stringResource(R.string.no_projects_hint),
+                        modifier = Modifier.padding(top = 8.dp, bottom = 18.dp),
+                        color = tokens.muted,
+                        textAlign = TextAlign.Center
+                    )
+                    PixelActionButton(
+                        label = stringResource(R.string.chrome_open_addon),
+                        tokens = tokens,
+                        gameEffectsEnabled = vm.gameEffectsEnabled,
+                        onClickSound = playClickSound,
+                        modifier = Modifier.fillMaxWidth(.88f),
+                        onClick = { importer.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "*/*")) }
+                    )
+                }
+            } else {
+                Text(
+                    stringResource(R.string.chrome_recent_projects),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+                    color = tokens.muted,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge
+                )
+                LazyColumn(Modifier.weight(1f)) {
                 items(
                     items = vm.projects,
                     key = { it.id },
                     contentType = { "project" }
                 ) { p ->
                     var menu by remember(p.id) { mutableStateOf(false) }
-                    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+                    Card(
+                        Modifier.fillMaxWidth().padding(vertical = 5.dp)
+                            .then(
+                                if (vm.gameEffectsEnabled) Modifier
+                                    .border(1.dp, tokens.inventoryLight, RectangleShape)
+                                    .border(2.dp, tokens.inventoryDark, RectangleShape)
+                                else Modifier.border(1.dp, tokens.divider, RectangleShape)
+                            )
+                    ) {
                         ListItem(
                             headlineContent = { Text(p.name) },
                             supportingContent = {
@@ -154,6 +236,7 @@ fun ProjectsScreen(vm: AppViewModel, onOpen: () -> Unit) {
                             modifier = Modifier.clickable { vm.selectProject(p); onOpen() }
                         )
                     }
+                }
                 }
             }
         }

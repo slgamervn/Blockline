@@ -7,25 +7,43 @@ import android.view.Gravity
 import android.view.inputmethod.EditorInfo
 import android.text.InputType
 import android.widget.EditText
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FindInPage
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.filled.Redo
@@ -44,8 +62,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +78,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -67,9 +90,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
 import com.blockline.app.data.JsonTools
@@ -78,6 +104,8 @@ import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
 import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
+import com.blockline.app.ui.theme.EditorTokens
+import com.blockline.app.ui.theme.editorTokens
 
 private const val LARGE_FILE_PAGE_CHARS = 12_000
 private const val LIVE_TEXT_ANALYSIS_MAX_CHARS = 12_000
@@ -107,6 +135,55 @@ private fun largeFilePageOffsets(text: String): List<Int> {
 fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val path = vm.activeFile
+    val tokens = editorTokens(vm.themeMode, systemDark = isSystemInDarkTheme())
+    val clickSound = remember(context, vm.clickSoundsEnabled) {
+        if (vm.clickSoundsEnabled) runCatching { PixelClickSound(context) }.getOrNull() else null
+    }
+    DisposableEffect(clickSound) {
+        onDispose { clickSound?.close() }
+    }
+    val playClickSound = { if (vm.clickSoundsEnabled) clickSound?.play() }
+    val wideLayout = LocalConfiguration.current.screenWidthDp >= 600
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var sidebarOpen by remember { mutableStateOf(false) }
+    var showCommandPalette by remember { mutableStateOf(false) }
+    var commandQuery by remember { mutableStateOf("") }
+    var showQuickSettings by remember { mutableStateOf(false) }
+    var showGoToLine by remember { mutableStateOf(false) }
+    var showAdvancementToast by remember { mutableStateOf(false) }
+    var explorerFolder by remember { mutableStateOf("") }
+    var goToLineText by remember { mutableStateOf("1") }
+    val projectId = vm.current?.id.orEmpty()
+    val goToFileLabel = stringResource(R.string.chrome_go_to_file)
+    val goToLineLabel = stringResource(R.string.chrome_go_to_line)
+    val findCommandLabel = stringResource(R.string.chrome_find_command)
+    val formatCommandLabel = stringResource(R.string.chrome_format_document)
+    val saveCommandLabel = stringResource(R.string.chrome_save_command)
+    val filePrefix = stringResource(R.string.chrome_file_prefix)
+    var indexedFiles by remember(projectId) { mutableStateOf<List<String>>(emptyList()) }
+    var commandCandidates by remember { mutableStateOf(emptyList<String>()) }
+    LaunchedEffect(projectId, vm.projectEntries[projectId]) {
+        val sourceFiles = vm.projectEntries[projectId].orEmpty()
+        val mapped = withContext(Dispatchers.Default) {
+            sourceFiles.asSequence()
+                .filter { it.isFile }
+                .map { vm.repo.relative(projectId, it) }
+                .sorted()
+                .toList()
+        }
+        if (projectId == vm.current?.id.orEmpty()) indexedFiles = mapped
+    }
+    val explorerItems = remember(indexedFiles, explorerFolder) {
+        if (explorerFolder.isBlank()) indexedFiles
+        else indexedFiles.filter { it.startsWith("$explorerFolder/") }
+    }
+    LaunchedEffect(indexedFiles, vm.openTabs.keys.toList(), goToFileLabel, goToLineLabel, findCommandLabel, formatCommandLabel, saveCommandLabel, filePrefix) {
+        val openTabs = vm.openTabs.keys.toList()
+        commandCandidates = withContext(Dispatchers.Default) {
+            listOf(goToFileLabel, goToLineLabel, findCommandLabel, formatCommandLabel, saveCommandLabel) +
+                (indexedFiles + openTabs.filter { it !in indexedFiles }).map { "$filePrefix $it" }
+        }
+    }
     var findText by remember { mutableStateOf("") }
     var showFind by remember { mutableStateOf(false) }
     var showHtmlPreview by remember(path) { mutableStateOf(false) }
@@ -120,6 +197,13 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val completionEngine = remember(context) { runCatching { AddonCompletionEngine.load(context) }.getOrNull() }
     var completionItems by remember(path) { mutableStateOf<List<AddonCompletionEngine.Suggestion>>(emptyList()) }
     var completionRange by remember(path) { mutableStateOf(0 to 0) }
+    LaunchedEffect(vm.advancementEvent) {
+        if (vm.advancementEvent > 0) {
+            showAdvancementToast = true
+            delay(2_000)
+            showAdvancementToast = false
+        }
+    }
     val largeOffsets = remember(vm.content, vm.readOnly) {
         if (vm.readOnly) largeFilePageOffsets(vm.content) else listOf(0)
     }
@@ -221,6 +305,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     }
+    val highlightedForCursor = remember(highlightedText, editorValue.text, editorValue.selection.start, tokens.currentLine) {
+        highlightedText
+            ?.takeIf { it.first == editorValue.text }
+            ?.let { highlightCurrentLine(editorValue.text, editorValue.selection.start, it.second, tokens.currentLine) }
+    }
     val jsonErrorOffset = remember(editorValue.text, syntaxIssue) {
         syntaxIssue?.line?.let { targetLine ->
             var currentLine = 1
@@ -240,19 +329,19 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         delay(120)
         val palette = Palette(
-            key = Color(0xFF82AAFF),
-            string = Color(0xFFA5D6A7),
-            number = Color(0xFFFFCB6B),
-            keyword = Color(0xFFC792EA),
-            comment = Color(0xFF7F8C98),
+            key = tokens.tokenKey,
+            string = tokens.tokenString,
+            number = tokens.tokenNumber,
+            keyword = tokens.tokenKeyword,
+            comment = tokens.tokenComment,
             errorBackground = if (
                 (lang == Lang.JSON || lang == Lang.LANG) &&
                 syntaxIssue?.severity == com.blockline.app.data.IssueSeverity.WARNING
-            ) Color(0x55E6B35A) else Color(0x55F44336),
-            boolean = Color(0xFFFF9E64),
-            function = Color(0xFF80CBC4),
-            property = Color(0xFF82AAFF),
-            identifier = Color(0xFFE6EDF3)
+            ) tokens.warningBackground else tokens.errorBackground,
+            boolean = tokens.tokenKeyword,
+            function = tokens.tokenFunction,
+            property = tokens.tokenKey,
+            identifier = tokens.foreground
         )
         val errorOffset = if (lang == Lang.JSON || lang == Lang.LANG) jsonErrorOffset else null
         val highlighted = withContext(Dispatchers.Default) {
@@ -292,8 +381,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
+            Column {
             TopAppBar(
-                title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = tokens.sidebarBackground),
+                title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall, color = tokens.muted) } },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
@@ -302,6 +393,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) }
                 },
                 actions = {
+                    IconButton(onClick = { commandQuery = ""; showCommandPalette = true }) {
+                        Icon(Icons.Default.Search, stringResource(R.string.chrome_command_palette))
+                    }
                     IconButton(onClick = {
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.undo()
@@ -329,48 +423,221 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
             )
+            AnimatedVisibility(
+                visible = showAdvancementToast && vm.gameEffectsEnabled,
+                enter = slideInVertically { -it } + fadeIn(),
+                exit = slideOutVertically { -it } + fadeOut()
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp)
+                        .border(1.dp, tokens.inventoryLight, RectangleShape)
+                        .border(2.dp, tokens.inventoryDark, RectangleShape),
+                    color = tokens.sidebarBackground,
+                    shape = RectangleShape
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("◆", color = tokens.gameGreen, style = MaterialTheme.typography.titleLarge)
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.chrome_advancement_title), color = tokens.gameGreen, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(if (vm.advancementEventIsCreation) R.string.chrome_created_file else R.string.chrome_saved_file),
+                                color = tokens.foreground,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+            }
         },
         bottomBar = {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                TextButton(onClick = {
-                    if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
-                    vm.undo()
-                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, null); Text(stringResource(R.string.undo)) }
-                TextButton(onClick = {
-                    if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
-                    vm.redo()
-                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, null); Text(stringResource(R.string.redo)) }
-                TextButton(onClick = {
-                    if (lang == Lang.JSON) {
-                        val next = JsonTools.format(editorValue.text)
-                        editorValue = TextFieldValue(next, TextRange(next.length))
-                        vm.updateContent(next)
-                    } else vm.message = context.getString(R.string.format_json_only)
-                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, null); Text(stringResource(R.string.format)) }
-                TextButton(onClick = {
-                    if (!vm.isOpeningFile && !vm.readOnly && editorValue.text != vm.content) vm.updateContent(editorValue.text)
-                    vm.saveCurrent()
-                }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, null); Text(stringResource(R.string.save)) }
-                TextButton(onClick = { showFind = true }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, null); Text(stringResource(R.string.find)) }
+            Column {
+                EditorShortcutBar(
+                    enabled = !vm.isOpeningFile && !vm.readOnly,
+                    onInsert = { insertion ->
+                        val source = editorValue.text
+                        val start = editorValue.selection.start.coerceIn(0, source.length)
+                        val end = editorValue.selection.end.coerceIn(start, source.length)
+                        val updated = source.replaceRange(start, end, insertion)
+                        editorValue = TextFieldValue(updated, TextRange(start + insertion.length))
+                        vm.updateContent(updated)
+                    },
+                    onUndo = {
+                        if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.undo()
+                    },
+                    onRedo = {
+                        if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.redo()
+                    },
+                    onFormat = {
+                        if (lang == Lang.JSON) {
+                            val next = JsonTools.format(editorValue.text)
+                            editorValue = TextFieldValue(next, TextRange(next.length))
+                            vm.updateContent(next)
+                        } else vm.message = context.getString(R.string.format_json_only)
+                    },
+                    onSave = {
+                        if (!vm.isOpeningFile && !vm.readOnly && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.saveCurrent()
+                    },
+                    onFind = { showFind = true },
+                    onHideKeyboard = { keyboardController?.hide() },
+                    tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound
+                )
+                val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
+                val beforeCursor = editorValue.text.substring(0, cursor)
+                val line = beforeCursor.count { it == '\n' } + 1
+                val column = cursor - (beforeCursor.lastIndexOf('\n') + 1) + 1
+                val languageLabel = when (lang) {
+                    Lang.JSON -> "JSON"
+                    Lang.JS -> "JavaScript"
+                    Lang.MCFUNC -> "mcfunction"
+                    Lang.LANG -> "Properties"
+                    null -> path?.substringAfterLast('.', "Plain Text")?.uppercase() ?: "Plain Text"
+                }
+                EditorStatusBar(
+                    line = line,
+                    column = column,
+                    language = languageLabel,
+                    saved = path == null || (editorValue.text == vm.activeFilePersistedContent && !vm.isOpeningFile),
+                    tokens = tokens
+                )
             }
         }
     ) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().padding(12.dp)) {
+        Box(Modifier.padding(pad).fillMaxSize().background(tokens.editorBackground)) {
+        Row(Modifier.fillMaxSize()) {
+            if (!wideLayout) {
+                Box(
+                    Modifier.width(10.dp).fillMaxSize().pointerInput(sidebarOpen) {
+                        var dragDistance = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { dragDistance = 0f },
+                            onDragEnd = {
+                                if (dragDistance > 35f) sidebarOpen = true
+                                if (dragDistance < -35f) sidebarOpen = false
+                                dragDistance = 0f
+                            },
+                            onHorizontalDrag = { change, delta ->
+                                dragDistance += delta
+                                change.consume()
+                            }
+                        )
+                    }
+                )
+            }
+            EditorActivityBar(
+                selected = when {
+                    showQuickSettings -> "settings"
+                    showFind -> "search"
+                    sidebarOpen || wideLayout -> "explorer"
+                    else -> ""
+                },
+                onExplorer = { sidebarOpen = !sidebarOpen },
+                onSearch = { showFind = true },
+                onSettings = { showQuickSettings = true },
+                tokens = tokens,
+                gameEffectsEnabled = vm.gameEffectsEnabled,
+                onClickSound = playClickSound
+            )
+            if (wideLayout) {
+                EditorSidebar(
+                    title = stringResource(R.string.chrome_explorer),
+                    items = explorerItems,
+                    selectedPath = path,
+                    tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound,
+                    onSelect = { selectedPath ->
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
+                            vm.updateContent(editorValue.text)
+                        }
+                        vm.openFile(selectedPath)
+                    }
+                )
+            }
+            Column(Modifier.weight(1f).fillMaxSize().padding(8.dp)) {
             if (vm.isOpeningFile) {
-                LinearProgressIndicator(Modifier.fillMaxWidth())
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = tokens.gameGreen,
+                    trackColor = tokens.divider
+                )
                 Text(stringResource(R.string.opening_file), style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
             }
             if (path == null) {
                 EmptyState(Icons.Default.ContentCopy, stringResource(R.string.no_file_open), stringResource(R.string.no_file_hint))
             } else {
+                if (path != null) {
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 32.dp)
+                            .background(tokens.editorBackground)
+                            .padding(horizontal = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(
+                            stringResource(R.string.chrome_project),
+                            modifier = Modifier.clickable {
+                                explorerFolder = ""
+                                sidebarOpen = true
+                            },
+                            color = tokens.muted,
+                            fontSize = 11.sp
+                        )
+                        path.split('/').forEachIndexed { index, segment ->
+                            Text("  ›  ", color = tokens.muted, fontSize = 11.sp)
+                            Text(
+                                segment,
+                                modifier = Modifier.clickable(enabled = index < path.split('/').lastIndex) {
+                                    explorerFolder = path.split('/').take(index + 1).joinToString("/")
+                                    sidebarOpen = true
+                                },
+                                color = if (index == path.split('/').lastIndex) tokens.foreground else tokens.muted,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
                 if (vm.openTabs.isNotEmpty()) {
-                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Start) {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                            .background(tokens.sidebarBackground)
+                            .border(1.dp, tokens.divider),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         vm.openTabs.keys.toList().forEach { tab ->
-                            TextButton(onClick = {
-                                if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
-                                vm.openFile(tab)
-                            }) { Text(tab.substringAfterLast('/'), maxLines = 1) }
-                            IconButton(onClick = { vm.closeTab(tab) }) { Icon(Icons.Default.Close, stringResource(R.string.close_tab)) }
+                            val selected = tab == path
+                            val dirty = selected && editorValue.text != vm.content
+                            Column(
+                                Modifier
+                                    .background(if (selected) tokens.tabSelected else tokens.tabInactive)
+                                    .clickable {
+                                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
+                                            vm.updateContent(editorValue.text)
+                                        }
+                                        vm.openFile(tab)
+                                    }
+                            ) {
+                                Box(Modifier.fillMaxWidth().height(2.dp).background(if (selected) tokens.statusBar else Color.Transparent))
+                                Row(Modifier.heightIn(min = 42.dp).padding(start = 11.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    if (dirty) Text("● ", color = tokens.gameGreen, fontSize = 11.sp)
+                                    Text(tab.substringAfterLast('/'), color = tokens.foreground, fontSize = 12.sp, maxLines = 1)
+                                    IconButton(onClick = { vm.closeTab(tab) }, modifier = Modifier.size(40.dp)) {
+                                        Icon(Icons.Default.Close, stringResource(R.string.close_tab), tint = tokens.muted, modifier = Modifier.size(17.dp))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -450,7 +717,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         Text(
                             pageText,
                             style = TextStyle(
-                                color = OnSurface,
+                                color = tokens.foreground,
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = vm.fontSize.sp,
                                 lineHeight = (vm.fontSize + 5).sp
@@ -458,7 +725,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         )
                     }
                 } else {
-                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                    Box(Modifier.weight(1f).fillMaxWidth().background(tokens.editorBackground)) {
                         if (editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
                             AndroidView(
                                 modifier = Modifier.fillMaxSize(),
@@ -466,7 +733,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     EditText(viewContext).apply {
                                         typeface = Typeface.MONOSPACE
                                         textSize = vm.fontSize.toFloat()
-                                        setTextColor(OnSurface.toArgb())
+                                        setTextColor(tokens.foreground.toArgb())
                                         setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                         setPadding(
                                             (8 * resources.displayMetrics.density).toInt(),
@@ -519,10 +786,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 },
                                 readOnly = vm.isOpeningFile,
                                 modifier = Modifier.fillMaxSize(),
-                                textStyle = TextStyle(color = OnSurface, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                                visualTransformation = highlightedText
-                                    ?.takeIf { lang != null && it.first == editorValue.text }
-                                    ?.let { PrecomputedHighlightTransformation(it.first, it.second) }
+                                textStyle = TextStyle(color = tokens.foreground, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
+                                visualTransformation = highlightedForCursor
+                                    ?.takeIf { lang != null }
+                                    ?.let { PrecomputedHighlightTransformation(editorValue.text, it) }
                                     ?: VisualTransformation.None
                             )
                             DropdownMenu(
@@ -556,6 +823,32 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }
                 }
             }
+            }
+        }
+        if (!wideLayout) {
+            AnimatedVisibility(
+                visible = sidebarOpen,
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 60.dp),
+                enter = slideInHorizontally { -it },
+                exit = slideOutHorizontally { -it }
+            ) {
+                EditorSidebar(
+                    title = stringResource(R.string.chrome_explorer),
+                    items = indexedFiles,
+                    selectedPath = path,
+                    tokens = tokens,
+                    gameEffectsEnabled = vm.gameEffectsEnabled,
+                    onClickSound = playClickSound,
+                    onSelect = { selectedPath ->
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
+                            vm.updateContent(editorValue.text)
+                        }
+                        vm.openFile(selectedPath)
+                        sidebarOpen = false
+                    }
+                )
+            }
+        }
         }
     }
     if (showHtmlPreview) AlertDialog(
@@ -622,5 +915,81 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }) { Text(stringResource(R.string.find)) }
         },
         dismissButton = { TextButton(onClick = { showFind = false }) { Text(stringResource(R.string.close)) } }
+    )
+    if (showCommandPalette) {
+        EditorCommandPalette(
+            query = commandQuery,
+            onQueryChange = { commandQuery = it },
+            candidates = commandCandidates,
+            onDismiss = { showCommandPalette = false },
+            onSelect = { command ->
+                showCommandPalette = false
+                when {
+                    command == findCommandLabel -> showFind = true
+                    command == goToLineLabel -> {
+                        goToLineText = "1"
+                        showGoToLine = true
+                    }
+                    command == formatCommandLabel -> {
+                        if (!vm.readOnly && !vm.isOpeningFile && lang == Lang.JSON) {
+                            val formatted = JsonTools.format(editorValue.text)
+                            editorValue = TextFieldValue(formatted, TextRange(formatted.length))
+                            vm.updateContent(formatted)
+                        } else if (lang != Lang.JSON) vm.message = context.getString(R.string.format_json_only)
+                    }
+                    command == saveCommandLabel -> {
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.saveCurrent()
+                    }
+                    command == goToFileLabel -> {
+                        commandQuery = "$filePrefix "
+                        showCommandPalette = true
+                    }
+                    command.startsWith("$filePrefix ") -> {
+                        if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        vm.openFile(command.removePrefix("$filePrefix "))
+                    }
+                }
+            }
+        )
+    }
+    if (showGoToLine) AlertDialog(
+        onDismissRequest = { showGoToLine = false },
+        title = { Text(stringResource(R.string.chrome_go_to_line)) },
+        text = {
+            OutlinedTextField(
+                value = goToLineText,
+                onValueChange = { goToLineText = it.filter(Char::isDigit).take(8) },
+                label = { Text(stringResource(R.string.chrome_line_number)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val target = goToLineText.toIntOrNull()
+                if (target != null && target > 0) {
+                    path?.let { vm.openFile(it, target) }
+                    showGoToLine = false
+                } else {
+                    vm.message = context.getString(R.string.chrome_enter_positive_line)
+                }
+            }) { Text(stringResource(R.string.chrome_go)) }
+        },
+        dismissButton = { TextButton(onClick = { showGoToLine = false }) { Text(stringResource(R.string.chrome_cancel)) } }
+    )
+    if (showQuickSettings) AlertDialog(
+        onDismissRequest = { showQuickSettings = false },
+        title = { Text(stringResource(R.string.chrome_quick_settings)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.chrome_editor_theme), style = MaterialTheme.typography.labelMedium)
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.DARK_PLUS }) { Text(stringResource(R.string.chrome_theme_dark_plus)) }
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.LIGHT_PLUS }) { Text(stringResource(R.string.chrome_theme_light_plus)) }
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.AMOLED }) { Text(stringResource(R.string.chrome_theme_amoled)) }
+                TextButton(onClick = { vm.themeMode = com.blockline.app.ui.theme.ThemeMode.SYSTEM }) { Text(stringResource(R.string.chrome_theme_system)) }
+            }
+        },
+        confirmButton = { TextButton(onClick = { showQuickSettings = false }) { Text(stringResource(R.string.ok)) } }
     )
 }

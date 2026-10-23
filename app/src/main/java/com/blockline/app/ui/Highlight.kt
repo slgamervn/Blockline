@@ -23,6 +23,30 @@ class Palette(
     val identifier: Color = Color(0xFFE6EDF3)
 )
 
+private val minecraftColorCodeRegex = Regex("§([0-9a-fA-F])")
+private val minecraftColors = mapOf(
+    '0' to Color(0xFF000000), '1' to Color(0xFF0000AA),
+    '2' to Color(0xFF00AA00), '3' to Color(0xFF00AAAA),
+    '4' to Color(0xFFAA0000), '5' to Color(0xFFAA00AA),
+    '6' to Color(0xFFFFAA00), '7' to Color(0xFFAAAAAA),
+    '8' to Color(0xFF555555), '9' to Color(0xFF5555FF),
+    'a' to Color(0xFF55FF55), 'b' to Color(0xFF55FFFF),
+    'c' to Color(0xFFFF5555), 'd' to Color(0xFFFF55FF),
+    'e' to Color(0xFFFFFF55), 'f' to Color(0xFFFFFFFF)
+)
+
+private fun AnnotatedString.Builder.addMinecraftColorSpans(value: String, absoluteStart: Int) {
+    val codes = minecraftColorCodeRegex.findAll(value).toList()
+    if (codes.isEmpty()) return
+    codes.forEachIndexed { index, match ->
+        val code = match.groupValues[1].lowercase().first()
+        val spanStart = absoluteStart + match.range.first
+        val spanEnd = absoluteStart + (codes.getOrNull(index + 1)?.range?.first ?: value.length)
+        val color = minecraftColors[code] ?: return@forEachIndexed
+        if (spanStart < spanEnd) addStyle(SpanStyle(color = color), spanStart, spanEnd)
+    }
+}
+
 private val jsonRx = Regex(
     """//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\\n])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b"""
 )
@@ -109,6 +133,11 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
             else -> p.keyword
         }
         addStyle(SpanStyle(color = color), m.range.first, m.range.last + 1)
+        val isQuotedString = t.length >= 2 && (t.first() == '"' || t.first() == '\'' || t.first() == '`')
+        val isJsonKey = lang == Lang.JSON && t.startsWith('"') && isKey(src, m.range.last + 1)
+        if (isQuotedString && !isJsonKey) {
+            addMinecraftColorSpans(t.substring(1, t.length - 1), m.range.first + 1)
+        }
     }
     if ((lang == Lang.JSON || lang == Lang.LANG) && errorOffset != null && src.isNotEmpty()) {
         val position = errorOffset.coerceIn(0, src.lastIndex)
@@ -137,4 +166,24 @@ class PrecomputedHighlightTransformation(
             if (text.text == sourceText) highlightedText else text,
             OffsetMapping.Identity
         )
+}
+
+
+fun highlightCurrentLine(
+    source: String,
+    cursorPosition: Int,
+    syntax: AnnotatedString,
+    background: Color
+): AnnotatedString {
+    if (source.isEmpty() || syntax.text != source) return syntax
+    val cursor = cursorPosition.coerceIn(0, source.length)
+    val lineStart = if (cursor == 0) 0 else source.lastIndexOf('\n', cursor - 1) + 1
+    val foundLineEnd = source.indexOf('\n', cursor)
+    var lineEnd = if (foundLineEnd >= 0) foundLineEnd else source.length
+    if (lineEnd == lineStart && lineEnd < source.length) lineEnd++
+    if (lineStart >= lineEnd) return syntax
+    return buildAnnotatedString {
+        append(syntax)
+        addStyle(SpanStyle(background = background), lineStart, lineEnd)
+    }
 }

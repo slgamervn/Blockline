@@ -240,13 +240,60 @@ fun MoreScreen(vm: AppViewModel) {
                         Text(stringResource(R.string.appearance_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.DARK, onClick = { vm.themeMode = ThemeMode.DARK }, label = { Text(stringResource(R.string.dark)) })
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.LIGHT, onClick = { vm.themeMode = ThemeMode.LIGHT }, label = { Text(stringResource(R.string.light)) })
-                    androidx.compose.material3.FilterChip(selected = vm.themeMode == ThemeMode.SYSTEM, onClick = { vm.themeMode = ThemeMode.SYSTEM }, label = { Text(stringResource(R.string.system)) })
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.themeMode in setOf(ThemeMode.DARK, ThemeMode.DARK_PLUS),
+                        onClick = { vm.themeMode = ThemeMode.DARK_PLUS },
+                        label = { Text(stringResource(R.string.theme_dark_plus)) }
+                    )
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.themeMode in setOf(ThemeMode.LIGHT, ThemeMode.LIGHT_PLUS),
+                        onClick = { vm.themeMode = ThemeMode.LIGHT_PLUS },
+                        label = { Text(stringResource(R.string.theme_light_plus)) }
+                    )
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.themeMode == ThemeMode.AMOLED,
+                        onClick = { vm.themeMode = ThemeMode.AMOLED },
+                        label = { Text(stringResource(R.string.theme_amoled)) }
+                    )
+                    androidx.compose.material3.FilterChip(
+                        selected = vm.themeMode == ThemeMode.SYSTEM,
+                        onClick = { vm.themeMode = ThemeMode.SYSTEM },
+                        label = { Text(stringResource(R.string.system)) }
+                    )
                 }
             }
         }
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.chrome_game_effects), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.chrome_game_effects_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = vm.gameEffectsEnabled,
+                            onCheckedChange = { vm.gameEffectsEnabled = it }
+                        )
+                    }
+                    androidx.compose.material3.HorizontalDivider()
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.chrome_click_sounds), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.chrome_click_sounds_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = vm.clickSoundsEnabled,
+                            onCheckedChange = { vm.clickSoundsEnabled = it }
+                        )
+                    }
+                }
+            }
         }
         item {
         Card(Modifier.fillMaxWidth()) {
