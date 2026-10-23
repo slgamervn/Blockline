@@ -302,6 +302,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     }
+    val highlightedForCursor = remember(highlightedText, editorValue.text, editorValue.selection.start, tokens.currentLine) {
+        highlightedText
+            ?.takeIf { it.first == editorValue.text }
+            ?.let { highlightCurrentLine(editorValue.text, editorValue.selection.start, it.second, tokens.currentLine) }
+    }
     val jsonErrorOffset = remember(editorValue.text, syntaxIssue) {
         syntaxIssue?.line?.let { targetLine ->
             var currentLine = 1
@@ -779,9 +784,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 readOnly = vm.isOpeningFile,
                                 modifier = Modifier.fillMaxSize(),
                                 textStyle = TextStyle(color = tokens.foreground, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
-                                visualTransformation = highlightedText
-                                    ?.takeIf { lang != null && it.first == editorValue.text }
-                                    ?.let { PrecomputedHighlightTransformation(it.first, it.second) }
+                                visualTransformation = highlightedForCursor
+                                    ?.takeIf { lang != null }
+                                    ?.let { PrecomputedHighlightTransformation(editorValue.text, it) }
                                     ?: VisualTransformation.None
                             )
                             DropdownMenu(
