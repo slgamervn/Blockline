@@ -16,15 +16,28 @@ class Palette(
     val number: Color,
     val keyword: Color,
     val comment: Color,
-    val errorBackground: Color = Color(0x55F44336)
+    val errorBackground: Color = Color(0x55F44336),
+    val boolean: Color = Color(0xFFFF9E64),
+    val function: Color = Color(0xFF80CBC4),
+    val property: Color = key,
+    val identifier: Color = Color(0xFFE6EDF3)
 )
 
 private val jsonRx = Regex(
     """//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\\n])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b"""
 )
 private val jsRx = Regex(
-    """//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`|\b\d+(?:\.\d+)?\b|\b(?:const|let|var|function|return|if|else|for|while|import|export|from|new|class|async|await|true|false|null|undefined|of|in|switch|case|break|continue|try|catch|throw|default)\b"""
+    """//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`|\b\d+(?:\.\d+)?\b|\b[A-Za-z_$][\w$]*\b"""
 )
+private val jsKeywords = setOf(
+    "const", "let", "var", "function", "return", "if", "else", "for", "while",
+    "import", "export", "from", "new", "class", "async", "await", "true", "false",
+    "null", "undefined", "of", "in", "switch", "case", "break", "continue", "try",
+    "catch", "throw", "default", "this", "super", "extends", "implements", "interface",
+    "type", "typeof", "instanceof", "void", "delete", "do", "while", "yield", "with",
+    "get", "set", "static", "constructor"
+)
+private val jsBooleanLiterals = setOf("true", "false", "null", "undefined")
 private val mcRx = Regex(
     """#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
 )
@@ -75,12 +88,22 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
             }
             continue
         }
+        val afterToken = src.substring((m.range.last + 1).coerceAtMost(src.length))
+        val nextNonWhitespace = afterToken.firstOrNull { !it.isWhitespace() }
         val color = when {
             t.startsWith("//") || t.startsWith("/*") || (lang == Lang.MCFUNC && t.startsWith("#")) -> p.comment
+            lang == Lang.JSON && t in setOf("true", "false", "null") -> p.boolean
+            lang == Lang.JS && t in jsBooleanLiterals -> p.boolean
             t[0] == '"' || t[0] == '\'' || t[0] == 96.toChar() ->
-                if (lang == Lang.JSON && isKey(src, m.range.last + 1)) p.key else p.string
+                if (lang == Lang.JSON && isKey(src, m.range.last + 1)) p.key
+                else if (lang == Lang.JS && nextNonWhitespace == ':') p.property
+                else p.string
             t[0] == '@' -> p.key
             t[0].isDigit() || t[0] == '-' -> p.number
+            lang == Lang.JS && t in jsKeywords -> p.keyword
+            lang == Lang.JS && nextNonWhitespace == '(' -> p.function
+            lang == Lang.JS && nextNonWhitespace == ':' -> p.property
+            lang == Lang.JS -> p.identifier
             else -> p.keyword
         }
         addStyle(SpanStyle(color = color), m.range.first, m.range.last + 1)
