@@ -53,7 +53,7 @@ class HighlightTest {
 
     @Test
     fun highlightsMinecraftFormattingInsideMcfunctionStrings() {
-        val source = """say "§bWelcome""""
+        val source = "say \"§bWelcome\""
         val colored = highlight(source, Lang.MCFUNC, palette)
 
         assertHasColor(colored, source.indexOf("Welcome"), Color(0xFF55FFFF))
