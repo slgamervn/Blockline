@@ -96,7 +96,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
 import com.blockline.app.ui.theme.editorTokens
-import androidx.compose.foundation.shape.RectangleShape
+import androidx.compose.ui.graphics.RectangleShape
 import java.io.OutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
