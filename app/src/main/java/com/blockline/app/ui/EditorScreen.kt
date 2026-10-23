@@ -430,10 +430,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             ) {
                 Surface(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp)
-                        .border(1.dp, tokens.inventoryLight, androidx.compose.foundation.shape.RectangleShape)
-                        .border(2.dp, tokens.inventoryDark, androidx.compose.foundation.shape.RectangleShape),
+                        .border(1.dp, tokens.inventoryLight, RectangleShape)
+                        .border(2.dp, tokens.inventoryDark, RectangleShape),
                     color = tokens.sidebarBackground,
-                    shape = androidx.compose.foundation.shape.RectangleShape
+                    shape = RectangleShape
                 ) {
                     Row(
                         Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
