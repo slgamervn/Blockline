@@ -14,6 +14,7 @@ android {
         targetSdk = 35
         versionCode = providers.gradleProperty("VERSION_CODE").orElse("1").get().toInt()
         versionName = providers.gradleProperty("VERSION_NAME").orElse("0.1.0").get()
+        buildConfigField("String", "UPDATE_CHANNEL", "\"stable\"")
     }
 
     signingConfigs {
@@ -37,7 +38,16 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
+            buildConfigField("String", "UPDATE_CHANNEL", "\"stable\"")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        create("test") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".test"
+            signingConfig = signingConfigs.getByName("release")
+            versionNameSuffix = ""
+            resValue("string", "app_name", "Blockline Test")
+            buildConfigField("String", "UPDATE_CHANNEL", "\"test\"")
         }
     }
     compileOptions {
