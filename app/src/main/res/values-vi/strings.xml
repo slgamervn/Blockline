@@ -53,7 +53,7 @@
     <string name="project_local_notice">Đây là bản làm việc trên thiết bị. Blockline không tải nội dung pack của bạn lên máy chủ.</string>
     <string name="files_count">%1$d tệp</string>
     <string name="manifest_title">Manifest · %1$s</string>
-    <string name="pack">Pack</string>
+    <string name="pack">Gói</string>
     <string name="unknown_pack">Pack không xác định</string>
     <string name="manifest_parse_failed">Không đọc được manifest</string>
     <string name="no_description">Không có mô tả</string>
@@ -269,7 +269,7 @@
     <string name="resource_kind_item">Định nghĩa item</string>
     <string name="resource_kind_block">Định nghĩa block</string>
     <string name="resource_kind_recipe">Định nghĩa recipe</string>
-    <string name="resource_kind_loot">Loot table</string>
+    <string name="resource_kind_loot">Bảng loot</string>
     <string name="resource_kind_function">Tệp function</string>
     <string name="resource_kind_script">Mã nguồn script</string>
     <string name="resource_kind_language">Tệp ngôn ngữ</string>
@@ -277,10 +277,10 @@
     <string name="manifest_format_value">Định dạng manifest: %1$s</string>
     <string name="manifest_engine_value">Phiên bản engine tối thiểu: %1$s</string>
     <string name="manifest_module_line">Module %1$d · %2$s · UUID: %3$s · Phiên bản: %4$s</string>
-    <string name="manifest_dependencies">Dependencies</string>
+    <string name="manifest_dependencies">Phụ thuộc</string>
     <string name="manifest_no_dependencies">Không khai báo dependency.</string>
     <string name="manifest_dependency_line">%1$s · Phiên bản: %2$s</string>
-    <string name="manifest_capabilities">Capabilities: %1$s</string>
+    <string name="manifest_capabilities">Khả năng: %1$s</string>
     <string name="file_operation_running">Đang cập nhật tệp…</string>
     <string name="find_not_found">Không tìm thấy nội dung cần tìm trong tệp này.</string>
     <string name="opening_file">Đang mở tệp…</string>
@@ -310,8 +310,8 @@
     <string name="pack_manifest_generator_hint">Tạo manifest mới với UUID riêng. Tệp manifest đã tồn tại sẽ không bị ghi đè.</string>
     <string name="generated_pack_name">Tên pack</string>
     <string name="generated_pack_description">Mô tả</string>
-    <string name="generated_behavior_pack">Behavior Pack</string>
-    <string name="generated_resource_pack">Resource Pack</string>
+    <string name="generated_behavior_pack">Gói hành vi</string>
+    <string name="generated_resource_pack">Gói tài nguyên</string>
     <string name="generate_manifest">Tạo và mở manifest</string>
     <string name="generated_manifest_created">Đã tạo %1$s</string>
     <string name="dependency_viewer_title">Trình xem dependency</string>
@@ -510,7 +510,7 @@
     <string name="unicode_tool_encode">Mã hóa thành \\uXXXX</string>
     <string name="unicode_tool_autofix">Tự sửa JSON</string>
     <string name="unicode_tool_format">Định dạng</string>
-    <string name="unicode_tool_minify">Minify</string>
+    <string name="unicode_tool_minify">Rút gọn</string>
     <string name="unicode_tool_clear">Xóa</string>
     <string name="unicode_tool_swap">Đổi chỗ</string>
     <string name="unicode_tool_copy">Sao chép kết quả</string>
@@ -540,7 +540,7 @@
     <string name="brarchive_check_json">Kiểm tra JSON</string>
     <string name="brarchive_autofix_json">Tự sửa</string>
     <string name="brarchive_format_json">Định dạng</string>
-    <string name="brarchive_minify_json">Minify</string>
+    <string name="brarchive_minify_json">Rút gọn JSON</string>
     <string name="brarchive_unicode_toggle">Unicode \\uXXXX ⇄ chữ</string>
     <string name="brarchive_loaded">Đã đọc %1$d entry (%2$d tên trùng).</string>
     <string name="brarchive_json_valid">JSON hợp lệ.</string>
@@ -562,5 +562,10 @@
     <string name="latest_changelog">Ghi chú phát hành mới nhất</string>
     <string name="release_notes_empty">Chưa có ghi chú phát hành được lưu. Hãy kiểm tra cập nhật khi có kết nối Internet.</string>
     <string name="view_release_notes">Xem chi tiết bản phát hành</string>
+
+
+    <string name="html_preview_title">Xem trước HTML</string>
+    <string name="import_text_file_cd">Nhập tệp văn bản</string>
+    <string name="favorite_cd">Đánh dấu yêu thích</string>
 
 </resources>
