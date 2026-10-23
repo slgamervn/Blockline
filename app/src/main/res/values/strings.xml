@@ -568,4 +568,7 @@
     <string name="import_text_file_cd">Import text file</string>
     <string name="favorite_cd">Favorite</string>
 
+    <string name="theme_dark_plus">Dark+</string>
+    <string name="theme_light_plus">Light+</string>
+    <string name="theme_amoled">AMOLED</string>
 </resources>
