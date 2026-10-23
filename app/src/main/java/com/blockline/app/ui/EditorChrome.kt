@@ -258,13 +258,13 @@ fun EditorShortcutBar(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        PixelKey("↶", enabled, tokens, stringResource(R.string.undo), gameEffectsEnabled, onClickSound) { onUndo() }
-        PixelKey("↷", enabled, tokens, stringResource(R.string.redo), gameEffectsEnabled, onClickSound) { onRedo() }
-        PixelKey("✓", enabled, tokens, stringResource(R.string.save), gameEffectsEnabled, onClickSound) { onSave() }
-        PixelKey("⌕", true, tokens, stringResource(R.string.find), gameEffectsEnabled, onClickSound) { onFind() }
-        PixelKey("≡", enabled, tokens, stringResource(R.string.format), gameEffectsEnabled, onClickSound) { onFormat() }
-        PixelKey("§", true, tokens, stringResource(R.string.minecraft_palette_title), gameEffectsEnabled, onClickSound) { onShowColorPalette() }
-        PixelKey("⌄", true, tokens, stringResource(R.string.chrome_hide_keyboard), gameEffectsEnabled, onClickSound) { onHideKeyboard() }
+        PixelKey("✓", enabled, tokens, stringResource(R.string.save), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.save)) { onSave() }
+        PixelKey("⌕", true, tokens, stringResource(R.string.find), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.find)) { onFind() }
+        PixelKey("§", true, tokens, stringResource(R.string.minecraft_palette_title), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.minecraft_palette_short)) { onShowColorPalette() }
+        PixelKey("↶", enabled, tokens, stringResource(R.string.undo), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.undo)) { onUndo() }
+        PixelKey("↷", enabled, tokens, stringResource(R.string.redo), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.redo)) { onRedo() }
+        PixelKey("≡", enabled, tokens, stringResource(R.string.format), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.format)) { onFormat() }
+        PixelKey("⌄", true, tokens, stringResource(R.string.chrome_hide_keyboard), gameEffectsEnabled, onClickSound, caption = stringResource(R.string.chrome_hide_short)) { onHideKeyboard() }
         keys.forEach { key ->
             PixelKey(key, enabled, tokens, key, gameEffectsEnabled, onClickSound) {
                 onInsert(if (key == "Tab") "    " else key)
@@ -281,6 +281,7 @@ private fun RowScope.PixelKey(
     description: String = text,
     gameEffectsEnabled: Boolean = true,
     onClickSound: () -> Unit = {},
+    caption: String? = null,
     onClick: () -> Unit
 ) {
     val borderModifier = if (gameEffectsEnabled) {
@@ -290,7 +291,7 @@ private fun RowScope.PixelKey(
         Modifier.border(1.dp, tokens.divider, RectangleShape)
     }
     Surface(
-        modifier = Modifier.heightIn(min = 48.dp).width(if (text.length > 4) 56.dp else 48.dp)
+        modifier = Modifier.heightIn(min = 48.dp).width(if (caption != null || text.length > 4) 58.dp else 48.dp)
             .then(borderModifier)
             .clip(RectangleShape)
             .clickable(enabled = enabled, onClick = { onClickSound(); onClick() })
@@ -298,14 +299,27 @@ private fun RowScope.PixelKey(
         color = if (enabled) tokens.tabInactive else tokens.sidebarBackground,
         shape = RectangleShape
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 3.dp)) {
+        Column(
+            modifier = Modifier.padding(horizontal = 2.dp, vertical = 3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text,
                 color = if (enabled) tokens.foreground else tokens.muted,
-                fontSize = if (text.length > 4) 10.sp else 13.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1
             )
+            if (caption != null) {
+                Text(
+                    caption,
+                    color = if (enabled) tokens.foreground else tokens.muted,
+                    fontSize = 8.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
