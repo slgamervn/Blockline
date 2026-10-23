@@ -605,4 +605,5 @@
     <string name="chrome_saved_file">Đã lưu tệp</string>
     <string name="chrome_created_file">Đã tạo tệp</string>
     <string name="chrome_recent_projects">Dự án gần đây</string>
+    <string name="chrome_open_addon">Mở tệp add-on</string>
 </resources>
