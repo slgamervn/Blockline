@@ -568,4 +568,7 @@
     <string name="import_text_file_cd">Nhập tệp văn bản</string>
     <string name="favorite_cd">Đánh dấu yêu thích</string>
 
+    <string name="theme_dark_plus">Tối (Dark+)</string>
+    <string name="theme_light_plus">Sáng (Light+)</string>
+    <string name="theme_amoled">Đen AMOLED</string>
 </resources>
