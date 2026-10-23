@@ -8,6 +8,10 @@ import android.view.inputmethod.EditorInfo
 import android.text.InputType
 import android.widget.EditText
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -142,6 +146,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var commandQuery by remember { mutableStateOf("") }
     var showQuickSettings by remember { mutableStateOf(false) }
     var showGoToLine by remember { mutableStateOf(false) }
+    var showAdvancementToast by remember { mutableStateOf(false) }
     var goToLineText by remember { mutableStateOf("1") }
     val projectId = vm.current?.id.orEmpty()
     val goToFileLabel = stringResource(R.string.chrome_go_to_file)
@@ -183,6 +188,13 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val completionEngine = remember(context) { runCatching { AddonCompletionEngine.load(context) }.getOrNull() }
     var completionItems by remember(path) { mutableStateOf<List<AddonCompletionEngine.Suggestion>>(emptyList()) }
     var completionRange by remember(path) { mutableStateOf(0 to 0) }
+    LaunchedEffect(vm.advancementEvent) {
+        if (vm.advancementEvent > 0) {
+            showAdvancementToast = true
+            delay(2_000)
+            showAdvancementToast = false
+        }
+    }
     val largeOffsets = remember(vm.content, vm.readOnly) {
         if (vm.readOnly) largeFilePageOffsets(vm.content) else listOf(0)
     }
@@ -355,6 +367,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
+            Column {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = tokens.sidebarBackground),
                 title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall, color = tokens.muted) } },
@@ -396,6 +409,36 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
             )
+            AnimatedVisibility(
+                visible = showAdvancementToast && vm.gameEffectsEnabled,
+                enter = slideInVertically { -it } + fadeIn(),
+                exit = slideOutVertically { -it } + fadeOut()
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp)
+                        .border(1.dp, tokens.inventoryLight, androidx.compose.foundation.shape.RectangleShape)
+                        .border(2.dp, tokens.inventoryDark, androidx.compose.foundation.shape.RectangleShape),
+                    color = tokens.sidebarBackground,
+                    shape = androidx.compose.foundation.shape.RectangleShape
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("◆", color = tokens.gameGreen, style = MaterialTheme.typography.titleLarge)
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.chrome_advancement_title), color = tokens.gameGreen, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(if (vm.advancementEventIsCreation) R.string.chrome_created_file else R.string.chrome_saved_file),
+                                color = tokens.foreground,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+            }
         },
         bottomBar = {
             Column {
