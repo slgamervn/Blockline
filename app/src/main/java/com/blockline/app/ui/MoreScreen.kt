@@ -6,6 +6,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -86,6 +89,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 @Composable
 fun MoreScreen(vm: AppViewModel) {
@@ -195,7 +204,7 @@ fun MoreScreen(vm: AppViewModel) {
                         selected = vm.appLanguage == "en",
                         onClick = {
                             vm.changeAppLanguage("en")
-                            (context as? android.app.Activity)?.recreate()
+                            context.findActivity()?.recreate()
                         },
                         label = { Text(stringResource(R.string.language_english)) }
                     )
@@ -203,7 +212,7 @@ fun MoreScreen(vm: AppViewModel) {
                         selected = vm.appLanguage == "vi",
                         onClick = {
                             vm.changeAppLanguage("vi")
-                            (context as? android.app.Activity)?.recreate()
+                            context.findActivity()?.recreate()
                         },
                         label = { Text(stringResource(R.string.language_vietnamese)) }
                     )
@@ -211,7 +220,7 @@ fun MoreScreen(vm: AppViewModel) {
                         selected = vm.appLanguage == "system",
                         onClick = {
                             vm.changeAppLanguage("system")
-                            (context as? android.app.Activity)?.recreate()
+                            context.findActivity()?.recreate()
                         },
                         label = { Text(stringResource(R.string.language_system)) }
                     )
