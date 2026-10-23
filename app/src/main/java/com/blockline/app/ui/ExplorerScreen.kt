@@ -80,7 +80,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
         indexedEntries = if (projectId == null) {
             emptyList()
         } else {
-            withContext(Dispatchers.IO) {
+            withContext(Dispatchers.Default) {
                 allEntries.map { file ->
                     val path = vm.repo.relative(projectId, file)
                     val segments = path.split('/')
@@ -101,7 +101,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
         visibleEntries = if (projectId == null) {
             emptyList()
         } else {
-            withContext(Dispatchers.IO) {
+            withContext(Dispatchers.Default) {
                 val filtered = indexedEntries.filter { entry ->
                     when (filter) {
                         "Favorites" -> entry.file.isFile && vm.repo.isFavorite(projectId, entry.path)
