@@ -2,7 +2,8 @@ package com.blockline.app.data
 
 class EditorHistory(
     private val maxDepth: Int = 80,
-    private val groupingWindowMillis: Long = 700L
+    private val groupingWindowMillis: Long = 700L,
+    private val maxCharsPerStack: Long = 1_000_000L
 ) {
     private val undo = mutableMapOf<String, MutableList<String>>()
     private val redo = mutableMapOf<String, MutableList<String>>()
@@ -11,6 +12,7 @@ class EditorHistory(
     init {
         require(maxDepth > 0)
         require(groupingWindowMillis >= 0L)
+        require(maxCharsPerStack > 0L)
     }
 
     fun recordEdit(path: String, previousContent: String, nowMillis: Long) {
@@ -58,7 +60,14 @@ class EditorHistory(
     }
 
     private fun pushHistory(stack: MutableList<String>, value: String) {
+        if (value.length.toLong() > maxCharsPerStack) {
+            stack.clear()
+            return
+        }
         stack.add(value)
-        if (stack.size > maxDepth) stack.removeAt(0)
+        var storedChars = stack.sumOf { it.length.toLong() }
+        while (stack.size > maxDepth || storedChars > maxCharsPerStack) {
+            storedChars -= stack.removeAt(0).length.toLong()
+        }
     }
 }
