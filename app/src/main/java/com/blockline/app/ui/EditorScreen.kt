@@ -453,6 +453,29 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         vm.consumePendingEditorLine()
     }
+    fun insertAtCursor(insertion: String) {
+        val native = largeEditText.takeIf { editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS }
+        if (native != null) {
+            val editable = native.text
+            val current = editable.toString()
+            val start = native.selectionStart.coerceIn(0, current.length)
+            val end = native.selectionEnd.coerceIn(start, current.length)
+            editable.replace(start, end, insertion)
+            val cursor = (start + insertion.length).coerceAtMost(editable.length)
+            native.setSelection(cursor)
+            val updated = editable.toString()
+            editorValue = TextFieldValue(updated, TextRange(cursor))
+            vm.updateContent(updated)
+        } else {
+            val source = editorValue.text
+            val start = editorValue.selection.start.coerceIn(0, source.length)
+            val end = editorValue.selection.end.coerceIn(start, source.length)
+            val updated = source.replaceRange(start, end, insertion)
+            editorValue = TextFieldValue(updated, TextRange(start + insertion.length))
+            vm.updateContent(updated)
+        }
+    }
+
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
@@ -533,14 +556,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             Column {
                 EditorShortcutBar(
                     enabled = !vm.isOpeningFile && !vm.readOnly,
-                    onInsert = { insertion ->
-                        val source = editorValue.text
-                        val start = editorValue.selection.start.coerceIn(0, source.length)
-                        val end = editorValue.selection.end.coerceIn(start, source.length)
-                        val updated = source.replaceRange(start, end, insertion)
-                        editorValue = TextFieldValue(updated, TextRange(start + insertion.length))
-                        vm.updateContent(updated)
-                    },
+                    onInsert = { insertion -> insertAtCursor(insertion) },
                     onUndo = {
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         vm.undo()
@@ -810,7 +826,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         largeEditText = this
                                         var lastStyledLine = -1
                                         setOnScrollChangeListener { view, _, scrollY, _, _ ->
-                                            val currentLayout = view.layout
+                                            val currentLayout = (view as? EditText)?.layout
                                             if (currentLayout != null && currentLayout.lineCount > 0) {
                                                 val line = currentLayout.getLineForVertical(
                                                     scrollY.coerceIn(0, (currentLayout.height - 1).coerceAtLeast(0))
@@ -821,6 +837,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                 }
                                             }
                                         }
+                                        post { visibleSyntaxRefresh++ }
                                         typeface = Typeface.MONOSPACE
                                         textSize = vm.fontSize.toFloat()
                                         setTextColor(tokens.foreground.toArgb())
@@ -1043,6 +1060,16 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         vm.openFile(command.removePrefix("$filePrefix "))
                     }
                 }
+            }
+        )
+    }
+    if (showMinecraftPalette) {
+        MinecraftColorPaletteDialog(
+            tokens = tokens,
+            onDismiss = { showMinecraftPalette = false },
+            onSelectCode = { code ->
+                insertAtCursor(code)
+                showMinecraftPalette = false
             }
         )
     }
