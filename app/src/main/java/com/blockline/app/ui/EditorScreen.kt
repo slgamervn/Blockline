@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
@@ -80,7 +81,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.sp
@@ -136,8 +136,14 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showGoToLine by remember { mutableStateOf(false) }
     var goToLineText by remember { mutableStateOf("1") }
     val projectId = vm.current?.id.orEmpty()
+    val goToFileLabel = stringResource(R.string.chrome_go_to_file)
+    val goToLineLabel = stringResource(R.string.chrome_go_to_line)
+    val findCommandLabel = stringResource(R.string.chrome_find_command)
+    val formatCommandLabel = stringResource(R.string.chrome_format_document)
+    val saveCommandLabel = stringResource(R.string.chrome_save_command)
+    val filePrefix = stringResource(R.string.chrome_file_prefix)
     var indexedFiles by remember(projectId) { mutableStateOf<List<String>>(emptyList()) }
-    var commandCandidates by remember { mutableStateOf(listOf("Go to File", "Go to Line", "Find", "Format Document", "Save")) }
+    var commandCandidates by remember { mutableStateOf(emptyList<String>()) }
     LaunchedEffect(projectId, vm.projectEntries[projectId]) {
         val sourceFiles = vm.projectEntries[projectId].orEmpty()
         val mapped = withContext(Dispatchers.Default) {
@@ -149,12 +155,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         if (projectId == vm.current?.id.orEmpty()) indexedFiles = mapped
     }
-    LaunchedEffect(indexedFiles, vm.openTabs.keys.toList()) {
+    LaunchedEffect(indexedFiles, vm.openTabs.keys.toList(), goToFileLabel, goToLineLabel, findCommandLabel, formatCommandLabel, saveCommandLabel, filePrefix) {
         val openTabs = vm.openTabs.keys.toList()
         commandCandidates = withContext(Dispatchers.Default) {
-            listOf("Go to File", "Go to Line", "Find", "Format Document", "Save") +
-                indexedFiles.map { "File: $it" } +
-                openTabs.filter { it !in indexedFiles }.map { "File: $it" }
+            listOf(goToFileLabel, goToLineLabel, findCommandLabel, formatCommandLabel, saveCommandLabel) +
+                (indexedFiles + openTabs.filter { it !in indexedFiles }).map { "$filePrefix $it" }
         }
     }
     var findText by remember { mutableStateOf("") }
