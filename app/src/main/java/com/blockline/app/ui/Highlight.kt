@@ -144,7 +144,7 @@ private val jsKeywords = setOf(
 private val jsBooleanLiterals = setOf("true", "false", "null", "undefined")
 private val jsonBooleanLiterals = setOf("true", "false", "null")
 private val mcRx = Regex(
-    """#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
+    """"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|#[^\n]*|@[aeprs]\b|-?\d+(?:\.\d+)?|\b(?:execute|run|as|at|if|unless|positioned|rotated|align|facing|anchored|in|give|tp|teleport|scoreboard|tag|summon|kill|function|say|tellraw|title|effect|playsound|setblock|fill|clone)\b"""
 )
 
 private val langRx = Regex(
