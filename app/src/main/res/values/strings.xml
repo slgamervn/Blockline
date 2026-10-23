@@ -632,4 +632,6 @@
     <string name="mc_style_underline">Underline</string>
     <string name="mc_style_italic">Italic</string>
     <string name="mc_style_reset">Reset</string>
+    <string name="minecraft_palette_short">Colors</string>
+    <string name="chrome_hide_short">Hide</string>
 </resources>
