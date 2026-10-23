@@ -552,4 +552,15 @@
     <string name="brarchive_failed">Archive operation failed: %1$s</string>
     <string name="validation_msg_texture_external">Texture reference %1$s is not bundled with this pack or the cached vanilla index. It may be provided by Minecraft vanilla or another active resource pack.</string>
 
+
+    <string name="app_language_title">App language</string>
+    <string name="app_language_hint">Choose English, Vietnamese, or follow your device language. The app restarts to apply the change.</string>
+    <string name="language_english">English</string>
+    <string name="language_vietnamese">Tiếng Việt</string>
+    <string name="language_system">Follow device</string>
+    <string name="updates_hint_test">This test build checks only test-channel prereleases. It never checks stable releases.</string>
+    <string name="latest_changelog">Latest release notes</string>
+    <string name="release_notes_empty">No saved release notes yet. Check for updates while connected to the internet.</string>
+    <string name="view_release_notes">View release details</string>
+
 </resources>
