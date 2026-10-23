@@ -268,6 +268,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun dismissUpdate(version: String) {
+        val visibleUpdate = updateInfo?.takeIf { it.version == version }
+        if (visibleUpdate != null) rememberReleaseInfo(visibleUpdate)
         settingsPreferences.edit().putString("dismissed_update_version", version).apply()
         updateInfo = null
     }
