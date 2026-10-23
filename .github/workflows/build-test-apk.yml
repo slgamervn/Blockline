@@ -1,0 +1,159 @@
+name: Build signed test APK
+
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blockline-test-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-build:
+    if: github.ref == 'refs/heads/test'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      KEYSTORE_BASE64: ${{ secrets.BLOCKLINE_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.BLOCKLINE_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.BLOCKLINE_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.BLOCKLINE_KEY_PASSWORD }}
+    steps:
+      - name: Checkout test branch and release history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine test version
+        id: version
+        shell: bash
+        run: |
+          VERSION_NAME="0.1.$GITHUB_RUN_NUMBER-test"
+          SEMVER_REGEX='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-test$'
+          if [[ ! "$VERSION_NAME" =~ $SEMVER_REGEX ]]; then
+            echo "::error::Unexpected test version: $VERSION_NAME"
+            exit 1
+          fi
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Validate required stable signing key
+        shell: bash
+        run: |
+          if [[ -z "$KEYSTORE_BASE64" || -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
+            echo "::error::The test APK must use the same signing key as stable. Configure all BLOCKLINE_KEYSTORE_* secrets; no unsigned/debug fallback will be created."
+            exit 1
+          fi
+          if ! printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/blockline-upload.jks"; then
+            echo "::error::BLOCKLINE_KEYSTORE_BASE64 is not valid Base64."
+            exit 1
+          fi
+          if [[ ! -s "$RUNNER_TEMP/blockline-upload.jks" ]]; then
+            echo "::error::Decoded keystore is empty."
+            exit 1
+          fi
+          echo "BLOCKLINE_KEYSTORE_PATH=$RUNNER_TEMP/blockline-upload.jks" >> "$GITHUB_ENV"
+          echo "BLOCKLINE_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "BLOCKLINE_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "BLOCKLINE_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Validate Android translations and add-on schema
+        run: |
+          node scripts/check-android-translations.mjs
+          node scripts/check-addon-completion-schema.mjs
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          accept-android-sdk-licenses: true
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: 8.14.6
+
+      - name: Run unit tests
+        run: gradle testDebugUnitTest --stacktrace --no-daemon
+
+      - name: Build test-channel APK with stable signing key
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+        run: gradle assembleTest -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME="$VERSION_NAME" --stacktrace --no-daemon
+
+      - name: Verify output package and prepare APK
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+        run: |
+          APK_PATH="app/build/outputs/apk/test/app-test.apk"
+          if [[ ! -s "$APK_PATH" ]]; then
+            echo "::error::Expected signed test APK not found at $APK_PATH"
+            find app/build/outputs/apk -maxdepth 3 -type f -print
+            exit 1
+          fi
+          cp "$APK_PATH" "Blockline-v$VERSION_NAME.apk"
+          apksigner verify --print-certs "Blockline-v$VERSION_NAME.apk"
+
+      - name: Generate test-only release notes
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+        run: |
+          {
+            echo "## Test channel"
+            echo "- Version: $VERSION_NAME"
+            echo "- Package ID: com.blockline.app.test"
+            echo "- Signed with the same keystore as the stable app."
+            echo "- The app checks only test-channel prereleases."
+            echo "- Commit: $GITHUB_SHA"
+            echo
+            echo "## Changes since main"
+            git fetch origin main
+            if git merge-base origin/main HEAD >/dev/null 2>&1; then
+              git log origin/main..HEAD --no-merges --pretty=format:'- %s (%h)' | head -n 80
+            else
+              git log -n 20 --no-merges --pretty=format:'- %s (%h)'
+            fi
+            echo
+            echo
+            echo "## Installation"
+            echo "- Install this APK alongside Blockline stable. It uses a separate application ID."
+            echo "- Test updates are offered from test prereleases; stable releases are not shown in the test app."
+          } > TEST_RELEASE_NOTES.md
+
+      - name: Upload signed test APK artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Blockline-test-v${{ steps.version.outputs.version_name }}
+          path: Blockline-v${{ steps.version.outputs.version_name }}.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish test-channel prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.version.outputs.version_name }}
+          target_commitish: ${{ github.sha }}
+          name: Blockline Test v${{ steps.version.outputs.version_name }}
+          body_path: TEST_RELEASE_NOTES.md
+          files: Blockline-v${{ steps.version.outputs.version_name }}.apk
+          generate_release_notes: false
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
