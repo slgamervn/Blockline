@@ -269,6 +269,33 @@ fun MoreScreen(vm: AppViewModel) {
         }
         }
         item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.chrome_game_effects), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.chrome_game_effects_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = vm.gameEffectsEnabled,
+                            onCheckedChange = { vm.gameEffectsEnabled = it }
+                        )
+                    }
+                    androidx.compose.material3.HorizontalDivider()
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.chrome_click_sounds), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.chrome_click_sounds_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = vm.clickSoundsEnabled,
+                            onCheckedChange = { vm.clickSoundsEnabled = it }
+                        )
+                    }
+                }
+            }
+        }
+        item {
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
