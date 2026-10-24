@@ -2,6 +2,8 @@ package com.blockline.app
 
 import android.app.Application
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.runtime.getValue
@@ -20,6 +22,7 @@ import com.blockline.app.data.OperationLogEntry
 import com.blockline.app.data.OperationLogRepository
 import com.blockline.app.data.AppUpdate
 import com.blockline.app.data.AppUpdateRepository
+import com.blockline.app.data.InAppUpdateInstaller
 import com.blockline.app.data.ResourcePreview
 import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
@@ -135,6 +138,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var isCheckingUpdates by mutableStateOf(false)
         private set
+    var isDownloadingUpdate by mutableStateOf(false)
+        private set
+    var updateDownloadProgress by mutableStateOf(0)
+        private set
+    private val updateProgressHandler = Handler(Looper.getMainLooper())
     var updateInfo by mutableStateOf<AppUpdate?>(null)
         private set
     var latestReleaseInfo by mutableStateOf(readSavedReleaseInfo())
@@ -305,6 +313,45 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (visibleUpdate != null) rememberReleaseInfo(visibleUpdate)
         settingsPreferences.edit().putString("dismissed_update_version", version).apply()
         updateInfo = null
+    }
+
+    fun downloadAndInstallUpdate(context: android.content.Context) {
+        val info = updateInfo ?: latestReleaseInfo ?: return
+        if (isDownloadingUpdate) return
+        if (!InAppUpdateInstaller.canInstallPackages(context)) {
+            runCatching { InAppUpdateInstaller.openInstallPermissionSettings(context) }
+                .onSuccess { message = text(R.string.update_install_permission_needed) }
+                .onFailure { message = text(R.string.update_installer_open_failed, it.message ?: text(R.string.unknown_value)) }
+            return
+        }
+
+        val cached = InAppUpdateInstaller.cachedFile(getApplication(), info.version)
+        if (cached != null) {
+            runCatching { InAppUpdateInstaller.launchInstaller(context, cached) }
+                .onFailure { message = text(R.string.update_installer_open_failed, it.message ?: text(R.string.unknown_value)) }
+            return
+        }
+
+        isDownloadingUpdate = true
+        updateDownloadProgress = 0
+        viewModelScope.launch {
+            try {
+                val apk = withContext(Dispatchers.IO) {
+                    InAppUpdateInstaller.download(getApplication(), info) { percent ->
+                        updateProgressHandler.post { updateDownloadProgress = percent }
+                    }
+                }
+                updateDownloadProgress = 100
+                runCatching { InAppUpdateInstaller.launchInstaller(context, apk) }
+                    .onFailure { message = text(R.string.update_installer_open_failed, it.message ?: text(R.string.unknown_value)) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                message = text(R.string.update_download_failed, error.message ?: text(R.string.unknown_value))
+            } finally {
+                isDownloadingUpdate = false
+            }
+        }
     }
 
     fun openUpdateReleasePage(context: android.content.Context) {
