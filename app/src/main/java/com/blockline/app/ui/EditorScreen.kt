@@ -541,7 +541,16 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
             val window = withContext(Dispatchers.Main.immediate) {
                 visibleCodeWindow(editor, source)
-            } ?: return@LaunchedEffect
+            }
+            if (window == null) {
+                withContext(Dispatchers.Main.immediate) {
+                    if (activePath == vm.activeFile && source === editorValue.text && editor === largeEditText) {
+                        clearEditorCodeSpans(editor)
+                        syntaxWindowTracker.reset()
+                    }
+                }
+                return@LaunchedEffect
+            }
             val coloredWindow = withContext(Dispatchers.Default) {
                 highlight(window.text, lang, palette)
             }
@@ -582,7 +591,16 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     } else {
                         visibleCodeWindow(editor, source)
                     }
-                } ?: return@collect
+                }
+                if (window == null) {
+                    withContext(Dispatchers.Main.immediate) {
+                        if (activePath == vm.activeFile && source === editorValue.text && editor === largeEditText) {
+                            clearEditorCodeSpans(editor)
+                            syntaxWindowTracker.reset()
+                        }
+                    }
+                    return@collect
+                }
 
                 val coloredWindow = withContext(Dispatchers.Default) {
                     highlight(window.text, activeLang, palette)
