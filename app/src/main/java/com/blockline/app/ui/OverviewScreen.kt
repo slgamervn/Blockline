@@ -256,8 +256,11 @@ fun OverviewScreen(vm: AppViewModel, onBack: () -> Unit, onExplorer: () -> Unit,
                         style = androidx.compose.material3.MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        if (header == null) stringResource(R.string.check_manifest_json)
-                        else localizedManifestText.second.ifBlank { stringResource(R.string.no_description) }
+                        text = if (header == null) androidx.compose.ui.text.AnnotatedString(stringResource(R.string.check_manifest_json))
+                        else minecraftPreviewText(
+                            localizedManifestText.second.ifBlank { stringResource(R.string.no_description) },
+                            androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                     val uuidValue = header?.optString("uuid", stringResource(R.string.missing_value)) ?: stringResource(R.string.invalid_value)
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
