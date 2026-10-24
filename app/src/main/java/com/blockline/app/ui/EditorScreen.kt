@@ -75,13 +75,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -341,7 +340,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showHtmlPreview by remember(path) { mutableStateOf(false) }
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
     var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
-    var visibleSyntaxRefresh by remember(path) { mutableStateOf(0) }
+    val syntaxRefreshRequests = remember { Channel<Unit>(Channel.CONFLATED) }
     var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     val syntaxWindowTracker = remember(path) { EditorSyntaxWindowTracker() }
     var largeFilePage by remember(path) { mutableStateOf(0) }
@@ -552,10 +551,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         // Keep one worker alive while scrolling. Conflate queued refresh requests instead
         // of cancelling syntax work on every scroll callback; after a pass, process the
         // newest viewport rather than painting an outdated one.
-        snapshotFlow { visibleSyntaxRefresh }
-            .distinctUntilChanged()
-            .conflate()
-            .collect {
+        syntaxRefreshRequests.receiveAsFlow().collect {
                 val source = editorValue.text
                 if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@collect
                 val editor = largeEditText ?: return@collect
@@ -994,7 +990,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         val syntaxRefreshRunnable = Runnable {
                                             syntaxRefreshQueued = false
                                             lastSyntaxRefreshAt = SystemClock.uptimeMillis()
-                                            visibleSyntaxRefresh++
+                                            syntaxRefreshRequests.trySend(Unit)
                                         }
                                         setOnScrollChangeListener { view, _, scrollY, _, _ ->
                                             val currentLayout = (view as? EditText)?.layout
@@ -1008,7 +1004,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                     val elapsed = now - lastSyntaxRefreshAt
                                                     if (elapsed >= 65L) {
                                                         lastSyntaxRefreshAt = now
-                                                        visibleSyntaxRefresh++
+                                                        syntaxRefreshRequests.trySend(Unit)
                                                     } else if (!syntaxRefreshQueued) {
                                                         syntaxRefreshQueued = true
                                                         postDelayed(syntaxRefreshRunnable, (65L - elapsed).coerceAtLeast(1L))
@@ -1016,7 +1012,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                 }
                                             }
                                         }
-                                        post { visibleSyntaxRefresh++ }
+                                        post { syntaxRefreshRequests.trySend(Unit) }
                                         typeface = Typeface.MONOSPACE
                                         textSize = vm.fontSize.toFloat()
                                         setTextColor(tokens.foreground.toArgb())
