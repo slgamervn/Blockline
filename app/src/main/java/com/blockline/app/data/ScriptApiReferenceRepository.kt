@@ -53,9 +53,6 @@ class ScriptApiReferenceRepository(context: Context) {
                 writeMetadata(packageName, metadata)
             } catch (error: Exception) {
                 errorMessage = "Online version lookup failed: " + (error.message ?: "network error")
-                if (requestedVersion == null && sourceCacheFile(packageName, targetVersion).isFile) {
-                    targetVersion = targetVersion
-                }
             }
         }
 
@@ -73,6 +70,10 @@ class ScriptApiReferenceRepository(context: Context) {
             } catch (error: Exception) {
                 errorMessage = "Type declarations could not be refreshed: " + (error.message ?: "network error")
             }
+        }
+        if (sourceText == null && refreshOnline && cachedTarget.isFile) {
+            sourceText = runCatching { cachedTarget.readText(Charsets.UTF_8) }.getOrNull()
+            if (sourceText != null) sourceKind = ScriptApiSource.CACHE
         }
 
         var finalVersion = targetVersion
@@ -119,7 +120,13 @@ class ScriptApiReferenceRepository(context: Context) {
 
     private fun fetchMetadata(packageName: String): PackageMetadata {
         val encodedName = packageName.replace("@", "%40").replace("/", "%2f")
-        val json = JSONObject(readHttps("https://registry.npmjs.org/" + encodedName, MAX_METADATA_BYTES))
+        val json = JSONObject(
+            readHttps(
+                "https://registry.npmjs.org/" + encodedName,
+                MAX_METADATA_BYTES,
+                NPM_REGISTRY_ACCEPT
+            )
+        )
         val tags = json.optJSONObject("dist-tags")
         val versionsObject = json.optJSONObject("versions") ?: JSONObject()
         val stableVersions = mutableListOf<String>()
@@ -140,7 +147,8 @@ class ScriptApiReferenceRepository(context: Context) {
         val versionMetadata = runCatching {
             JSONObject(readHttps(
                 "https://registry.npmjs.org/" + encodedName + "/" + version,
-                MAX_METADATA_BYTES
+                MAX_METADATA_BYTES,
+                NPM_REGISTRY_ACCEPT
             ))
         }.getOrNull()
         var declarationPath = versionMetadata?.optString("types").orEmpty()
@@ -189,7 +197,11 @@ class ScriptApiReferenceRepository(context: Context) {
         throw IOException(lastError?.message ?: "No TypeScript declaration file was found.")
     }
 
-    private fun readHttps(urlText: String, maxBytes: Int): String {
+    private fun readHttps(
+        urlText: String,
+        maxBytes: Int,
+        acceptHeader: String = "application/json, text/plain, */*"
+    ): String {
         var url = URL(urlText)
         repeat(MAX_REDIRECTS + 1) {
             require(isAllowedSourceUrl(url)) { "Blocked API source URL." }
@@ -198,7 +210,7 @@ class ScriptApiReferenceRepository(context: Context) {
             connection.readTimeout = NETWORK_TIMEOUT_MS
             connection.instanceFollowRedirects = false
             connection.setRequestProperty("User-Agent", "Blockline-Script-API-Reference")
-            connection.setRequestProperty("Accept", "application/json, text/plain, */*")
+            connection.setRequestProperty("Accept", acceptHeader)
             try {
                 val code = connection.responseCode
                 if (code in 300..399) {
@@ -307,8 +319,9 @@ class ScriptApiReferenceRepository(context: Context) {
 
         private const val NETWORK_TIMEOUT_MS = 7_000
         private const val MAX_REDIRECTS = 5
-        private const val MAX_METADATA_BYTES = 4_000_000
-        private const val MAX_SOURCE_BYTES = 3_500_000
+        private const val MAX_METADATA_BYTES = 8_000_000
+        private const val MAX_SOURCE_BYTES = 8_000_000
+        private const val NPM_REGISTRY_ACCEPT = "application/vnd.npm.install-v1+json, application/json;q=0.9"
         private val ALLOWED_HOSTS = setOf("registry.npmjs.org", "cdn.jsdelivr.net", "data.jsdelivr.net")
     }
 }

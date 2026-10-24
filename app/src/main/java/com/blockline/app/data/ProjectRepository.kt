@@ -264,9 +264,6 @@ class ProjectRepository(private val ctx: Context) {
         if (!base.isDirectory) return emptyList()
         return base.walkTopDown()
             .filter { it != base }
-            .map { file -> file to file.relativeTo(base).path.lowercase(java.util.Locale.ROOT) }
-            .sortedBy { it.second }
-            .map { it.first }
             .toList()
     }
     fun allFiles(id: String): List<File> {

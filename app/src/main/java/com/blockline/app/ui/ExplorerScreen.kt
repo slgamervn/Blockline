@@ -51,26 +51,31 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
-import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
-private data class IndexedExplorerEntry(
-    val file: File,
-    val path: String,
-    val ancestors: List<String>,
-    val depth: Int
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     val project = vm.current
-    val listState = androidx.compose.runtime.saveable.rememberSaveable(project?.id, saver = androidx.compose.foundation.lazy.LazyListState.Saver) { androidx.compose.foundation.lazy.LazyListState() }
-    var expanded by remember(project?.id) { mutableStateOf(setOf<String>()) }
-    var filter by remember(project?.id) { mutableStateOf("All") }
+    val listState = androidx.compose.runtime.saveable.rememberSaveable(
+        project?.id,
+        saver = androidx.compose.foundation.lazy.LazyListState.Saver
+    ) { androidx.compose.foundation.lazy.LazyListState() }
+    val expandedState = androidx.compose.runtime.saveable.rememberSaveable(
+        project?.id,
+        saver = androidx.compose.runtime.saveable.Saver<
+            androidx.compose.runtime.MutableState<Set<String>>,
+            List<String>
+        >(
+            save = { state -> state.value.toList() },
+            restore = { saved -> mutableStateOf(saved.toSet()) }
+        )
+    ) { mutableStateOf(emptySet<String>()) }
+    var expanded by expandedState
+    var filter by androidx.compose.runtime.saveable.rememberSaveable(project?.id) { mutableStateOf("All") }
     var dialog by remember { mutableStateOf<String?>(null) }
     var name by remember { mutableStateOf("") }
     var targetPath by remember { mutableStateOf("") }
@@ -86,52 +91,11 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
         } else {
             withContext(Dispatchers.Default) {
                 val context = currentCoroutineContext()
-                buildList {
-                    allEntries.forEachIndexed { index, file ->
-                        if (index % 128 == 0) context.ensureActive()
-                        val path = vm.repo.relative(projectId, file)
-                        val segments = path.split('/')
-                        val ancestors = ArrayList<String>((segments.size - 1).coerceAtLeast(0))
-                        var ancestor = ""
-                        for (segmentIndex in 0 until segments.lastIndex) {
-                            ancestor = if (ancestor.isEmpty()) segments[segmentIndex]
-                            else "$ancestor/${segments[segmentIndex]}"
-                            ancestors += ancestor
-                        }
-                        add(
-                            IndexedExplorerEntry(
-                                file = file,
-                                path = path,
-                                ancestors = ancestors,
-                                depth = ancestors.size
-                            )
-                        )
-                    }
-                }.let { entries ->
-                    val byPath = entries.associateBy { it.path }
-                    val nameComparator = Comparator<String> { left, right -> left.compareTo(right, ignoreCase = true) }
-                    entries.sortedWith { left, right ->
-                        val leftParts = left.path.split('/')
-                        val rightParts = right.path.split('/')
-                        var result = 0
-                        var index = 0
-                        while (index < leftParts.size && index < rightParts.size && result == 0) {
-                            if (leftParts[index] != rightParts[index]) {
-                                val leftPath = leftParts.take(index + 1).joinToString("/")
-                                val rightPath = rightParts.take(index + 1).joinToString("/")
-                                val leftDirectory = byPath[leftPath]?.file?.isDirectory == true
-                                val rightDirectory = byPath[rightPath]?.file?.isDirectory == true
-                                result = when {
-                                    leftDirectory && !rightDirectory -> -1
-                                    !leftDirectory && rightDirectory -> 1
-                                    else -> nameComparator.compare(leftParts[index], rightParts[index])
-                                }
-                            }
-                            index++
-                        }
-                        if (result != 0) result else leftParts.size.compareTo(rightParts.size)
-                    }
-                }
+                ExplorerTreeOrdering.index(
+                    files = allEntries,
+                    pathOf = { file -> vm.repo.relative(projectId, file) },
+                    ensureActive = { context.ensureActive() }
+                )
             }
         }
     }
