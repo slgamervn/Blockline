@@ -105,6 +105,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                         } else {
                             Text(stringResource(R.string.update_no_notes), style = MaterialTheme.typography.bodySmall)
                         }
+                        Text(stringResource(R.string.update_install_confirmation_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (update.apkSizeBytes > 0L) {
                             Text(
                                 stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f", update.apkSizeBytes / 1_048_576.0)),
@@ -115,7 +116,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                     }
                 },
                 confirmButton = {
-                    Button(onClick = { vm.openUpdateReleasePage(context) }) { Text(stringResource(R.string.update_now)) }
+                    Button(onClick = { vm.downloadAndInstallUpdate(context) }, enabled = !vm.isDownloadingUpdate) { Text(if (vm.isDownloadingUpdate) stringResource(R.string.update_downloading, vm.updateDownloadProgress) else stringResource(R.string.update_download_install)) }
                 },
                 dismissButton = {
                     TextButton(onClick = { vm.dismissUpdate(update.version) }) { Text(stringResource(R.string.update_later)) }
