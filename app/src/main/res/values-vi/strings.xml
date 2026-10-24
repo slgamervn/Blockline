@@ -634,4 +634,15 @@
     <string name="mc_style_reset">Đặt lại</string>
     <string name="minecraft_palette_short">Màu</string>
     <string name="chrome_hide_short">Ẩn</string>
+
+    <string name="update_download_install">Tải xuống và cài đặt</string>
+    <string name="update_downloading">Đang tải bản cập nhật… %1$d%%</string>
+    <string name="update_install_permission_title">Cho phép Blockline cài bản cập nhật</string>
+    <string name="update_install_permission_message">Android yêu cầu cấp quyền để Blockline đề nghị cài ứng dụng. Bật “Cho phép từ nguồn này”, quay lại Blockline rồi nhấn Tải xuống và cài đặt lần nữa.</string>
+    <string name="update_install_permission_open">Mở cài đặt</string>
+    <string name="update_install_permission_needed">Hãy bật “Cho phép từ nguồn này” trong cài đặt Android rồi nhấn Tải xuống và cài đặt lần nữa.</string>
+    <string name="update_download_failed">Không tải được bản cập nhật: %1$s</string>
+    <string name="update_installer_open_failed">Đã tải APK nhưng không mở được trình cài đặt Android: %1$s</string>
+    <string name="update_install_confirmation_note">APK được tải ngay trong Blockline. Sau đó Android sẽ hiển thị màn hình xác nhận cài đặt riêng; Blockline không thể bỏ qua bước bảo mật của hệ thống.</string>
+
 </resources>
