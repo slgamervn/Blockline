@@ -274,3 +274,65 @@ fun highlightCurrentLine(
         addStyle(SpanStyle(background = background), lineStart, lineEnd)
     }
 }
+
+
+/**
+ * Renders Minecraft legacy formatting codes for human-readable previews.
+ * The editor itself keeps the source codes intact; this helper is only for preview UI.
+ */
+fun minecraftPreviewText(value: String, baseColor: Color): AnnotatedString = buildAnnotatedString {
+    var currentColor = baseColor
+    var bold = false
+    var italic = false
+    var underline = false
+    var strike = false
+    var cursor = 0
+
+    fun appendStyled(end: Int) {
+        if (end <= cursor) return
+        val start = length
+        append(value.substring(cursor, end))
+        addStyle(
+            SpanStyle(
+                color = currentColor,
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
+                textDecoration = when {
+                    underline && strike -> TextDecoration.combine(listOf(TextDecoration.Underline, TextDecoration.LineThrough))
+                    underline -> TextDecoration.Underline
+                    strike -> TextDecoration.LineThrough
+                    else -> TextDecoration.None
+                }
+            ),
+            start,
+            length
+        )
+    }
+
+    for (match in minecraftColorCodeRegex.findAll(value)) {
+        appendStyled(match.range.first)
+        val code = (match.groupValues[1].ifBlank { match.groupValues[2] }).lowercase().first()
+        when {
+            minecraftColors.containsKey(code) -> {
+                currentColor = minecraftColors.getValue(code)
+                bold = false
+                italic = false
+                underline = false
+                strike = false
+            }
+            code == 'r' -> {
+                currentColor = baseColor
+                bold = false
+                italic = false
+                underline = false
+                strike = false
+            }
+            code == 'l' -> bold = true
+            code == 'o' -> italic = true
+            code == 'n' -> underline = true
+            code == 'm' -> strike = true
+        }
+        cursor = match.range.last + 1
+    }
+    appendStyled(value.length)
+}
