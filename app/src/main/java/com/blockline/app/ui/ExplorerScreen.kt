@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Favorite
@@ -67,6 +68,7 @@ private data class IndexedExplorerEntry(
 @Composable
 fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
     val project = vm.current
+    val listState = androidx.compose.runtime.saveable.rememberSaveable(project?.id, saver = androidx.compose.foundation.lazy.LazyListState.Saver) { androidx.compose.foundation.lazy.LazyListState() }
     var expanded by remember(project?.id) { mutableStateOf(setOf<String>()) }
     var filter by remember(project?.id) { mutableStateOf("All") }
     var dialog by remember { mutableStateOf<String?>(null) }
@@ -104,6 +106,30 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                                 depth = ancestors.size
                             )
                         )
+                    }
+                }.let { entries ->
+                    val byPath = entries.associateBy { it.path }
+                    val nameComparator = compareBy<String>(String.CASE_INSENSITIVE_ORDER) { it }
+                    entries.sortedWith { left, right ->
+                        val leftParts = left.path.split('/')
+                        val rightParts = right.path.split('/')
+                        var result = 0
+                        var index = 0
+                        while (index < leftParts.size && index < rightParts.size && result == 0) {
+                            if (leftParts[index] != rightParts[index]) {
+                                val leftPath = leftParts.take(index + 1).joinToString("/")
+                                val rightPath = rightParts.take(index + 1).joinToString("/")
+                                val leftDirectory = byPath[leftPath]?.file?.isDirectory == true
+                                val rightDirectory = byPath[rightPath]?.file?.isDirectory == true
+                                result = when {
+                                    leftDirectory && !rightDirectory -> -1
+                                    !leftDirectory && rightDirectory -> 1
+                                    else -> nameComparator.compare(leftParts[index], rightParts[index])
+                                }
+                            }
+                            index++
+                        }
+                        if (result != 0) result else leftParts.size.compareTo(rightParts.size)
                     }
                 }
             }
@@ -176,7 +202,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                 ) {
                     EmptyState(Icons.Default.Folder, stringResource(R.string.no_matching_files), stringResource(R.string.explorer_no_results_hint), Modifier.fillMaxSize())
                 } else if (visibleEntries.isNotEmpty()) {
-                    LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
+                    LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth()) {
                         items(
                             items = visibleEntries,
                             key = { it.path },
