@@ -195,11 +195,12 @@ private fun applyEditorCodeSpans(
     tracker: EditorSyntaxWindowTracker
 ) {
     val editable = editor.text ?: return
-    if (windowStart < 0 || windowStart + windowText.length > editable.length) return
-    if (editable.subSequence(windowStart, windowStart + windowText.length).toString() != windowText) return
+    val windowEnd = windowStart + windowText.length
+    if (windowStart < 0 || windowEnd > editable.length) return
+    if (editable.subSequence(windowStart, windowEnd).toString() != windowText) return
 
-    // A text edit can move spans. Clear them once when the source snapshot changes;
-    // ordinary scrolling only replaces spans from the previous viewport window.
+    // Text edits move existing spans, so clear once per source snapshot. During ordinary
+    // scrolling, remove only the old viewport's spans instead of querying the full document.
     if (tracker.source !== source) {
         clearEditorCodeSpans(editor)
         tracker.source = source
@@ -217,28 +218,34 @@ private fun applyEditorCodeSpans(
     editor.beginBatchEdit()
     try {
         highlighted.spanStyles.forEach { range ->
-        val style = range.item
-        val color = style.color.takeUnless { it == Color.Unspecified }?.toArgb()
-        val bold = style.fontWeight == androidx.compose.ui.text.font.FontWeight.Bold
-        val italic = style.fontStyle == androidx.compose.ui.text.font.FontStyle.Italic
-        val underline = style.textDecoration?.contains(androidx.compose.ui.text.style.TextDecoration.Underline) == true
-        val strikeThrough = style.textDecoration?.contains(androidx.compose.ui.text.style.TextDecoration.LineThrough) == true
-        val start = (windowStart + range.start).coerceIn(windowStart, windowStart + windowText.length)
-        val end = (windowStart + range.end).coerceIn(start, windowStart + windowText.length)
-        if ((color != null || bold || italic || underline || strikeThrough) && start < end) {
-            editable.setSpan(
-                EditorCodeSpan(color, bold, italic, underline, strikeThrough),
-                start,
-                end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
+            val style = range.item
+            val color = style.color.takeUnless { it == Color.Unspecified }?.toArgb()
+            val bold = style.fontWeight == androidx.compose.ui.text.font.FontWeight.Bold
+            val italic = style.fontStyle == androidx.compose.ui.text.font.FontStyle.Italic
+            val underline = style.textDecoration?.contains(
+                androidx.compose.ui.text.style.TextDecoration.Underline
+            ) == true
+            val strikeThrough = style.textDecoration?.contains(
+                androidx.compose.ui.text.style.TextDecoration.LineThrough
+            ) == true
+            val start = (windowStart + range.start).coerceIn(windowStart, windowEnd)
+            val end = (windowStart + range.end).coerceIn(start, windowEnd)
+            if ((color != null || bold || italic || underline || strikeThrough) && start < end) {
+                editable.setSpan(
+                    EditorCodeSpan(color, bold, italic, underline, strikeThrough),
+                    start,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
         }
-        tracker.source = source
-        tracker.start = windowStart
-        tracker.end = windowStart + windowText.length
     } finally {
         editor.endBatchEdit()
     }
+
+    tracker.source = source
+    tracker.start = windowStart
+    tracker.end = windowEnd
 }
 
 private fun paletteFor(tokens: EditorTokens) = Palette(
@@ -520,7 +527,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     activePath == vm.activeFile &&
                     source === editorValue.text &&
                     editor === largeEditText &&
-                    currentWindow?.start == window.start &&
+                    currentWindow != null &&
+                    currentWindow.start == window.start &&
                     currentWindow.endExclusive() == window.endExclusive()
                 ) {
                     applyEditorCodeSpans(
@@ -556,7 +564,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 activePath == vm.activeFile &&
                 source === editorValue.text &&
                 editor === largeEditText &&
-                currentWindow?.start == window.start &&
+                currentWindow != null &&
+                currentWindow.start == window.start &&
                 currentWindow.endExclusive() == window.endExclusive()
             ) {
                 applyEditorCodeSpans(
