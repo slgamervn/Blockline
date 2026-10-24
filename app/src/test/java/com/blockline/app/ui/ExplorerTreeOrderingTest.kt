@@ -25,9 +25,10 @@ class ExplorerTreeOrderingTest {
             val entries = root.walkTopDown()
                 .filter { it != root }
                 .toList()
-            val sorted = ExplorerTreeOrdering.index(entries) {
-                it.relativeTo(root).path.replace(File.separatorChar, '/')
-            }
+            val sorted = ExplorerTreeOrdering.index(
+                entries,
+                pathOf = { file -> file.relativeTo(root).path.replace(File.separatorChar, '/') }
+            )
 
             assertEquals(
                 listOf(
@@ -58,9 +59,10 @@ class ExplorerTreeOrderingTest {
             val entries = root.walkTopDown()
                 .filter { it != root }
                 .toList()
-            val nestedFile = ExplorerTreeOrdering.index(entries) {
-                it.relativeTo(root).path.replace(File.separatorChar, '/')
-            }.single { it.path == "BP/entities/mob.json" }
+            val nestedFile = ExplorerTreeOrdering.index(
+                entries,
+                pathOf = { file -> file.relativeTo(root).path.replace(File.separatorChar, '/') }
+            ).single { it.path == "BP/entities/mob.json" }
 
             assertEquals(listOf("BP", "BP/entities"), nestedFile.ancestors)
             assertEquals(2, nestedFile.depth)

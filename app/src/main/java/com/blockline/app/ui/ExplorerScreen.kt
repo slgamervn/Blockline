@@ -70,7 +70,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             androidx.compose.runtime.MutableState<Set<String>>,
             List<String>
         >(
-            save = { state -> state.value.toList() },
+            save = { state -> ArrayList(state.value) },
             restore = { saved -> mutableStateOf(saved.toSet()) }
         )
     ) { mutableStateOf(emptySet<String>()) }
