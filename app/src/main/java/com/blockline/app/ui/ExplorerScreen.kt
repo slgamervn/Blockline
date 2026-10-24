@@ -109,7 +109,7 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
                     }
                 }.let { entries ->
                     val byPath = entries.associateBy { it.path }
-                    val nameComparator = compareBy<String>(String.CASE_INSENSITIVE_ORDER) { it }
+                    val nameComparator = Comparator<String> { left, right -> left.compareTo(right, ignoreCase = true) }
                     entries.sortedWith { left, right ->
                         val leftParts = left.path.split('/')
                         val rightParts = right.path.split('/')
