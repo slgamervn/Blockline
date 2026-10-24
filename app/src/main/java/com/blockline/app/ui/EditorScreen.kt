@@ -1,7 +1,6 @@
 package com.blockline.app.ui
 
 import android.graphics.Typeface
-import android.os.SystemClock
 import android.text.Editable
 import android.text.Spannable
 import android.text.TextPaint
@@ -543,12 +542,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 visibleCodeWindow(editor, source)
             }
             if (window == null) {
-                withContext(Dispatchers.Main.immediate) {
-                    if (activePath == vm.activeFile && source === editorValue.text && editor === largeEditText) {
-                        clearEditorCodeSpans(editor)
-                        syntaxWindowTracker.reset()
-                    }
-                }
+                // Keep the last painted viewport while layout/tokenization is temporarily unavailable.
+                // Clearing all spans here on every scroll frame causes visible color blinking.
                 return@LaunchedEffect
             }
             val coloredWindow = withContext(Dispatchers.Default) {
@@ -593,12 +588,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }
                 }
                 if (window == null) {
-                    withContext(Dispatchers.Main.immediate) {
-                        if (activePath == vm.activeFile && source === editorValue.text && editor === largeEditText) {
-                            clearEditorCodeSpans(editor)
-                            syntaxWindowTracker.reset()
-                        }
-                    }
+                    // Keep the last painted viewport while layout/tokenization is temporarily unavailable.
+                    // Clearing all spans here on every scroll frame causes visible color blinking.
                     return@collect
                 }
 
@@ -1024,11 +1015,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     EditText(viewContext).apply {
                                         largeEditText = this
                                         var lastStyledLine = -1
-                                        var lastSyntaxRefreshAt = 0L
-                                        var syntaxRefreshQueued = false
                                         val syntaxRefreshRunnable = Runnable {
-                                            syntaxRefreshQueued = false
-                                            lastSyntaxRefreshAt = SystemClock.uptimeMillis()
                                             syntaxRefreshRequests.trySend(Unit)
                                         }
                                         setOnScrollChangeListener { view, _, scrollY, _, _ ->
@@ -1039,15 +1026,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                 )
                                                 if (line != lastStyledLine) {
                                                     lastStyledLine = line
-                                                    val now = SystemClock.uptimeMillis()
-                                                    val elapsed = now - lastSyntaxRefreshAt
-                                                    if (elapsed >= 65L) {
-                                                        lastSyntaxRefreshAt = now
-                                                        syntaxRefreshRequests.trySend(Unit)
-                                                    } else if (!syntaxRefreshQueued) {
-                                                        syntaxRefreshQueued = true
-                                                        postDelayed(syntaxRefreshRunnable, (65L - elapsed).coerceAtLeast(1L))
-                                                    }
+                                                    // Debounce syntax work until scrolling settles instead of
+                                                    // tokenizing and replacing spans every 65 ms mid-gesture.
+                                                    removeCallbacks(syntaxRefreshRunnable)
+                                                    postDelayed(syntaxRefreshRunnable, 120L)
                                                 }
                                             }
                                         }
