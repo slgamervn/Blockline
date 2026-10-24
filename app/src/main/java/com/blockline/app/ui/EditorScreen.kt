@@ -243,19 +243,14 @@ private fun applyEditorCodeSpans(
         highlighted.spanStyles.forEach { range ->
             val style = range.item
             val color = style.color.takeUnless { it == Color.Unspecified }?.toArgb()
-            val bold = style.fontWeight == androidx.compose.ui.text.font.FontWeight.Bold
-            val italic = style.fontStyle == androidx.compose.ui.text.font.FontStyle.Italic
-            val underline = style.textDecoration?.contains(
-                androidx.compose.ui.text.style.TextDecoration.Underline
-            ) == true
-            val strikeThrough = style.textDecoration?.contains(
-                androidx.compose.ui.text.style.TextDecoration.LineThrough
-            ) == true
+            // Large-file highlighting must not change glyph metrics. Bold/italic and
+            // decoration spans can alter wrapped-line geometry, which makes EditText
+            // recalculate its layout while scrolling and can snap the viewport upward.
             val start = (windowStart + range.start).coerceIn(windowStart, windowEnd)
             val end = (windowStart + range.end).coerceIn(start, windowEnd)
-            if ((color != null || bold || italic || underline || strikeThrough) && start < end) {
+            if (color != null && start < end) {
                 editable.setSpan(
-                    EditorCodeSpan(color, bold, italic, underline, strikeThrough),
+                    EditorCodeSpan(color, false, false, false, false),
                     start,
                     end,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
