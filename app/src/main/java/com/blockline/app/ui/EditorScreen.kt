@@ -165,19 +165,40 @@ private fun visibleCodeWindow(editor: EditText, source: String): VisibleCodeWind
     var start = layout.getLineStart(firstLine).coerceIn(0, source.length)
     var end = layout.getLineEnd(lastLine).coerceIn(start, source.length)
 
-    // Minified JSON/JS may have very long logical lines. Never parse an unbounded window.
+    // Keep tokenizer input aligned to complete logical lines. Starting in the middle
+    // of a huge minified line loses quote/comment state and produces incorrect colors.
     if (end - start > MAX_VISIBLE_SYNTAX_CHARS) {
         val visibleStart = layout.getLineStart(firstVisible).coerceIn(0, source.length)
         val visibleEnd = layout.getLineEnd(lastVisible).coerceIn(visibleStart, source.length)
         val visibleLength = visibleEnd - visibleStart
+
         if (visibleLength >= MAX_VISIBLE_SYNTAX_CHARS) {
-            start = ((visibleStart + visibleEnd - MAX_VISIBLE_SYNTAX_CHARS) / 2)
-                .coerceIn(0, (source.length - MAX_VISIBLE_SYNTAX_CHARS).coerceAtLeast(0))
-            end = (start + MAX_VISIBLE_SYNTAX_CHARS).coerceAtMost(source.length)
+            // A single oversized logical line (common in minified JSON) cannot be
+            // tokenized safely as an arbitrary substring. Suppress coloring for this
+            // viewport rather than painting misleading spans; normal editing stays active.
+            val lineStart = layout.getLineStart(firstVisible).coerceIn(0, source.length)
+            val lineEnd = layout.getLineEnd(lastVisible).coerceIn(lineStart, source.length)
+            if (lineEnd - lineStart >= MAX_VISIBLE_SYNTAX_CHARS) return null
+            start = lineStart
+            end = lineEnd
         } else {
-            start = (visibleStart - (MAX_VISIBLE_SYNTAX_CHARS - visibleLength) / 2).coerceAtLeast(0)
-            end = (start + MAX_VISIBLE_SYNTAX_CHARS).coerceAtMost(source.length)
-            start = (end - MAX_VISIBLE_SYNTAX_CHARS).coerceAtLeast(0)
+            // Expand only across complete lines; never cut a string/comment at the edges.
+            start = visibleStart
+            end = visibleEnd
+            var beforeLine = firstVisible - 1
+            while (beforeLine >= 0) {
+                val candidateStart = layout.getLineStart(beforeLine).coerceIn(0, source.length)
+                if (end - candidateStart > MAX_VISIBLE_SYNTAX_CHARS) break
+                start = candidateStart
+                beforeLine--
+            }
+            var afterLine = lastVisible + 1
+            while (afterLine < layout.lineCount) {
+                val candidateEnd = layout.getLineEnd(afterLine).coerceIn(start, source.length)
+                if (candidateEnd - start > MAX_VISIBLE_SYNTAX_CHARS) break
+                end = candidateEnd
+                afterLine++
+            }
         }
     }
     if (start >= end) return null
