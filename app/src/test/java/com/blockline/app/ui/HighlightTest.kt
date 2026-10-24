@@ -60,9 +60,33 @@ class HighlightTest {
     }
 
     @Test
-    fun treatsHtmlAsJavaScriptCapableSourceForCanvasApps() {
-        assertEquals(Lang.JS, langFor("html"))
-        assertEquals(Lang.JS, langFor("htm"))
+    fun detectsHtmlXmlAndCssAsDedicatedLanguageModes() {
+        assertEquals(Lang.HTML, langFor("html"))
+        assertEquals(Lang.HTML, langFor("htm"))
+        assertEquals(Lang.HTML, langFor("xml"))
+        assertEquals(Lang.CSS, langFor("css"))
+        assertEquals(Lang.JS, langFor("ts"))
+    }
+
+    @Test
+    fun highlightsHtmlCommentsTagsAttributesAndQuotedValues() {
+        val source = """<!-- note --><div class="hero">Hello</div>"""
+        val colored = highlight(source, Lang.HTML, palette)
+        assertHasColor(colored, source.indexOf("<!--"), palette.comment)
+        assertHasColor(colored, source.indexOf("<div"), palette.keyword)
+        assertHasColor(colored, source.indexOf("class"), palette.key)
+        assertHasColor(colored, source.indexOf("hero"), palette.string)
+    }
+
+    @Test
+    fun highlightsCssCommentsSelectorsPropertiesAndValues() {
+        val source = """/* note */ .hero { color: #ff00aa; margin: 4px; }"""
+        val colored = highlight(source, Lang.CSS, palette)
+        assertHasColor(colored, source.indexOf("/*"), palette.comment)
+        assertHasColor(colored, source.indexOf(".hero"), palette.function)
+        assertHasColor(colored, source.indexOf("color"), palette.key)
+        assertHasColor(colored, source.indexOf("#ff00aa"), palette.function)
+        assertHasColor(colored, source.indexOf("4px"), palette.number)
     }
 
 

@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.blockline.app.R
 
-enum class Lang { JSON, JS, MCFUNC, LANG }
+enum class Lang { JSON, JS, MCFUNC, LANG, HTML, CSS }
 
 class Palette(
     val key: Color,
@@ -153,10 +153,20 @@ private val mcRx = Regex(
 private val langRx = Regex(
     """(?m)^[ \t]*##[^\r\n]*|^[ \t]*[^=\r\n]+(?==)|(?<==)[^\r\n]+"""
 )
+private val htmlRx = Regex(
+    """<!--[\s\S]*?-->|<!DOCTYPE\b[^>]*>|</?[A-Za-z][A-Za-z0-9:-]*|/?>|[A-Za-z_:][\w:.-]*(?=\s*=)|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|&(?:#\d+|#x[\da-fA-F]+|[A-Za-z][A-Za-z0-9]+);?""",
+    RegexOption.IGNORE_CASE
+)
+private val cssRx = Regex(
+    """/\*[\s\S]*?\*/|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|#[0-9a-fA-F]{3,8}\b|[-+]?(?:\d*\.)?\d+(?:px|em|rem|%|vh|vw|deg|s|ms)?\b|@[A-Za-z_-][\w-]*|\.[A-Za-z_-][\w-]*|[A-Za-z_-][\w-]*(?=\s*\{)|[A-Za-z_-][\w-]*(?=\s*:)""",
+    RegexOption.IGNORE_CASE
+)
 
-fun langFor(ext: String): Lang? = when (ext.lowercase()) {
+fun langFor(ext: String): Lang? = when (ext.lowercase(java.util.Locale.ROOT)) {
     "json", "mcmeta", "json5" -> Lang.JSON
-    "js", "mjs", "ts", "html", "htm" -> Lang.JS
+    "js", "mjs", "cjs", "ts", "tsx", "jsx" -> Lang.JS
+    "html", "htm", "xml", "svg" -> Lang.HTML
+    "css" -> Lang.CSS
     "mcfunction" -> Lang.MCFUNC
     "lang" -> Lang.LANG
     else -> null
@@ -175,6 +185,8 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
         Lang.JS -> jsRx
         Lang.MCFUNC -> mcRx
         Lang.LANG -> langRx
+        Lang.HTML -> htmlRx
+        Lang.CSS -> cssRx
     }
     for (m in rx.findAll(src)) {
         val t = m.value
@@ -200,25 +212,34 @@ fun highlight(src: String, lang: Lang, p: Palette, errorOffset: Int? = null): An
         while (nextIndex < src.length && src[nextIndex].isWhitespace()) nextIndex++
         val nextNonWhitespace = src.getOrNull(nextIndex)
         val color = when {
-            t.startsWith("//") || t.startsWith("/*") || (lang == Lang.MCFUNC && t.startsWith("#")) -> p.comment
+            t.startsWith("//") || t.startsWith("/*") ||
+                (lang == Lang.MCFUNC && t.startsWith("#")) ||
+                (lang == Lang.HTML && t.startsWith("<!--")) -> p.comment
             lang == Lang.JSON && t in jsonBooleanLiterals -> p.boolean
             lang == Lang.JS && t in jsBooleanLiterals -> p.boolean
+            lang == Lang.HTML && (t.startsWith("<") || t == ">" || t == "/>") -> p.keyword
+            lang == Lang.HTML && t.startsWith("&") -> p.number
+            lang == Lang.HTML && nextNonWhitespace == '=' -> p.key
+            lang == Lang.CSS && t.startsWith("@") -> p.keyword
+            lang == Lang.CSS && (t.startsWith(".") || (t.startsWith("#") && t.length > 1)) -> p.function
+            lang == Lang.CSS && nextNonWhitespace == ':' -> p.key
             t[0] == '"' || t[0] == '\'' || t[0] == 96.toChar() ->
                 if (lang == Lang.JSON && isKey(src, m.range.last + 1)) p.key
                 else if (lang == Lang.JS && nextNonWhitespace == ':') p.property
                 else p.string
             t[0] == '@' -> p.key
-            t[0].isDigit() || t[0] == '-' -> p.number
+            t[0].isDigit() || t[0] == '-' || (lang == Lang.CSS && t[0] == '+') -> p.number
             lang == Lang.JS && t in jsKeywords -> p.keyword
             lang == Lang.JS && nextNonWhitespace == '(' -> p.function
             lang == Lang.JS && nextNonWhitespace == ':' -> p.property
             lang == Lang.JS -> p.identifier
+            lang == Lang.HTML || lang == Lang.CSS -> p.identifier
             else -> p.keyword
         }
         addStyle(SpanStyle(color = color), m.range.first, m.range.last + 1)
         val isQuotedString = t.length >= 2 && (t.first() == '"' || t.first() == '\'' || t.first() == '`')
         val isJsonKey = lang == Lang.JSON && t.startsWith('"') && isKey(src, m.range.last + 1)
-        if (isQuotedString && !isJsonKey) {
+        if (isQuotedString && !isJsonKey && lang in setOf(Lang.JSON, Lang.JS, Lang.MCFUNC)) {
             addMinecraftFormattingSpans(
                 t.substring(1, t.length - 1),
                 m.range.first + 1,

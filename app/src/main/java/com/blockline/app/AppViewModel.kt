@@ -1051,7 +1051,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     require(file.isFile) { text(R.string.file_not_found) }
                     val size = file.length()
                     require(size <= 5L * 1024L * 1024L) { text(R.string.file_too_large) }
-                    val fileText = buffered ?: file.readText(Charsets.UTF_8)
+                    val fileText = buffered ?: com.blockline.app.data.TextDocumentPolicy.decodeUtf8(file.readBytes())
                     repo.addRecentFile(project.id, path)
                     OpenedFile(size, fileText)
                 }
