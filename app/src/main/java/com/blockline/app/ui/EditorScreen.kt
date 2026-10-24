@@ -302,6 +302,21 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             ""
         }
     }
+    var highlightedPage by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
+    LaunchedEffect(pageText, lang, tokens) {
+        if (lang == null || pageText.isEmpty()) {
+            highlightedPage = null
+        } else {
+            val source = pageText
+            val palette = paletteFor(tokens)
+            val result = withContext(Dispatchers.Default) { highlight(source, lang, palette) }
+            if (source == pageText) highlightedPage = source to result
+        }
+    }
+    val pageDisplayText = remember(pageText, highlightedPage) {
+        highlightedPage?.takeIf { it.first == pageText }?.second ?: AnnotatedString(pageText)
+    }
+
     LaunchedEffect(showFind, findText, path, vm.content) {
         if (!showFind || findText.isBlank()) {
             matchCount = 0
@@ -827,7 +842,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             .padding(horizontal = 4.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            pageText,
+                            pageDisplayText,
                             style = TextStyle(
                                 color = tokens.foreground,
                                 fontFamily = FontFamily.Monospace,
