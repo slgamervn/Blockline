@@ -75,9 +75,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -157,8 +160,8 @@ private fun visibleCodeWindow(editor: EditText, source: String): VisibleCodeWind
     val maxVertical = (layout.height - 1).coerceAtLeast(0)
     val firstVisible = layout.getLineForVertical(editor.scrollY.coerceIn(0, maxVertical))
     val lastVisible = layout.getLineForVertical((editor.scrollY + editor.height).coerceIn(0, maxVertical))
-    val firstLine = (firstVisible - 8).coerceAtLeast(0)
-    val lastLine = (lastVisible + 16).coerceAtMost(layout.lineCount - 1)
+    val firstLine = (firstVisible - 4).coerceAtLeast(0)
+    val lastLine = (lastVisible + 10).coerceAtMost(layout.lineCount - 1)
     var start = layout.getLineStart(firstLine).coerceIn(0, source.length)
     var end = layout.getLineEnd(lastLine).coerceIn(start, source.length)
 
@@ -539,40 +542,49 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
-    LaunchedEffect(visibleSyntaxRefresh, path, lang, tokens, largeEditText, vm.readOnly) {
+    LaunchedEffect(path, lang, tokens, largeEditText, vm.readOnly) {
         val activePath = path ?: return@LaunchedEffect
         val activeLang = lang ?: return@LaunchedEffect
         if (vm.readOnly) return@LaunchedEffect
-        val source = editorValue.text
-        if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@LaunchedEffect
-        val editor = largeEditText ?: return@LaunchedEffect
         val palette = paletteFor(tokens)
 
-        val window = withContext(Dispatchers.Main.immediate) {
-            if (source !== editorValue.text || activePath != vm.activeFile || editor !== largeEditText) {
-                null
-            } else {
-                visibleCodeWindow(editor, source)
+        // Keep one worker alive while scrolling. Conflate queued refresh requests instead
+        // of cancelling syntax work on every scroll callback; after a pass, process the
+        // newest viewport rather than painting an outdated one.
+        snapshotFlow { visibleSyntaxRefresh }
+            .distinctUntilChanged()
+            .conflate()
+            .collect {
+                val source = editorValue.text
+                if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@collect
+                val editor = largeEditText ?: return@collect
+                val window = withContext(Dispatchers.Main.immediate) {
+                    if (source !== editorValue.text || activePath != vm.activeFile || editor !== largeEditText) {
+                        null
+                    } else {
+                        visibleCodeWindow(editor, source)
+                    }
+                } ?: return@collect
+
+                val coloredWindow = withContext(Dispatchers.Default) {
+                    highlight(window.text, activeLang, palette)
+                }
+                withContext(Dispatchers.Main.immediate) {
+                    val currentWindow = visibleCodeWindow(editor, source)
+                    if (
+                        activePath == vm.activeFile &&
+                        source === editorValue.text &&
+                        editor === largeEditText &&
+                        currentWindow != null &&
+                        currentWindow.start == window.start &&
+                        currentWindow.endExclusive() == window.endExclusive()
+                    ) {
+                        applyEditorCodeSpans(
+                            editor, source, window.start, window.text, coloredWindow, syntaxWindowTracker
+                        )
+                    }
+                }
             }
-        } ?: return@LaunchedEffect
-        val coloredWindow = withContext(Dispatchers.Default) {
-            highlight(window.text, activeLang, palette)
-        }
-        withContext(Dispatchers.Main.immediate) {
-            val currentWindow = visibleCodeWindow(editor, source)
-            if (
-                activePath == vm.activeFile &&
-                source === editorValue.text &&
-                editor === largeEditText &&
-                currentWindow != null &&
-                currentWindow.start == window.start &&
-                currentWindow.endExclusive() == window.endExclusive()
-            ) {
-                applyEditorCodeSpans(
-                    editor, source, window.start, window.text, coloredWindow, syntaxWindowTracker
-                )
-            }
-        }
     }
     val precomputedEditorText = remember(highlightedText, editorValue.text) {
         highlightedText?.takeIf { it.first == editorValue.text }?.second
