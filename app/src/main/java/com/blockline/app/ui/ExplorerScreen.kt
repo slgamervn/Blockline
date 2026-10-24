@@ -138,7 +138,18 @@ fun ExplorerScreen(vm: AppViewModel, onOpenEditor: () -> Unit) {
             IconButton(onClick = { dialog = "folder"; name = "" }) { Icon(Icons.Default.CreateNewFolder, stringResource(R.string.new_folder_cd)) }
             IconButton(onClick = { dialog = "file"; name = "" }) { Icon(Icons.AutoMirrored.Filled.InsertDriveFile, stringResource(R.string.new_file_cd)) }
             IconButton(
-                onClick = { importTextLauncher.launch(arrayOf("text/*", "application/json", "application/javascript", "application/xml")) },
+                onClick = { importTextLauncher.launch(
+                    arrayOf(
+                        "text/*",
+                        "application/json",
+                        "application/javascript",
+                        "application/xml",
+                        "application/typescript",
+                        "text/csv",
+                        "application/x-yaml",
+                        "application/toml"
+                    )
+                ) },
                 enabled = project != null && !vm.isFileOperationRunning
             ) { Icon(Icons.Default.FileOpen, stringResource(R.string.import_text_file_cd)) }
         })

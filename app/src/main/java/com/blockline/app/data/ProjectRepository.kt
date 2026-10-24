@@ -133,12 +133,10 @@ class ProjectRepository(private val ctx: Context) {
         val projectRoot = projectDir(projectId)
         require(projectRoot.isDirectory) { "Project not found." }
         val display = displayName(uri).substringAfterLast('/').trim()
-        val extension = display.substringAfterLast('.', "").lowercase()
-        require(extension in setOf("txt", "html", "htm", "css", "js", "json", "xml", "md", "log", "yml", "yaml", "properties", "mcfunction")) {
-            "Unsupported text file type. Choose TXT, HTML, CSS, JS, JSON, XML, Markdown, LOG, YAML or MCFunction."
+        require(TextDocumentPolicy.isSupported(display)) {
+            "Unsupported text file type. Choose a supported text or source-code file."
         }
-        require(display.isNotBlank() && display != "." && display != "..") { "Invalid file name." }
-        val safeName = display.map { ch -> if (ch.isLetterOrDigit() || ch in "._- ") ch else '_' }.joinToString("").trim()
+        val safeName = TextDocumentPolicy.sanitizeDisplayName(display)
         val target = resolve(projectId, safeName)
         require(!target.exists()) { "A file with this name already exists in the project." }
         val bytes = ctx.contentResolver.openInputStream(uri)?.use { input ->
@@ -154,8 +152,7 @@ class ProjectRepository(private val ctx: Context) {
             }
             output.toByteArray()
         } ?: error("Could not read the selected file.")
-        val text = bytes.toString(Charsets.UTF_8)
-        require('\u0000' !in text) { "The selected file is not plain text." }
+        val text = TextDocumentPolicy.decodeUtf8(bytes)
         check(target.parentFile?.mkdirs() != false) { "Could not create the destination folder." }
         AtomicFileWriter.write(target, text, suffix = ".importing")
         return relative(projectId, target)
