@@ -777,6 +777,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     Lang.JS -> "JavaScript"
                     Lang.MCFUNC -> "mcfunction"
                     Lang.LANG -> "Properties"
+                    Lang.HTML -> "HTML/XML"
+                    Lang.CSS -> "CSS"
                     null -> path?.substringAfterLast('.', "Plain Text")?.uppercase() ?: "Plain Text"
                 }
                 EditorStatusBar(
