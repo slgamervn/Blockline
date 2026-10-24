@@ -65,6 +65,27 @@ class HighlightTest {
         assertEquals(Lang.JS, langFor("htm"))
     }
 
+
+    @Test
+    fun rendersMinecraftPreviewWithoutShowingFormattingCodes() {
+        val preview = minecraftPreviewText("§aGreen §lBold §cRed§r Normal", Color(0xFFD4D4D4))
+        assertEquals("Green Bold Red Normal", preview.text)
+        assertHasColor(preview, preview.text.indexOf("Green"), Color(0xFF55FF55))
+        assertHasColor(preview, preview.text.indexOf("Red"), Color(0xFFFF5555))
+        assertHasColor(preview, preview.text.indexOf("Normal"), Color(0xFFD4D4D4))
+        assertTrue(preview.spanStyles.any {
+            it.start <= preview.text.indexOf("Bold") && it.end > preview.text.indexOf("Bold") &&
+                it.item.fontWeight == FontWeight.Bold
+        })
+    }
+
+    @Test
+    fun previewKeepsUnicodeAndVietnameseText() {
+        val preview = minecraftPreviewText("§bXin chào thế giới 🌱", Color.White)
+        assertEquals("Xin chào thế giới 🌱", preview.text)
+        assertHasColor(preview, 0, Color(0xFF55FFFF))
+    }
+
     private fun assertHasColor(
         text: androidx.compose.ui.text.AnnotatedString,
         index: Int,
