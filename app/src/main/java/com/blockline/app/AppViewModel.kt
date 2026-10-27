@@ -338,12 +338,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             settingsPreferences.edit().putString("last_update_check", lastUpdateCheck).apply()
             result.onSuccess { available ->
                 if (available != null) rememberReleaseInfo(available)
-                val ignoredVersion = settingsPreferences.getString("dismissed_update_version", null)
                 // Automatic checks update the saved changelog silently. Keep modals for
                 // explicit user-initiated checks so startup never interrupts editing.
-                updateInfo = if (available != null && !automatic &&
-                    (ignoredVersion != available.version || !automatic)
-                ) available else null
+                updateInfo = if (available != null && !automatic) available else null
                 updateCheckResult = when {
                     available != null -> text(R.string.update_available_status, available.version)
                     else -> text(R.string.update_up_to_date)
