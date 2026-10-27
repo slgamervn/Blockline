@@ -89,7 +89,7 @@ class CheckpointedSyntaxDocumentTest {
 
     @Test
     fun handlesLongMcfunctionStringsTargetsAndComments() {
-        val source = "say \"" + "x".repeat(75_000) + """ {braces} Việt Nam 🌱\" # generated comment
+        val source = "say \"" + "x".repeat(75_000) + """ {braces} Việt Nam 🌱" # generated comment
 execute as @e run say "done""""
         val index = CheckpointedSyntaxDocument.build(source, Lang.MCFUNC)
         val valueOffset = source.indexOf("Việt Nam")
