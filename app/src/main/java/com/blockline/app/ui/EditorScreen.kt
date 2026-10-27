@@ -1161,7 +1161,21 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         setLineSpacing(0f, 1.1f)
                                         setText(editorValue.text)
                                         lastSyncedNativeText[0] = editorValue.text
-                                        setSelection(editorValue.selection.start.coerceIn(0, text.length))
+                                        val initialViewport = path?.let { vm.editorViewport(it) }?.clamped(editorValue.text.length)
+                                        setSelection(
+                                            (initialViewport?.selectionStart ?: editorValue.selection.start).coerceIn(0, text.length),
+                                            (initialViewport?.selectionEnd ?: editorValue.selection.end).coerceIn(0, text.length)
+                                        )
+                                        initialViewport?.let { viewport ->
+                                            post {
+                                                scrollTo(viewport.scrollX, viewport.scrollY)
+                                                path?.let { nativePath ->
+                                                    vm.saveEditorViewport(
+                                                        nativePath, scrollX, scrollY, selectionStart, selectionEnd
+                                                    )
+                                                }
+                                            }
+                                        }
                                         setOnKeyListener { _, keyCode, event ->
                                             if (keyCode == android.view.KeyEvent.KEYCODE_TAB &&
                                                 event.action == android.view.KeyEvent.ACTION_DOWN &&
