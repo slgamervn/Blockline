@@ -416,6 +416,17 @@ fun MoreScreen(vm: AppViewModel) {
                         onCheckedChange = { vm.editorWordWrapEnabled = it }
                     )
                 }
+                Text(stringResource(R.string.editor_indentation_width), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(2, 4, 8).forEach { width ->
+                        androidx.compose.material3.FilterChip(
+                            selected = vm.editorIndentSize == width,
+                            onClick = { vm.editorIndentSize = width },
+                            label = { Text(stringResource(R.string.editor_indent_spaces, width)) }
+                        )
+                    }
+                }
+                androidx.compose.material3.HorizontalDivider()
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.editor_syntax_highlighting), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
