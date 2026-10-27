@@ -641,6 +641,24 @@
     <string name="minecraft_palette_short">Màu</string>
     <string name="chrome_hide_short">Ẩn</string>
 
-    <string name="update_release_page_note">Ứng dụng sẽ mở trang phát hành GitHub chính thức. Hãy xem ghi chú và tự chọn tải tệp APK tại đó.</string>
+    <string name="update_release_page_note">Bạn có thể xem lại thông tin bản phát hành trong phần ghi chú đã lưu bên dưới.</string>
+    <string name="update_download_prompt">Blockline tải bản cập nhật ngay trong ứng dụng. Android vẫn yêu cầu bạn xác nhận cài đặt.</string>
+    <string name="update_download_size">Dung lượng APK: %1$s</string>
+    <string name="update_download_action">Tải bản cập nhật</string>
+    <string name="update_retry_download">Thử tải lại</string>
+    <string name="update_cancel_download">Hủy tải xuống</string>
+    <string name="update_install_downloaded">Cài đặt bản cập nhật đã tải</string>
+    <string name="update_install_after_permission">Tiếp tục cài đặt</string>
+    <string name="update_state_idle">Sẵn sàng tải xuống.</string>
+    <string name="update_state_downloading">Đang tải… %1$d%%</string>
+    <string name="update_state_verifying">Đang xác minh gói APK, phiên bản và chữ ký…</string>
+    <string name="update_state_ready">APK đã xác minh. Sẵn sàng mở hộp thoại cài đặt của Android.</string>
+    <string name="update_state_waiting_permission">Cho phép cài ứng dụng từ Blockline trong cài đặt Android, quay lại đây rồi nhấn Tiếp tục.</string>
+    <string name="update_state_installing">Đang mở trình cài đặt gói của Android…</string>
+    <string name="update_state_failed">Tải xuống hoặc xác minh thất bại.</string>
+    <string name="update_state_cancelled">Đã hủy tải. Nhấn thử lại để tiếp tục tải còn dang dở.</string>
+    <string name="update_download_failed_detail">Cập nhật thất bại: %1$s</string>
+    <string name="update_install_failed_detail">Không mở được trình cài đặt: %1$s</string>
+    <string name="update_download_missing">Không có APK đã xác minh trong bộ nhớ đệm. Hãy tải bản cập nhật trước.</string>
 
 </resources>

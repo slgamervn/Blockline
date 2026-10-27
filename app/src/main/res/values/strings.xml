@@ -641,6 +641,24 @@
     <string name="minecraft_palette_short">Colors</string>
     <string name="chrome_hide_short">Hide</string>
 
-    <string name="update_release_page_note">This opens the official GitHub release page. Review the notes and choose the APK download yourself.</string>
+    <string name="update_release_page_note">The release details can be reviewed from the saved changelog below.</string>
+    <string name="update_download_prompt">Blockline downloads this release inside the app. Android will still ask you to confirm installation.</string>
+    <string name="update_download_size">APK size: %1$s</string>
+    <string name="update_download_action">Download update</string>
+    <string name="update_retry_download">Retry download</string>
+    <string name="update_cancel_download">Cancel download</string>
+    <string name="update_install_downloaded">Install downloaded update</string>
+    <string name="update_install_after_permission">Continue to installer</string>
+    <string name="update_state_idle">Ready to download.</string>
+    <string name="update_state_downloading">Downloading… %1$d%%</string>
+    <string name="update_state_verifying">Verifying APK identity, version and signing certificate…</string>
+    <string name="update_state_ready">APK verified. Ready for Android installation confirmation.</string>
+    <string name="update_state_waiting_permission">Allow installs from Blockline in Android settings, return here, then tap Continue.</string>
+    <string name="update_state_installing">Opening Android package installer…</string>
+    <string name="update_state_failed">Download or verification failed.</string>
+    <string name="update_state_cancelled">Download cancelled. Retry to continue an interrupted download.</string>
+    <string name="update_download_failed_detail">Update failed: %1$s</string>
+    <string name="update_install_failed_detail">Could not open installer: %1$s</string>
+    <string name="update_download_missing">No verified APK is cached. Download the update first.</string>
 
 </resources>
