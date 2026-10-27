@@ -7,6 +7,7 @@ import android.text.TextPaint
 import android.text.TextWatcher
 import android.text.style.CharacterStyle
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import android.text.InputType
 import android.widget.EditText
@@ -549,35 +550,38 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             vm.updateContent(snapshot)
         }
     }
-    LaunchedEffect(path, editorValue.text, lang, vm.readOnly) {
-        if ((lang != Lang.JSON && lang != Lang.LANG) || vm.readOnly || editorValue.text.isBlank() ||
-            editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS
-        ) {
+    LaunchedEffect(path, syntaxSource, lang, vm.readOnly) {
+        val source = syntaxSource
+        if ((lang != Lang.JSON && lang != Lang.LANG) || source.isBlank()) {
             syntaxIssue = null
             checkingJson = false
         } else {
             checkingJson = true
-            delay(320)
-            val source = editorValue.text
+            syntaxIssue = null
+            // JSON validation builds parser state for the entire document; debounce large files
+            // more aggressively and keep the work off the UI thread.
+            delay(if (source.length > 128_000) 850 else 320)
+            val snapshot = source
             val issue = withContext(Dispatchers.Default) {
-                if (lang == Lang.LANG) ProjectValidator.inspectLangSyntax(source)
-                else ProjectValidator.inspectJsonSyntax(source)
+                if (lang == Lang.LANG) ProjectValidator.inspectLangSyntax(snapshot)
+                else ProjectValidator.inspectJsonSyntax(snapshot)
             }
-            if (source == editorValue.text && path == vm.activeFile) {
+            val currentSource = if (vm.readOnly) vm.content else editorValue.text
+            if (snapshot === currentSource && path == vm.activeFile) {
                 syntaxIssue = issue
                 checkingJson = false
             }
         }
     }
-    val jsonErrorOffset = remember(editorValue.text, syntaxIssue) {
+    val jsonErrorOffset = remember(syntaxSource, syntaxIssue) {
         syntaxIssue?.line?.let { targetLine ->
             var currentLine = 1
             var offset = 0
-            while (offset < editorValue.text.length && currentLine < targetLine) {
-                if (editorValue.text[offset] == '\n') currentLine++
+            while (offset < syntaxSource.length && currentLine < targetLine) {
+                if (syntaxSource[offset] == '\n') currentLine++
                 offset++
             }
-            (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, editorValue.text.length)
+            (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, syntaxSource.length)
         }
     }
     LaunchedEffect(path, editorValue.text, lang, tokens, largeEditText, vm.readOnly, vm.editorSyntaxHighlightingEnabled) {
@@ -587,15 +591,19 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         if (!vm.editorSyntaxHighlightingEnabled) {
             highlightedText = null
             if (native != null && syntaxWindowTracker.source != null) {
-                withContext(Dispatchers.Main.immediate) { clearEditorCodeSpans(native) }
+                withContext(Dispatchers.Main.immediate) {
+                    clearTrackedEditorCodeSpans(native, syntaxWindowTracker, source, editorWordWrapEnabled)
+                }
             }
             syntaxWindowTracker.reset()
             return@LaunchedEffect
         }
         if (activePath == null || lang == null || source.isEmpty() || vm.readOnly) {
             highlightedText = null
-            if (native != null) {
-                withContext(Dispatchers.Main.immediate) { clearEditorCodeSpans(native) }
+            if (native != null && syntaxWindowTracker.source != null) {
+                withContext(Dispatchers.Main.immediate) {
+                    clearTrackedEditorCodeSpans(native, syntaxWindowTracker, source, editorWordWrapEnabled)
+                }
             }
             syntaxWindowTracker.reset()
             return@LaunchedEffect
@@ -615,25 +623,24 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         } else {
             highlightedText = null
             val editor = native ?: return@LaunchedEffect
-            // Debounce content edits briefly; viewport scrolling is handled by the
-            // separate throttled effect below and does not wait for this delay.
             delay(90)
-            if (activePath != vm.activeFile || source !== editorValue.text || editor !== largeEditText) {
-                return@LaunchedEffect
-            }
+            if (activePath != vm.activeFile || source !== editorValue.text || editor !== largeEditText) return@LaunchedEffect
             val window = withContext(Dispatchers.Main.immediate) {
-                visibleCodeWindow(editor, source)
-            }
-            if (window == null) {
-                // Keep the last painted viewport while layout/tokenization is temporarily unavailable.
-                // Clearing all spans here on every scroll frame causes visible color blinking.
+                visibleCodeWindow(editor, source, editorWordWrapEnabled)
+            } ?: return@LaunchedEffect
+            val indexed = checkpointedSyntax?.takeIf { it.source === source && it.language == lang }
+            if (CheckpointedSyntaxDocument.supports(lang) && indexed == null) {
+                withContext(Dispatchers.Main.immediate) {
+                    clearTrackedEditorCodeSpans(editor, syntaxWindowTracker, source, editorWordWrapEnabled)
+                }
                 return@LaunchedEffect
             }
             val coloredWindow = withContext(Dispatchers.Default) {
-                highlight(window.text, lang, palette)
+                indexed?.highlightWindow(window.start, window.endExclusive(), palette)
+                    ?: highlight(window.text, lang, palette)
             }
             withContext(Dispatchers.Main.immediate) {
-                val currentWindow = visibleCodeWindow(editor, source)
+                val currentWindow = visibleCodeWindow(editor, source, editorWordWrapEnabled)
                 if (
                     activePath == vm.activeFile &&
                     source === editorValue.text &&
@@ -643,7 +650,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     currentWindow.endExclusive() == window.endExclusive()
                 ) {
                     applyEditorCodeSpans(
-                        editor, source, window.start, window.text, coloredWindow, syntaxWindowTracker
+                        editor, source, window.start, window.text, coloredWindow,
+                        syntaxWindowTracker, editorWordWrapEnabled
                     )
                 }
             }
@@ -656,45 +664,48 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         if (vm.readOnly || !vm.editorSyntaxHighlightingEnabled) return@LaunchedEffect
         val palette = paletteFor(tokens)
 
-        // Keep one worker alive while scrolling. Conflate queued refresh requests instead
-        // of cancelling syntax work on every scroll callback; after a pass, process the
-        // newest viewport rather than painting an outdated one.
+        // One conflated worker handles scrolling. A long line is colored from the checkpoint
+        // index, never by tokenizing the entire minified line for every viewport.
         syntaxRefreshRequests.receiveAsFlow().collect {
-                val source = editorValue.text
-                if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@collect
-                val editor = largeEditText ?: return@collect
-                val window = withContext(Dispatchers.Main.immediate) {
-                    if (source !== editorValue.text || activePath != vm.activeFile || editor !== largeEditText) {
-                        null
-                    } else {
-                        visibleCodeWindow(editor, source)
-                    }
+            val source = editorValue.text
+            if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@collect
+            val editor = largeEditText ?: return@collect
+            val window = withContext(Dispatchers.Main.immediate) {
+                if (source !== editorValue.text || activePath != vm.activeFile || editor !== largeEditText) {
+                    null
+                } else {
+                    visibleCodeWindow(editor, source, editorWordWrapEnabled)
                 }
-                if (window == null) {
-                    // Keep the last painted viewport while layout/tokenization is temporarily unavailable.
-                    // Clearing all spans here on every scroll frame causes visible color blinking.
-                    return@collect
-                }
+            } ?: return@collect
 
-                val coloredWindow = withContext(Dispatchers.Default) {
-                    highlight(window.text, activeLang, palette)
-                }
+            val indexed = checkpointedSyntax?.takeIf { it.source === source && it.language == activeLang }
+            if (CheckpointedSyntaxDocument.supports(activeLang) && indexed == null) {
                 withContext(Dispatchers.Main.immediate) {
-                    val currentWindow = visibleCodeWindow(editor, source)
-                    if (
-                        activePath == vm.activeFile &&
-                        source === editorValue.text &&
-                        editor === largeEditText &&
-                        currentWindow != null &&
-                        currentWindow.start == window.start &&
-                        currentWindow.endExclusive() == window.endExclusive()
-                    ) {
-                        applyEditorCodeSpans(
-                            editor, source, window.start, window.text, coloredWindow, syntaxWindowTracker
-                        )
-                    }
+                    clearTrackedEditorCodeSpans(editor, syntaxWindowTracker, source, editorWordWrapEnabled)
+                }
+                return@collect
+            }
+            val coloredWindow = withContext(Dispatchers.Default) {
+                indexed?.highlightWindow(window.start, window.endExclusive(), palette)
+                    ?: highlight(window.text, activeLang, palette)
+            }
+            withContext(Dispatchers.Main.immediate) {
+                val currentWindow = visibleCodeWindow(editor, source, editorWordWrapEnabled)
+                if (
+                    activePath == vm.activeFile &&
+                    source === editorValue.text &&
+                    editor === largeEditText &&
+                    currentWindow != null &&
+                    currentWindow.start == window.start &&
+                    currentWindow.endExclusive() == window.endExclusive()
+                ) {
+                    applyEditorCodeSpans(
+                        editor, source, window.start, window.text, coloredWindow,
+                        syntaxWindowTracker, editorWordWrapEnabled
+                    )
                 }
             }
+        }
     }
     val precomputedEditorText = remember(highlightedText, editorValue.text) {
         highlightedText?.takeIf { it.first == editorValue.text }?.second
@@ -1008,9 +1019,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                 }
-                if ((lang == Lang.JSON || lang == Lang.LANG) && !vm.readOnly && editorValue.text.isNotBlank() &&
-                    editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS
-                ) {
+                if ((lang == Lang.JSON || lang == Lang.LANG) && syntaxSource.isNotBlank()) {
                     val issue = syntaxIssue
                     val colors = MaterialTheme.colorScheme
                     val hasSyntaxError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
@@ -1045,14 +1054,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
-                }
-                if (!vm.readOnly && lang != null && editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
-                    Text(
-                        stringResource(R.string.editor_live_analysis_paused),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
                 }
                 if (vm.readOnly) {
                     Text(
@@ -1099,12 +1100,18 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 factory = { viewContext ->
                                     EditText(viewContext).apply {
                                         largeEditText = this
+                                        path?.let { nativeDocumentPaths[this] = it }
                                         var lastStyledLine = -1
                                         val syntaxRefreshRunnable = Runnable {
                                             syntaxRefreshRequests.trySend(Unit)
                                         }
                                         setOnScrollChangeListener { view, _, scrollY, _, _ ->
-                                            val currentLayout = (view as? EditText)?.layout
+                                            val native = view as? EditText
+                                            val nativePath = native?.let { nativeDocumentPaths[it] } ?: vm.activeFile
+                                            if (native != null && nativePath != null) {
+                                                vm.saveEditorViewport(nativePath, native.scrollX, scrollY, native.selectionStart, native.selectionEnd)
+                                            }
+                                            val currentLayout = native?.layout
                                             if (currentLayout != null && currentLayout.lineCount > 0) {
                                                 val line = currentLayout.getLineForVertical(
                                                     scrollY.coerceIn(0, (currentLayout.height - 1).coerceAtLeast(0))
@@ -1117,6 +1124,20 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                     postDelayed(syntaxRefreshRunnable, 120L)
                                                 }
                                             }
+                                        }
+                                        setOnTouchListener { view, event ->
+                                            if (event?.actionMasked == MotionEvent.ACTION_UP ||
+                                                event?.actionMasked == MotionEvent.ACTION_CANCEL
+                                            ) {
+                                                view.post {
+                                                    val native = view as? EditText
+                                                    val nativePath = native?.let { nativeDocumentPaths[it] } ?: vm.activeFile
+                                                    if (native != null && nativePath != null) {
+                                                        vm.saveEditorViewport(nativePath, native.scrollX, native.scrollY, native.selectionStart, native.selectionEnd)
+                                                    }
+                                                }
+                                            }
+                                            false
                                         }
                                         post { syntaxRefreshRequests.trySend(Unit) }
                                         typeface = Typeface.MONOSPACE
@@ -1171,13 +1192,57 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 },
                                 update = { editText ->
                                     if (largeEditText !== editText) largeEditText = editText
+                                    val previousPath = nativeDocumentPaths[editText]
+                                    val pathChanged = previousPath != path
+                                    if (pathChanged && previousPath != null) {
+                                        vm.saveEditorViewport(
+                                            previousPath, editText.scrollX, editText.scrollY,
+                                            editText.selectionStart, editText.selectionEnd
+                                        )
+                                    }
+                                    if (path != null) nativeDocumentPaths[editText] = path
                                     if (editText.currentTextColor != tokens.foreground.toArgb()) {
                                         editText.setTextColor(tokens.foreground.toArgb())
                                     }
-                                    if (lastSyncedNativeText[0] !== editorValue.text) {
-                                        val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
-                                        editText.setText(editorValue.text)
-                                        editText.setSelection(cursor.coerceIn(0, editText.text.length))
+                                    val textReferenceChanged = lastSyncedNativeText[0] !== editorValue.text
+                                    val sameTextValue = textReferenceChanged && !pathChanged &&
+                                        editText.text.contentEquals(editorValue.text)
+                                    if (pathChanged || (textReferenceChanged && !sameTextValue)) {
+                                        val savedViewport = if (pathChanged) vm.editorViewport(path.orEmpty())?.clamped(editorValue.text.length) else null
+                                        val restoreX = savedViewport?.scrollX ?: editText.scrollX
+                                        val restoreY = savedViewport?.scrollY ?: editText.scrollY
+                                        val restoreStart = savedViewport?.selectionStart
+                                            ?: editorValue.selection.start.coerceIn(0, editorValue.text.length)
+                                        val restoreEnd = savedViewport?.selectionEnd
+                                            ?: editorValue.selection.end.coerceIn(0, editorValue.text.length)
+                                        syncingNativeText[0] = true
+                                        try {
+                                            editText.setText(editorValue.text)
+                                        } finally {
+                                            syncingNativeText[0] = false
+                                        }
+                                        editText.setSelection(
+                                            restoreStart.coerceIn(0, editText.text.length),
+                                            restoreEnd.coerceIn(0, editText.text.length)
+                                        )
+                                        lastSyncedNativeText[0] = editorValue.text
+                                        val targetPath = path
+                                        editText.post {
+                                            if (nativeDocumentPaths[editText] == targetPath) {
+                                                editText.setSelection(
+                                                    restoreStart.coerceIn(0, editText.text.length),
+                                                    restoreEnd.coerceIn(0, editText.text.length)
+                                                )
+                                                editText.scrollTo(restoreX, restoreY)
+                                                vm.saveEditorViewport(
+                                                    targetPath, editText.scrollX, editText.scrollY,
+                                                    editText.selectionStart, editText.selectionEnd
+                                                )
+                                            }
+                                        }
+                                    } else if (textReferenceChanged) {
+                                        // Adopt the new immutable snapshot identity without replacing
+                                        // the native buffer or touching its viewport.
                                         lastSyncedNativeText[0] = editorValue.text
                                     }
                                     if ((editText.tag as? Boolean) != editorWordWrapEnabled) {
