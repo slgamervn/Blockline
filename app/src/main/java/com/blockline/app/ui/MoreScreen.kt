@@ -105,6 +105,9 @@ private fun UpdateDownloadControls(
     context: Context,
     update: AppUpdate
 ) {
+    val state = if (vm.updateDownloadVersion == update.version) vm.updateDownloadState else UpdateDownloadState.IDLE
+    val progress = if (state == UpdateDownloadState.IDLE) 0 else vm.updateDownloadProgress
+    val error = if (vm.updateDownloadVersion == update.version) vm.updateDownloadError else null
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             stringResource(R.string.update_download_prompt),
@@ -117,9 +120,9 @@ private fun UpdateDownloadControls(
             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            when (vm.updateDownloadState) {
+            when (state) {
                 UpdateDownloadState.IDLE -> stringResource(R.string.update_state_idle)
-                UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, vm.updateDownloadProgress)
+                UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, progress)
                 UpdateDownloadState.VERIFYING -> stringResource(R.string.update_state_verifying)
                 UpdateDownloadState.READY_TO_INSTALL -> stringResource(R.string.update_state_ready)
                 UpdateDownloadState.WAITING_PERMISSION -> stringResource(R.string.update_state_waiting_permission)
@@ -128,23 +131,23 @@ private fun UpdateDownloadControls(
                 UpdateDownloadState.CANCELLED -> stringResource(R.string.update_state_cancelled)
             },
             style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-            color = if (vm.updateDownloadState == UpdateDownloadState.FAILED)
+            color = if (state == UpdateDownloadState.FAILED)
                 androidx.compose.material3.MaterialTheme.colorScheme.error
             else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
         )
-        if (vm.updateDownloadState == UpdateDownloadState.DOWNLOADING ||
-            vm.updateDownloadState == UpdateDownloadState.VERIFYING
+        if (state == UpdateDownloadState.DOWNLOADING ||
+            state == UpdateDownloadState.VERIFYING
         ) {
             LinearProgressIndicator(
-                progress = { if (vm.updateDownloadState == UpdateDownloadState.VERIFYING) 1f else vm.updateDownloadProgress / 100f },
+                progress = { if (state == UpdateDownloadState.VERIFYING) 1f else progress / 100f },
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        vm.updateDownloadError?.let {
+        error?.let {
             Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error,
                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
         }
-        when (vm.updateDownloadState) {
+        when (state) {
             UpdateDownloadState.DOWNLOADING -> TextButton(onClick = { vm.cancelUpdateDownload() }) {
                 Text(stringResource(R.string.update_cancel_download))
             }
@@ -152,18 +155,18 @@ private fun UpdateDownloadControls(
                 onClick = { vm.installDownloadedUpdate(context) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.WAITING_PERMISSION)
+                Text(stringResource(if (state == UpdateDownloadState.WAITING_PERMISSION)
                     R.string.update_install_after_permission else R.string.update_install_downloaded))
             }
             UpdateDownloadState.VERIFYING, UpdateDownloadState.INSTALLING -> Button(
                 onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.INSTALLING)
+                Text(stringResource(if (state == UpdateDownloadState.INSTALLING)
                     R.string.update_state_installing else R.string.update_state_verifying))
             }
             else -> Button(onClick = { vm.downloadUpdate() }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.FAILED ||
-                    vm.updateDownloadState == UpdateDownloadState.CANCELLED)
+                Text(stringResource(if (state == UpdateDownloadState.FAILED ||
+                    state == UpdateDownloadState.CANCELLED)
                     R.string.update_retry_download else R.string.update_download_action))
             }
         }
