@@ -346,6 +346,27 @@ fun MoreScreen(vm: AppViewModel) {
                     androidx.compose.material3.OutlinedButton(onClick = { vm.fontSize = (vm.fontSize - 1).coerceAtLeast(10) }, enabled = vm.fontSize > 10) { Text(stringResource(R.string.smaller_text)) }
                     Button(onClick = { vm.fontSize = (vm.fontSize + 1).coerceAtMost(24) }, enabled = vm.fontSize < 24) { Text(stringResource(R.string.larger_text)) }
                 }
+                androidx.compose.material3.HorizontalDivider()
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.editor_word_wrap_large), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.editor_word_wrap_large_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = vm.editorWordWrapEnabled,
+                        onCheckedChange = { vm.editorWordWrapEnabled = it }
+                    )
+                }
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.editor_syntax_highlighting), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.editor_syntax_highlighting_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = vm.editorSyntaxHighlightingEnabled,
+                        onCheckedChange = { vm.editorSyntaxHighlightingEnabled = it }
+                    )
+                }
             }
         }
         }
