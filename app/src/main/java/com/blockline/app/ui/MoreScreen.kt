@@ -386,6 +386,17 @@ fun MoreScreen(vm: AppViewModel) {
                             onCheckedChange = { vm.clickSoundsEnabled = it }
                         )
                     }
+                    androidx.compose.material3.HorizontalDivider()
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.reduced_motion), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.reduced_motion_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = vm.reducedMotionEnabled,
+                            onCheckedChange = { vm.reducedMotionEnabled = it }
+                        )
+                    }
                 }
             }
         }
