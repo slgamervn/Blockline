@@ -37,6 +37,15 @@ object UpdateApkPolicy {
         require(actualVersionCode > installedVersionCode) { "This APK is not a newer version of the installed app." }
     }
 
+    fun validateSha256(actual: String, expected: String?) {
+        if (expected == null) return
+        require(expected.matches(Regex("[0-9a-fA-F]{64}"))) { "The published SHA-256 digest is malformed." }
+        require(actual.matches(Regex("[0-9a-fA-F]{64}"))) { "Could not calculate a valid APK SHA-256 digest." }
+        require(actual.equals(expected, ignoreCase = true)) {
+            "The APK SHA-256 digest does not match the published release asset."
+        }
+    }
+
     fun signaturesCompatible(
         installedHistory: Set<String>,
         candidateHistory: Set<String>,

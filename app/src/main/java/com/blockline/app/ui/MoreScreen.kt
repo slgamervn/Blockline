@@ -47,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -83,6 +84,8 @@ import com.blockline.app.data.ScriptApiReferenceRepository
 import com.blockline.app.data.ScriptApiLoadResult
 import com.blockline.app.data.ScriptApiSource
 import com.blockline.app.data.TEXT_EXT
+import com.blockline.app.data.AppUpdate
+import com.blockline.app.data.UpdateDownloadState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,6 +97,80 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+@Composable
+private fun UpdateDownloadControls(
+    vm: AppViewModel,
+    context: Context,
+    update: AppUpdate
+) {
+    val state = if (vm.updateDownloadVersion == update.version) vm.updateDownloadState else UpdateDownloadState.IDLE
+    val progress = if (state == UpdateDownloadState.IDLE) 0 else vm.updateDownloadProgress
+    val error = if (vm.updateDownloadVersion == update.version) vm.updateDownloadError else null
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.update_download_prompt),
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+            style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+        )
+        Text(
+            stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", update.apkSizeBytes / 1_048_576.0)),
+            style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            when (state) {
+                UpdateDownloadState.IDLE -> stringResource(R.string.update_state_idle)
+                UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, progress)
+                UpdateDownloadState.VERIFYING -> stringResource(R.string.update_state_verifying)
+                UpdateDownloadState.READY_TO_INSTALL -> stringResource(R.string.update_state_ready)
+                UpdateDownloadState.WAITING_PERMISSION -> stringResource(R.string.update_state_waiting_permission)
+                UpdateDownloadState.INSTALLING -> stringResource(R.string.update_state_installing)
+                UpdateDownloadState.FAILED -> stringResource(R.string.update_state_failed)
+                UpdateDownloadState.CANCELLED -> stringResource(R.string.update_state_cancelled)
+            },
+            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+            color = if (state == UpdateDownloadState.FAILED)
+                androidx.compose.material3.MaterialTheme.colorScheme.error
+            else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (state == UpdateDownloadState.DOWNLOADING ||
+            state == UpdateDownloadState.VERIFYING
+        ) {
+            LinearProgressIndicator(
+                progress = { if (state == UpdateDownloadState.VERIFYING) 1f else progress / 100f },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        error?.let {
+            Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+        }
+        when (state) {
+            UpdateDownloadState.DOWNLOADING -> TextButton(onClick = { vm.cancelUpdateDownload() }) {
+                Text(stringResource(R.string.update_cancel_download))
+            }
+            UpdateDownloadState.READY_TO_INSTALL, UpdateDownloadState.WAITING_PERMISSION -> Button(
+                onClick = { vm.installDownloadedUpdate(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(if (state == UpdateDownloadState.WAITING_PERMISSION)
+                    R.string.update_install_after_permission else R.string.update_install_downloaded))
+            }
+            UpdateDownloadState.VERIFYING, UpdateDownloadState.INSTALLING -> Button(
+                onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(if (state == UpdateDownloadState.INSTALLING)
+                    R.string.update_state_installing else R.string.update_state_verifying))
+            }
+            else -> Button(onClick = { vm.downloadUpdate() }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(if (state == UpdateDownloadState.FAILED ||
+                    state == UpdateDownloadState.CANCELLED)
+                    R.string.update_retry_download else R.string.update_download_action))
+            }
+        }
+    }
 }
 
 @Composable
@@ -152,16 +229,7 @@ fun MoreScreen(vm: AppViewModel) {
                             if (info.releaseNotes.isNotBlank()) {
                                 Text(info.releaseNotes.take(1_000), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                             }
-                            Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", info.apkSizeBytes / 1_048_576.0)),
-                                style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(stringResource(R.string.update_download_prompt),
-                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-                            Button(
-                                onClick = { vm.openReleasePage(context, info) },
-                                modifier = Modifier.fillMaxWidth()
-                            ) { Text(stringResource(R.string.update_now)) }
+                            UpdateDownloadControls(vm, context, info)
                         }
                     }
                 }
@@ -205,13 +273,7 @@ fun MoreScreen(vm: AppViewModel) {
                     if (vm.updateInfo == null && runCatching {
                             com.blockline.app.data.AppUpdateRepository.compareVersions(changelog.version, BuildConfig.VERSION_NAME) > 0
                         }.getOrDefault(false)) {
-                        Text(stringResource(R.string.update_download_prompt),
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(
-                            onClick = { vm.openReleasePage(context, changelog) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text(stringResource(R.string.update_now)) }
+                        UpdateDownloadControls(vm, context, changelog)
                     }
                 }
             }
@@ -327,6 +389,17 @@ fun MoreScreen(vm: AppViewModel) {
                             onCheckedChange = { vm.clickSoundsEnabled = it }
                         )
                     }
+                    androidx.compose.material3.HorizontalDivider()
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.reduced_motion), style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.reduced_motion_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = vm.reducedMotionEnabled,
+                            onCheckedChange = { vm.reducedMotionEnabled = it }
+                        )
+                    }
                 }
             }
         }
@@ -357,6 +430,17 @@ fun MoreScreen(vm: AppViewModel) {
                         onCheckedChange = { vm.editorWordWrapEnabled = it }
                     )
                 }
+                Text(stringResource(R.string.editor_indentation_width), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(2, 4, 8).forEach { width ->
+                        androidx.compose.material3.FilterChip(
+                            selected = vm.editorIndentSize == width,
+                            onClick = { vm.editorIndentSize = width },
+                            label = { Text(stringResource(R.string.editor_indent_spaces, width)) }
+                        )
+                    }
+                }
+                androidx.compose.material3.HorizontalDivider()
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f)) {
                         Text(stringResource(R.string.editor_syntax_highlighting), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge)

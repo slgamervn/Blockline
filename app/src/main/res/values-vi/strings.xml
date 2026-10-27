@@ -119,6 +119,10 @@
 <string name="editor_word_wrap_large_hint">Bật hoặc tắt cuộn ngang khi chỉnh sửa tệp trên 12.000 ký tự.</string>
 <string name="editor_syntax_highlighting">Tô màu cú pháp</string>
 <string name="editor_syntax_highlighting_hint">Tô màu mã trong các định dạng được hỗ trợ; tắt để chỉnh sửa văn bản thuần nhẹ hơn.</string>
+<string name="editor_indentation_width">Độ rộng thụt lề</string>
+<string name="editor_indent_spaces">%1$d dấu cách</string>
+<string name="reduced_motion">Giảm chuyển động</string>
+<string name="reduced_motion_hint">Tắt hiệu ứng chuyển cảnh và bảng trình chỉnh sửa để giao diện nhẹ nhàng hơn.</string>
     <string name="smaller_text">A− Nhỏ hơn</string>
     <string name="larger_text">A+ Lớn hơn</string>
     <string name="about_blockline">Thông tin về Blockline</string>
@@ -646,7 +650,7 @@
     <string name="chrome_hide_short">Ẩn</string>
 
     <string name="update_release_page_note">Bạn có thể xem lại thông tin bản phát hành trong phần ghi chú đã lưu bên dưới.</string>
-    <string name="update_download_prompt">Mở trang phát hành GitHub chính thức để xem chi tiết và tự tải bản cập nhật. Blockline không tự tải xuống hoặc cài đặt.</string>
+    <string name="update_download_prompt">Blockline tải APK ngay tại đây, xác minh danh tính và mã kiểm tra nếu bản phát hành cung cấp, rồi yêu cầu Android hiển thị xác nhận cài đặt.</string>
     <string name="update_download_size">Dung lượng APK: %1$s</string>
     <string name="update_download_action">Tải bản cập nhật</string>
     <string name="update_retry_download">Thử tải lại</string>

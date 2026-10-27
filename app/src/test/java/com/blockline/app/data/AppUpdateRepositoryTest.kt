@@ -3,6 +3,7 @@ package com.blockline.app.data
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.json.JSONObject
 import org.junit.Test
 
 class AppUpdateRepositoryTest {
@@ -47,6 +48,32 @@ class AppUpdateRepositoryTest {
         assertEquals("Blockline-v0.1.54-test.apk", UpdateApkPolicy.expectedAssetName("0.1.54-test"))
         assertTrue(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
         assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://example.com/Blockline.apk"))
+    }
+
+    @Test
+    fun parsesPublishedSha256AndRejectsMalformedDigests() {
+        val digest = "ab".repeat(32)
+        assertEquals(digest, AppUpdateRepository.digestForAsset(JSONObject("""{"digest":"sha256:$digest"}""")))
+        assertEquals(null, AppUpdateRepository.digestForAsset(JSONObject()))
+        assertFalse(runCatching {
+            AppUpdateRepository.digestForAsset(JSONObject("""{"digest":"md5:$digest"}"""))
+        }.isSuccess)
+        assertFalse(runCatching {
+            AppUpdateRepository.digestForAsset(JSONObject("""{"digest":"sha256:xyz"}"""))
+        }.isSuccess)
+    }
+
+    @Test
+    fun sha256VerificationAcceptsOnlyThePublishedDigest() {
+        val expected = "a1".repeat(32)
+        UpdateApkPolicy.validateSha256(expected, expected)
+        UpdateApkPolicy.validateSha256("b2".repeat(32), null)
+        assertFalse(runCatching {
+            UpdateApkPolicy.validateSha256("b2".repeat(32), expected)
+        }.isSuccess)
+        assertFalse(runCatching {
+            UpdateApkPolicy.validateSha256("not-a-digest", expected)
+        }.isSuccess)
     }
 
     @Test

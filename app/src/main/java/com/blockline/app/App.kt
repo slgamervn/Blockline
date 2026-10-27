@@ -56,6 +56,7 @@ import com.blockline.app.ui.OverviewScreen
 import com.blockline.app.ui.ProjectsScreen
 import com.blockline.app.ui.SearchScreen
 import com.blockline.app.ui.ToolsScreen
+import com.blockline.app.data.UpdateDownloadState
 import com.blockline.app.ui.rememberSystemAnimationsEnabled
 import com.blockline.app.ui.theme.BlocklineTheme
 
@@ -80,7 +81,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
     BlocklineTheme(vm.themeMode, vm.accentColor) {
         val nav = rememberNavController()
         val context = LocalContext.current
-        val animationsEnabled = rememberSystemAnimationsEnabled()
+        val animationsEnabled = rememberSystemAnimationsEnabled() && !vm.reducedMotionEnabled
         val snack = remember { SnackbarHostState() }
         val msg = vm.message
         val update = vm.updateInfo
@@ -88,6 +89,9 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
         val backStack by nav.currentBackStackEntryAsState()
         val route = backStack?.destination?.route
         if (update != null) {
+            val updateState = if (vm.updateDownloadVersion == update.version) vm.updateDownloadState else UpdateDownloadState.IDLE
+            val downloadProgress = if (updateState == UpdateDownloadState.IDLE) 0 else vm.updateDownloadProgress
+            val downloadError = if (vm.updateDownloadVersion == update.version) vm.updateDownloadError else null
             AlertDialog(
                 onDismissRequest = { vm.dismissUpdate(update.version) },
                 title = { Text(stringResource(R.string.update_dialog_title)) },
@@ -107,11 +111,42 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                             Text(stringResource(R.string.update_no_notes), style = MaterialTheme.typography.bodySmall)
                         }
                         Text(stringResource(R.string.update_download_prompt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", update.apkSizeBytes / 1_048_576.0)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            when (updateState) {
+                                UpdateDownloadState.IDLE -> stringResource(R.string.update_state_idle)
+                                UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, downloadProgress)
+                                UpdateDownloadState.VERIFYING -> stringResource(R.string.update_state_verifying)
+                                UpdateDownloadState.READY_TO_INSTALL -> stringResource(R.string.update_state_ready)
+                                UpdateDownloadState.WAITING_PERMISSION -> stringResource(R.string.update_state_waiting_permission)
+                                UpdateDownloadState.INSTALLING -> stringResource(R.string.update_state_installing)
+                                UpdateDownloadState.FAILED -> stringResource(R.string.update_state_failed)
+                                UpdateDownloadState.CANCELLED -> stringResource(R.string.update_state_cancelled)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (updateState == UpdateDownloadState.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (updateState == UpdateDownloadState.DOWNLOADING || updateState == UpdateDownloadState.VERIFYING) {
+                            androidx.compose.material3.LinearProgressIndicator(
+                                progress = { if (updateState == UpdateDownloadState.VERIFYING) 1f else downloadProgress / 100f },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        downloadError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                     }
                 },
                 confirmButton = {
-                    Button(onClick = { vm.openReleasePage(context, update) }) {
-                        Text(stringResource(R.string.update_now))
+                    when (updateState) {
+                        UpdateDownloadState.DOWNLOADING -> TextButton(onClick = { vm.cancelUpdateDownload() }) { Text(stringResource(R.string.update_cancel_download)) }
+                        UpdateDownloadState.READY_TO_INSTALL, UpdateDownloadState.WAITING_PERMISSION -> Button(onClick = { vm.installDownloadedUpdate(context) }) {
+                            Text(stringResource(if (updateState == UpdateDownloadState.WAITING_PERMISSION) R.string.update_install_after_permission else R.string.update_install_downloaded))
+                        }
+                        UpdateDownloadState.VERIFYING, UpdateDownloadState.INSTALLING -> Button(onClick = {}, enabled = false) {
+                            Text(stringResource(if (updateState == UpdateDownloadState.INSTALLING) R.string.update_state_installing else R.string.update_state_verifying))
+                        }
+                        else -> Button(onClick = { vm.downloadUpdate() }) {
+                            Text(stringResource(if (updateState == UpdateDownloadState.FAILED || updateState == UpdateDownloadState.CANCELLED) R.string.update_retry_download else R.string.update_download_action))
+                        }
                     }
                 },
                 dismissButton = {

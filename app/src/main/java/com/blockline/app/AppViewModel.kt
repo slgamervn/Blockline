@@ -122,6 +122,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         clickSoundsEnabled = false
         editorWordWrapEnabled = true
         editorSyntaxHighlightingEnabled = true
+        editorIndentSize = 4
+        reducedMotionEnabled = false
     }
 
     private val gameEffectsState = mutableStateOf(settingsPreferences.getBoolean("game_effects_enabled", true))
@@ -175,11 +177,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             settingsPreferences.edit().putBoolean("editor_syntax_highlighting", value).apply()
         }
 
+    private val editorIndentSizeState = mutableStateOf(
+        settingsPreferences.getInt("editor_indent_size", 4).let { if (it in setOf(2, 4, 8)) it else 4 }
+    )
+    var editorIndentSize: Int
+        get() = editorIndentSizeState.value
+        set(value) {
+            editorIndentSizeState.value = if (value in setOf(2, 4, 8)) value else 4
+            settingsPreferences.edit().putInt("editor_indent_size", editorIndentSizeState.value).apply()
+        }
+
+    private val reducedMotionState = mutableStateOf(settingsPreferences.getBoolean("reduced_motion", false))
+    var reducedMotionEnabled: Boolean
+        get() = reducedMotionState.value
+        set(value) {
+            reducedMotionState.value = value
+            settingsPreferences.edit().putBoolean("reduced_motion", value).apply()
+        }
+
     var autoCheckUpdates by mutableStateOf(settingsPreferences.getBoolean("auto_check_updates", true))
         private set
     var isCheckingUpdates by mutableStateOf(false)
         private set
     var updateDownloadState by mutableStateOf(UpdateDownloadState.IDLE)
+        private set
+    var updateDownloadVersion by mutableStateOf<String?>(null)
         private set
     var updateDownloadProgress by mutableStateOf(0)
         private set
@@ -202,7 +224,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             apkUrl = apkUrl,
             apkSizeBytes = settingsPreferences.getLong("latest_release_size", 0L).coerceAtLeast(0L),
             releaseUrl = releaseUrl,
-            publishedAt = settingsPreferences.getString("latest_release_published_at", "") ?: ""
+            publishedAt = settingsPreferences.getString("latest_release_published_at", "") ?: "",
+            sha256 = settingsPreferences.getString("latest_release_sha256", null)
         )
     }
 
@@ -216,6 +239,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             .putLong("latest_release_size", info.apkSizeBytes)
             .putString("latest_release_url", info.releaseUrl)
             .putString("latest_release_published_at", info.publishedAt)
+            .putString("latest_release_sha256", info.sha256)
             .apply()
     }
     var lastUpdateCheck by mutableStateOf(settingsPreferences.getString("last_update_check", null))
@@ -336,8 +360,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             settingsPreferences.edit().putString("last_update_check", lastUpdateCheck).apply()
             result.onSuccess { available ->
                 if (available != null) rememberReleaseInfo(available)
-                val ignoredVersion = settingsPreferences.getString("dismissed_update_version", null)
-                updateInfo = if (available != null && (ignoredVersion != available.version || !automatic)) available else null
+                // Automatic checks update the saved changelog silently. Keep modals for
+                // explicit user-initiated checks so startup never interrupts editing.
+                updateInfo = if (available != null && !automatic) available else null
                 updateCheckResult = when {
                     available != null -> text(R.string.update_available_status, available.version)
                     else -> text(R.string.update_up_to_date)
@@ -363,6 +388,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { AppUpdateRepository.compareVersions(it.version, BuildConfig.VERSION_NAME) > 0 }.getOrDefault(false)
         } ?: return
         if (updateDownloadJob?.isActive == true) return
+        updateDownloadVersion = info.version
         updateDownloadError = null
         updateDownloadState = UpdateDownloadState.DOWNLOADING
         updateDownloadProgress = 0
@@ -412,6 +438,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun installDownloadedUpdate(context: android.content.Context) {
         val info = updateInfo ?: latestReleaseInfo ?: return
         if (updateDownloadState == UpdateDownloadState.VERIFYING || updateDownloadState == UpdateDownloadState.INSTALLING) return
+        updateDownloadVersion = info.version
         updateDownloadError = null
         updateDownloadState = UpdateDownloadState.VERIFYING
         updateDownloadJob = viewModelScope.launch {
