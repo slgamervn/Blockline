@@ -793,7 +793,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 title = { Column { Text(path?.substringAfterLast('/') ?: stringResource(R.string.editor)); if (path != null) Text(path, style = androidx.compose.material3.MaterialTheme.typography.labelSmall, color = tokens.muted) } },
                 navigationIcon = {
                     IconButton(onClick = {
+                        flushNativeEditorSnapshot()
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.saveCurrent(showMessage = false)
                         onBack()
                     }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back_cd)) }
@@ -803,11 +805,15 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         Icon(Icons.Default.Search, stringResource(R.string.chrome_command_palette))
                     }
                     IconButton(onClick = {
+                        flushNativeEditorSnapshot()
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.undo()
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.editor_undo_cd)) }
                     IconButton(onClick = {
+                        flushNativeEditorSnapshot()
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.redo()
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.editor_redo_cd)) }
                     if (path?.substringAfterLast('.', "")?.lowercase() in setOf("html", "htm")) {
@@ -816,6 +822,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                     IconButton(onClick = {
+                        flushNativeEditorSnapshot()
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
                         showFind = true
                     }, enabled = !vm.isOpeningFile) { Icon(Icons.Default.FindInPage, stringResource(R.string.editor_find_cd)) }
@@ -825,6 +832,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             editorValue = TextFieldValue(next, TextRange(next.length))
                             vm.updateContent(next)
                         }
+                        flushNativeEditorSnapshot()
                         vm.saveCurrent()
                     }, enabled = !vm.isOpeningFile && !vm.readOnly) { Icon(Icons.Default.Save, stringResource(R.string.editor_save_cd), tint = Emerald) }
                 }
@@ -866,11 +874,15 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     enabled = !vm.isOpeningFile && !vm.readOnly,
                     onInsert = { insertion -> insertAtCursor(insertion) },
                     onUndo = {
+                        flushNativeEditorSnapshot()
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.undo()
                     },
                     onRedo = {
+                        flushNativeEditorSnapshot()
                         if (editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.redo()
                     },
                     onFormat = {
@@ -882,6 +894,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                     },
                     onSave = {
                         if (!vm.isOpeningFile && !vm.readOnly && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.saveCurrent()
                     },
                     onFind = { showFind = true },
@@ -961,6 +974,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
                             vm.updateContent(editorValue.text)
                         }
+                        flushNativeEditorSnapshot()
                         vm.openFile(selectedPath)
                     }
                 )
@@ -1028,6 +1042,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
                                             vm.updateContent(editorValue.text)
                                         }
+                                        flushNativeEditorSnapshot()
                                         vm.openFile(tab)
                                     }
                             ) {
@@ -1396,6 +1411,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
                             vm.updateContent(editorValue.text)
                         }
+                        flushNativeEditorSnapshot()
                         vm.openFile(selectedPath)
                         sidebarOpen = false
                     }
@@ -1448,6 +1464,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         } },
         confirmButton = {
             TextButton(onClick = {
+                flushNativeEditorSnapshot()
                 val query = findText
                 if (query.isNotBlank()) {
                     val source = vm.content
@@ -1484,6 +1501,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         showGoToLine = true
                     }
                     command == formatCommandLabel -> {
+                        flushNativeEditorSnapshot()
                         if (!vm.readOnly && !vm.isOpeningFile && lang == Lang.JSON) {
                             val formatted = JsonTools.format(editorValue.text)
                             editorValue = TextFieldValue(formatted, TextRange(formatted.length))
@@ -1491,7 +1509,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         } else if (lang != Lang.JSON) vm.message = context.getString(R.string.format_json_only)
                     }
                     command == saveCommandLabel -> {
+                        flushNativeEditorSnapshot()
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.saveCurrent()
                     }
                     command == goToFileLabel -> {
@@ -1499,7 +1519,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         showCommandPalette = true
                     }
                     command.startsWith("$filePrefix ") -> {
+                        flushNativeEditorSnapshot()
                         if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) vm.updateContent(editorValue.text)
+                        flushNativeEditorSnapshot()
                         vm.openFile(command.removePrefix("$filePrefix "))
                     }
                 }
@@ -1532,6 +1554,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             TextButton(onClick = {
                 val target = goToLineText.toIntOrNull()
                 if (target != null && target > 0) {
+                    flushNativeEditorSnapshot()
                     path?.let { vm.openFile(it, target) }
                     showGoToLine = false
                 } else {
