@@ -381,6 +381,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
     var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
     val nativeDocumentPaths = remember { WeakHashMap<EditText, String>() }
+    val nativeSnapshotRunnables = remember { WeakHashMap<EditText, Runnable>() }
+    // TextWatcher events only mark the native buffer dirty; copying a large Editable is debounced.
+    val nativeTextDirty = remember { booleanArrayOf(false) }
     // Avoid feeding programmatic text synchronization back through the native TextWatcher.
     val syncingNativeText = remember { booleanArrayOf(false) }
     // Track the text snapshot by identity so recomposition does not stringify an entire
@@ -758,6 +761,27 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             editorValue = TextFieldValue(updated, TextRange(start + insertion.length))
             vm.updateContent(updated)
         }
+    }
+
+    fun flushNativeEditorSnapshot() {
+        val native = largeEditText ?: return
+        val documentPath = nativeDocumentPaths[native] ?: path ?: return
+        nativeSnapshotRunnables[native]?.let(native::removeCallbacks)
+        val cursorStart = native.selectionStart.coerceIn(0, native.text.length)
+        val cursorEnd = native.selectionEnd.coerceIn(0, native.text.length)
+        if (nativeTextDirty[0]) {
+            val updated = native.text?.toString().orEmpty()
+            nativeTextDirty[0] = false
+            lastSyncedNativeText[0] = updated
+            editorValue = TextFieldValue(updated, TextRange(cursorStart, cursorEnd))
+            if (!vm.readOnly && !vm.isOpeningFile) vm.updateContent(updated)
+            if (completionItems.isNotEmpty()) completionItems = emptyList()
+        } else if (editorValue.text.isNotEmpty()) {
+            editorValue = editorValue.copy(selection = TextRange(cursorStart, cursorEnd))
+        }
+        vm.saveEditorViewport(
+            documentPath, native.scrollX, native.scrollY, cursorStart, cursorEnd
+        )
     }
 
     Scaffold(
@@ -1189,24 +1213,39 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                 true
                                             } else false
                                         }
+                                        val nativeSnapshotRunnable = Runnable {
+                                            if (syncingNativeText[0] || !nativeTextDirty[0]) return@Runnable
+                                            val updated = text?.toString().orEmpty()
+                                            val cursorStart = selectionStart.coerceIn(0, updated.length)
+                                            val cursorEnd = selectionEnd.coerceIn(0, updated.length)
+                                            nativeTextDirty[0] = false
+                                            lastSyncedNativeText[0] = updated
+                                            editorValue = TextFieldValue(updated, TextRange(cursorStart, cursorEnd))
+                                            if (completionItems.isNotEmpty()) completionItems = emptyList()
+                                            val nativePath = nativeDocumentPaths[this@apply] ?: vm.activeFile
+                                            if (nativePath != null) {
+                                                vm.saveEditorViewport(
+                                                    nativePath, scrollX, scrollY, selectionStart, selectionEnd
+                                                )
+                                            }
+                                        }
+                                        nativeSnapshotRunnables[this] = nativeSnapshotRunnable
                                         addTextChangedListener(object : TextWatcher {
                                             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                                             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
                                             override fun afterTextChanged(s: Editable?) {
                                                 if (syncingNativeText[0]) return
-                                                val updated = s?.toString().orEmpty()
-                                                val cursor = selectionStart.coerceIn(0, updated.length)
-                                                if (updated !== editorValue.text || cursor != editorValue.selection.start) {
-                                                    lastSyncedNativeText[0] = updated
-                                                    editorValue = TextFieldValue(updated, TextRange(cursor))
-                                                    val nativePath = nativeDocumentPaths[this@apply] ?: vm.activeFile
-                                                    if (nativePath != null) {
-                                                        vm.saveEditorViewport(
-                                                            nativePath, scrollX, scrollY, selectionStart, selectionEnd
-                                                        )
-                                                    }
-                                                    if (completionItems.isNotEmpty()) completionItems = emptyList()
+                                                nativeTextDirty[0] = true
+                                                removeCallbacks(nativeSnapshotRunnable)
+                                                // Coalesce rapid typing/paste into one immutable document snapshot.
+                                                postDelayed(nativeSnapshotRunnable, 420L)
+                                                val nativePath = nativeDocumentPaths[this@apply] ?: vm.activeFile
+                                                if (nativePath != null) {
+                                                    vm.saveEditorViewport(
+                                                        nativePath, scrollX, scrollY, selectionStart, selectionEnd
+                                                    )
                                                 }
+                                                if (completionItems.isNotEmpty()) completionItems = emptyList()
                                             }
                                         })
                                     }
@@ -1225,10 +1264,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     if (editText.currentTextColor != tokens.foreground.toArgb()) {
                                         editText.setTextColor(tokens.foreground.toArgb())
                                     }
+                                    val nativeHasUnpublishedEdits = nativeTextDirty[0] && !pathChanged
                                     val textReferenceChanged = lastSyncedNativeText[0] !== editorValue.text
                                     val sameTextValue = textReferenceChanged && !pathChanged &&
                                         editText.text.contentEquals(editorValue.text)
-                                    if (pathChanged || (textReferenceChanged && !sameTextValue)) {
+                                    if (pathChanged || (!nativeHasUnpublishedEdits && textReferenceChanged && !sameTextValue)) {
                                         val savedViewport = if (pathChanged) vm.editorViewport(path.orEmpty())?.clamped(editorValue.text.length) else null
                                         val restoreX = savedViewport?.scrollX ?: editText.scrollX
                                         val restoreY = savedViewport?.scrollY ?: editText.scrollY
@@ -1261,7 +1301,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                                 )
                                             }
                                         }
-                                    } else if (textReferenceChanged) {
+                                    } else if (textReferenceChanged && !nativeHasUnpublishedEdits) {
                                         // Adopt the new immutable snapshot identity without replacing
                                         // the native buffer or touching its viewport.
                                         lastSyncedNativeText[0] = editorValue.text
