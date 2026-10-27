@@ -42,21 +42,28 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
-    fun updatePromptOpensOfficialLatestStablePageOrMatchingTestRelease() {
-        assertEquals(
-            "https://github.com/slgamervn/Blockline/releases/latest",
-            AppUpdateRepository.updatePromptUrl("stable", "https://github.com/slgamervn/Blockline/releases/tag/v9.9.9")
-        )
-        assertEquals(
-            "https://github.com/slgamervn/Blockline/releases/tag/v0.1.111-test",
-            AppUpdateRepository.updatePromptUrl("test", "https://github.com/slgamervn/Blockline/releases/tag/v0.1.111-test")
-        )
-        try {
-            AppUpdateRepository.updatePromptUrl("test", "https://example.com/fake-release")
-            throw AssertionError("Unexpected release URL should be rejected.")
-        } catch (_: IllegalArgumentException) {
-            // Expected: update links must stay on the official repository.
-        }
+    fun expectedAssetNameTracksReleaseVersionForBothChannels() {
+        assertEquals("Blockline-v1.2.3.apk", UpdateApkPolicy.expectedAssetName("1.2.3"))
+        assertEquals("Blockline-v0.1.54-test.apk", UpdateApkPolicy.expectedAssetName("0.1.54-test"))
+        assertTrue(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://example.com/Blockline.apk"))
+    }
+
+    @Test
+    fun packageVerificationRejectsWrongPackageVersionAndDowngrade() {
+        UpdateApkPolicy.validatePackageMetadata("com.blockline.app.test", "com.blockline.app.test", "0.1.54-test", "0.1.54-test", 54L, 53L)
+        assertFalse(runCatching { UpdateApkPolicy.validatePackageMetadata("com.blockline.app", "com.blockline.app.test", "0.1.54-test", "0.1.54-test", 54L, 53L) }.isSuccess)
+        assertFalse(runCatching { UpdateApkPolicy.validatePackageMetadata("com.blockline.app.test", "com.blockline.app.test", "0.1.55-test", "0.1.54-test", 54L, 53L) }.isSuccess)
+        assertFalse(runCatching { UpdateApkPolicy.validatePackageMetadata("com.blockline.app.test", "com.blockline.app.test", "0.1.54-test", "0.1.54-test", 52L, 53L) }.isSuccess)
+    }
+
+    @Test
+    fun downloadProgressIsClampedAndCertificateHistoryMustOverlap() {
+        assertEquals(50, UpdateApkPolicy.progressPercent(50L, 100L))
+        assertEquals(100, UpdateApkPolicy.progressPercent(101L, 100L))
+        assertTrue(UpdateApkPolicy.signaturesCompatible(setOf("old", "current"), setOf("current")))
+        assertFalse(UpdateApkPolicy.signaturesCompatible(setOf("installed"), setOf("untrusted")))
+        assertEquals(setOf("A", "B"), UpdateApkPolicy.signerSet("A", "B"))
     }
 
     @Test

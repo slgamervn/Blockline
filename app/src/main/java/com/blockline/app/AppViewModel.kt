@@ -20,6 +20,8 @@ import com.blockline.app.data.OperationLogEntry
 import com.blockline.app.data.OperationLogRepository
 import com.blockline.app.data.AppUpdate
 import com.blockline.app.data.AppUpdateRepository
+import com.blockline.app.data.InAppUpdateInstaller
+import com.blockline.app.data.UpdateDownloadState
 import com.blockline.app.data.ResourcePreview
 import com.blockline.app.data.ResourcePreviewBuilder
 import com.blockline.app.data.ProjectValidator
@@ -155,6 +157,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var isCheckingUpdates by mutableStateOf(false)
         private set
+    var updateDownloadState by mutableStateOf(UpdateDownloadState.IDLE)
+        private set
+    var updateDownloadProgress by mutableStateOf(0)
+        private set
+    var updateDownloadError by mutableStateOf<String?>(null)
+        private set
+    private var updateDownloadJob: Job? = null
     var updateInfo by mutableStateOf<AppUpdate?>(null)
         private set
     var latestReleaseInfo by mutableStateOf(readSavedReleaseInfo())
@@ -327,16 +336,85 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         updateInfo = null
     }
 
-    fun openUpdateReleasePage(context: android.content.Context) {
+    fun downloadUpdate() {
         val info = updateInfo ?: return
-        runCatching {
-            val url = AppUpdateRepository.updatePromptUrl(BuildConfig.UPDATE_CHANNEL, info.releaseUrl)
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }.onSuccess {
-            settingsPreferences.edit().putString("dismissed_update_version", info.version).apply()
-            if (updateInfo?.version == info.version) updateInfo = null
-        }.onFailure {
-            message = text(R.string.update_open_failed)
+        if (updateDownloadJob?.isActive == true) return
+        updateDownloadError = null
+        updateDownloadState = UpdateDownloadState.DOWNLOADING
+        updateDownloadProgress = 0
+        updateDownloadJob = viewModelScope.launch {
+            try {
+                val context = getApplication<Application>()
+                val cached = withContext(Dispatchers.IO) { InAppUpdateInstaller.cachedFile(context, info.version) }
+                if (cached != null) {
+                    val validCached = runCatching {
+                        withContext(Dispatchers.IO) { InAppUpdateInstaller.verifyDownloadedApk(context, cached, info) }
+                    }.isSuccess
+                    if (validCached) {
+                        updateDownloadProgress = 100
+                        updateDownloadState = UpdateDownloadState.READY_TO_INSTALL
+                        return@launch
+                    }
+                    withContext(Dispatchers.IO) { cached.delete() }
+                }
+                val apk = InAppUpdateInstaller.download(context, info) { percent ->
+                    withContext(Dispatchers.Main.immediate) { updateDownloadProgress = percent }
+                }
+                updateDownloadState = UpdateDownloadState.VERIFYING
+                withContext(Dispatchers.IO) { InAppUpdateInstaller.verifyDownloadedApk(context, apk, info) }
+                updateDownloadProgress = 100
+                updateDownloadState = UpdateDownloadState.READY_TO_INSTALL
+            } catch (cancelled: CancellationException) {
+                updateDownloadState = UpdateDownloadState.CANCELLED
+                throw cancelled
+            } catch (error: Exception) {
+                updateDownloadError = text(
+                    R.string.update_download_failed_detail,
+                    error.message ?: text(R.string.unknown_value)
+                )
+                updateDownloadState = UpdateDownloadState.FAILED
+            } finally {
+                updateDownloadJob = null
+            }
+        }
+    }
+
+    fun cancelUpdateDownload() {
+        if (updateDownloadState != UpdateDownloadState.DOWNLOADING && updateDownloadJob?.isActive != true) return
+        updateDownloadState = UpdateDownloadState.CANCELLED
+        updateDownloadJob?.cancel()
+    }
+
+    fun installDownloadedUpdate(context: android.content.Context) {
+        val info = updateInfo ?: latestReleaseInfo ?: return
+        if (updateDownloadState == UpdateDownloadState.VERIFYING || updateDownloadState == UpdateDownloadState.INSTALLING) return
+        updateDownloadError = null
+        updateDownloadState = UpdateDownloadState.VERIFYING
+        updateDownloadJob = viewModelScope.launch {
+            try {
+                val apk = withContext(Dispatchers.IO) {
+                    InAppUpdateInstaller.cachedFile(getApplication(), info.version)
+                        ?: throw IllegalStateException(text(R.string.update_download_missing))
+                }
+                withContext(Dispatchers.IO) { InAppUpdateInstaller.verifyDownloadedApk(getApplication(), apk, info) }
+                if (!InAppUpdateInstaller.canInstallPackages(context)) {
+                    updateDownloadState = UpdateDownloadState.WAITING_PERMISSION
+                    InAppUpdateInstaller.openInstallPermissionSettings(context)
+                    return@launch
+                }
+                InAppUpdateInstaller.launchInstaller(context, apk)
+                updateDownloadState = UpdateDownloadState.INSTALLING
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                updateDownloadError = text(
+                    R.string.update_install_failed_detail,
+                    error.message ?: text(R.string.unknown_value)
+                )
+                updateDownloadState = UpdateDownloadState.FAILED
+            } finally {
+                updateDownloadJob = null
+            }
         }
     }
 

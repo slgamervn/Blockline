@@ -82,17 +82,6 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
         fun endpointForChannel(channel: String): String =
             if (channel == TEST_CHANNEL) TEST_RELEASES_API_URL else STABLE_LATEST_API_URL
 
-        /** Stable builds open the latest release page; test builds open their matching test release. */
-        fun updatePromptUrl(channel: String, releaseUrl: String): String = when (channel) {
-            "stable" -> LATEST_RELEASE_PAGE_URL
-            TEST_CHANNEL -> releaseUrl.also {
-                require(it.startsWith("https://github.com/$REPOSITORY/releases/tag/")) {
-                    "The test release URL is not an official Blockline release."
-                }
-            }
-            else -> throw IllegalArgumentException("Unsupported update channel.")
-        }
-
         fun isValidVersion(value: String): Boolean = SemanticVersion.isValid(value)
 
         fun isTestRelease(version: String, prerelease: Boolean, draft: Boolean): Boolean =
