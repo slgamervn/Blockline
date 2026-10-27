@@ -72,7 +72,11 @@ object InAppUpdateInstaller {
                 if (resumeFrom > 0L) setRequestProperty("Range", "bytes=$resumeFrom-")
             }
             try {
-                var status = connection.responseCode
+                val status = connection.responseCode
+                val responseHost = connection.url.host.lowercase(java.util.Locale.ROOT)
+                require(responseHost in setOf("github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com")) {
+                    "The download redirected to an untrusted host."
+                }
                 if (status == HttpURLConnection.HTTP_PARTIAL) {
                     val contentRange = connection.getHeaderField("Content-Range").orEmpty()
                     require(contentRange.startsWith("bytes $resumeFrom-")) { "The server returned an invalid resume range." }
@@ -194,8 +198,9 @@ object InAppUpdateInstaller {
     private fun fingerprint(signature: android.content.pm.Signature): String =
         MessageDigest.getInstance("SHA-256").digest(signature.toByteArray()).joinToString("") { "%02x".format(it) }
 
+    @Suppress("DEPRECATION")
     private fun longVersionCode(info: PackageInfo): Long =
-        if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong()
+        if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
 
     fun canInstallPackages(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.O || context.packageManager.canRequestPackageInstalls()

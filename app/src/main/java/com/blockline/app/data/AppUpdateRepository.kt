@@ -19,6 +19,7 @@ data class AppUpdate(
 
 class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANNEL) {
     fun checkLatest(currentVersion: String): AppUpdate? {
+        if (!isSupportedChannel(channel)) return null
         val connection = (URL(endpointForChannel(channel)).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = CONNECT_TIMEOUT_MS
@@ -72,6 +73,7 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
         private const val TEST_RELEASES_API_URL = "https://api.github.com/repos/$REPOSITORY/releases?per_page=100"
         private const val CONNECT_TIMEOUT_MS = 8_000
         private const val READ_TIMEOUT_MS = 12_000
+        private const val STABLE_CHANNEL = "stable"
         private const val TEST_CHANNEL = "test"
         private const val TEST_VERSION_SUFFIX = "-test"
 
@@ -79,8 +81,13 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
             """^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"""
         )
 
-        fun endpointForChannel(channel: String): String =
-            if (channel == TEST_CHANNEL) TEST_RELEASES_API_URL else STABLE_LATEST_API_URL
+        fun endpointForChannel(channel: String): String = when (channel) {
+            TEST_CHANNEL -> TEST_RELEASES_API_URL
+            STABLE_CHANNEL -> STABLE_LATEST_API_URL
+            else -> throw IllegalArgumentException("Unsupported update channel: $channel")
+        }
+
+        fun isSupportedChannel(channel: String): Boolean = channel == STABLE_CHANNEL || channel == TEST_CHANNEL
 
         fun isValidVersion(value: String): Boolean = SemanticVersion.isValid(value)
 
@@ -89,7 +96,8 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
                 isValidVersion(version.removePrefix("v"))
 
         fun selectReleaseForChannel(response: String, channel: String): JSONObject? {
-            if (channel != TEST_CHANNEL) {
+            if (channel != STABLE_CHANNEL && channel != TEST_CHANNEL) return null
+            if (channel == STABLE_CHANNEL) {
                 val release = JSONObject(response)
                 return release.takeUnless {
                     it.optBoolean("draft", false) || it.optBoolean("prerelease", false)

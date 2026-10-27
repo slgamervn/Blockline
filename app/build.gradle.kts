@@ -33,6 +33,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            buildConfigField("String", "UPDATE_CHANNEL", "\"disabled\"")
             resValue("string", "app_name", "Blockline Debug")
         }
         release {

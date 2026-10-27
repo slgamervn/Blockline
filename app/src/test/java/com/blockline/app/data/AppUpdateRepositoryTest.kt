@@ -70,6 +70,11 @@ class AppUpdateRepositoryTest {
     fun testChannelUsesItsOwnEndpointAndFiltersOnlyTestPrereleases() {
         assertTrue(AppUpdateRepository.endpointForChannel("test").contains("/releases?per_page="))
         assertTrue(AppUpdateRepository.endpointForChannel("stable").endsWith("/releases/latest"))
+        assertTrue(AppUpdateRepository.isSupportedChannel("stable"))
+        assertTrue(AppUpdateRepository.isSupportedChannel("test"))
+        assertFalse(AppUpdateRepository.isSupportedChannel("disabled"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com@evil.example/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/../../evil.apk"))
         assertTrue(AppUpdateRepository.isTestRelease("v0.1.101-test", prerelease = true, draft = false))
         assertFalse(AppUpdateRepository.isTestRelease("v0.1.101", prerelease = false, draft = false))
         assertFalse(AppUpdateRepository.isTestRelease("v0.1.101-beta", prerelease = true, draft = false))

@@ -8,10 +8,13 @@ object UpdateApkPolicy {
         return "Blockline-v$version.apk"
     }
 
-    fun isAllowedApkUrl(url: String): Boolean =
-        url.startsWith("https://github.com/$REPOSITORY/releases/download/") &&
-            url.substringAfter("https://github.com/$REPOSITORY/releases/download/").isNotBlank() &&
-            !url.contains("@") && !url.contains("\\n")
+    fun isAllowedApkUrl(url: String): Boolean {
+        val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+        val prefix = "/$REPOSITORY/releases/download/"
+        return uri.scheme == "https" && uri.host == "github.com" && uri.rawUserInfo == null &&
+            uri.query == null && uri.fragment == null && uri.path.startsWith(prefix) &&
+            uri.path.removePrefix(prefix).split('/').none { it.isEmpty() || it == "." || it == ".." }
+    }
 
     fun progressPercent(receivedBytes: Long, totalBytes: Long): Int {
         require(totalBytes > 0L) { "Total download size must be positive." }
