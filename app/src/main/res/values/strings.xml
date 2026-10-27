@@ -454,7 +454,7 @@
     <string name="update_dialog_title">A new Blockline version is available</string>
     <string name="update_dialog_versions">Installed: %1$s\nLatest: %2$s</string>
     <string name="update_no_notes">No release notes were provided.</string>
-    <string name="update_now">View latest download</string>
+    <string name="update_now">Open GitHub release page</string>
     <string name="update_later">Later</string>
     <string name="update_available_status">Update available: v%1$s</string>
     <string name="update_up_to_date">Blockline is up to date.</string>
