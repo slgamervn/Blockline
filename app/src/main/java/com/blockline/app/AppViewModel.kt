@@ -34,6 +34,7 @@ import com.blockline.app.data.BatchReplaceFilePreview
 import com.blockline.app.data.BatchReplaceScanResult
 import com.blockline.app.data.BatchRenameCandidate
 import com.blockline.app.data.EditorSaveCoordinator
+import com.blockline.app.data.EditorViewportState
 import com.blockline.app.data.BatchRenameEngine
 import com.blockline.app.data.EditorHistory
 import com.blockline.app.data.BatchRenameOutcome
@@ -256,6 +257,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     private fun editorSaveKey(projectId: String, path: String): String = "$projectId::$path"
+
+    fun editorViewport(path: String): EditorViewportState? {
+        val projectId = current?.id ?: return null
+        return editorViewportStates[editorSaveKey(projectId, path)]
+    }
+
+    fun saveEditorViewport(
+        path: String,
+        scrollX: Int,
+        scrollY: Int,
+        selectionStart: Int,
+        selectionEnd: Int
+    ) {
+        val projectId = current?.id ?: return
+        editorViewportStates[editorSaveKey(projectId, path)] = EditorViewportState(
+            scrollX = scrollX.coerceAtLeast(0),
+            scrollY = scrollY.coerceAtLeast(0),
+            selectionStart = selectionStart.coerceAtLeast(0),
+            selectionEnd = selectionEnd.coerceAtLeast(0)
+        )
+    }
+
+    private fun forgetEditorViewport(path: String) {
+        val projectId = current?.id ?: return
+        editorViewportStates.remove(editorSaveKey(projectId, path))
+    }
     var generatedFileToOpen by mutableStateOf<String?>(null)
         private set
     var content by mutableStateOf("")
@@ -312,6 +339,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var contentSearchResults by mutableStateOf<List<ContentSearchResult>>(emptyList())
         private set
     val openTabs = mutableStateMapOf<String, String>()
+    // Plain map on purpose: scroll events must not trigger Compose recompositions.
+    private val editorViewportStates = mutableMapOf<String, EditorViewportState>()
     private val editorHistory = EditorHistory()
     private var contentSearchRequestId = 0
     private var validationRequestId = 0
@@ -1160,7 +1189,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val file = repo.resolve(project.id, path)
                     require(file.isFile) { text(R.string.file_not_found) }
                     val size = file.length()
-                    require(size <= 5L * 1024L * 1024L) { text(R.string.file_too_large) }
+                    require(size <= 10L * 1024L * 1024L) { text(R.string.file_too_large) }
                     val fileText = buffered ?: com.blockline.app.data.TextDocumentPolicy.decodeUtf8(file.readBytes())
                     repo.addRecentFile(project.id, path)
                     OpenedFile(size, fileText)
@@ -1303,6 +1332,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (activeFile == path && !saveCurrentAndWait(showMessage = false)) return@launch
             openTabs.remove(path)
             editorHistory.reset(path)
+            forgetEditorViewport(path)
             if (activeFile == path) {
                 activeFile = null
                 content = ""
