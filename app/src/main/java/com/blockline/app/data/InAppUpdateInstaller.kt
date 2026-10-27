@@ -125,6 +125,7 @@ object InAppUpdateInstaller {
                         throw java.io.IOException("The downloaded file is not a valid APK archive.")
                     }
                 }
+                UpdateApkPolicy.validateSha256(sha256(partial), update.sha256)
                 Files.move(partial.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
                 target
             } catch (error: Throwable) {
@@ -141,6 +142,7 @@ object InAppUpdateInstaller {
         require(apk.isFile && apk.length() == update.apkSizeBytes && apk.length() in 1..MAX_APK_BYTES) {
             "The downloaded APK is missing or has an unexpected size."
         }
+        UpdateApkPolicy.validateSha256(sha256(apk), update.sha256)
         val pm = context.packageManager
         val archive = getArchiveInfo(pm, apk) ?: throw IllegalArgumentException("Android could not read the downloaded APK.")
         val installed = getInstalledInfo(pm, context.packageName)
@@ -161,6 +163,19 @@ object InAppUpdateInstaller {
         )) {
             "The APK signing certificate is incompatible with the installed Blockline app."
         }
+    }
+
+    private fun sha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
     private fun getArchiveInfo(pm: PackageManager, apk: File): PackageInfo? =
