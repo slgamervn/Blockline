@@ -227,12 +227,6 @@ private fun applyEditorCodeSpans(
     tracker: EditorSyntaxWindowTracker
 ) {
     val editable = editor.text ?: return
-    // Span updates are visual-only, but Editable/Layout implementations may invalidate
-    // scroll geometry while replacing many spans. Keep interaction state invariant.
-    val savedSelectionStart = editor.selectionStart
-    val savedSelectionEnd = editor.selectionEnd
-    val savedScrollX = editor.scrollX
-    val savedScrollY = editor.scrollY
     val windowEnd = windowStart + windowText.length
     if (windowStart < 0 || windowEnd > editable.length) return
     if (editable.subSequence(windowStart, windowEnd).toString() != windowText) return
@@ -279,21 +273,6 @@ private fun applyEditorCodeSpans(
     tracker.source = source
     tracker.start = windowStart
     tracker.end = windowEnd
-    // Color-only spans must never move the cursor or viewport. Restore after layout
-    // invalidation rather than fighting an in-progress touch-scroll gesture immediately.
-    editor.post {
-        if (editor.text === editable) {
-            val length = editable.length
-            val start = savedSelectionStart.coerceIn(0, length)
-            val end = savedSelectionEnd.coerceIn(0, length)
-            if (editor.selectionStart != start || editor.selectionEnd != end) {
-                editor.setSelection(start, end)
-            }
-            val maxY = ((editor.layout?.height ?: editor.height) - editor.height).coerceAtLeast(0)
-            val maxX = ((editor.layout?.width ?: editor.width) - editor.width).coerceAtLeast(0)
-            editor.scrollTo(savedScrollX.coerceIn(0, maxX), savedScrollY.coerceIn(0, maxY))
-        }
-    }
 }
 
 private fun paletteFor(tokens: EditorTokens) = Palette(
@@ -509,9 +488,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
     LaunchedEffect(path, editorValue.text, lang, vm.readOnly) {
-        if ((lang != Lang.JSON && lang != Lang.LANG) || vm.readOnly || editorValue.text.isBlank() ||
-            editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS
-        ) {
+        if ((lang != Lang.JSON && lang != Lang.LANG) || vm.readOnly || editorValue.text.isBlank()) {
             syntaxIssue = null
             checkingJson = false
         } else {
@@ -967,9 +944,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                 }
-                if ((lang == Lang.JSON || lang == Lang.LANG) && !vm.readOnly && editorValue.text.isNotBlank() &&
-                    editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS
-                ) {
+                if ((lang == Lang.JSON || lang == Lang.LANG) && !vm.readOnly && editorValue.text.isNotBlank()) {
                     val issue = syntaxIssue
                     val colors = MaterialTheme.colorScheme
                     val hasSyntaxError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
@@ -1004,14 +979,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
-                }
-                if (!vm.readOnly && lang != null && editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
-                    Text(
-                        stringResource(R.string.editor_live_analysis_paused),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
                 }
                 if (vm.readOnly) {
                     Text(
