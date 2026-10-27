@@ -122,6 +122,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         clickSoundsEnabled = false
         editorWordWrapEnabled = true
         editorSyntaxHighlightingEnabled = true
+        editorIndentSize = 4
+        reducedMotionEnabled = false
     }
 
     private val gameEffectsState = mutableStateOf(settingsPreferences.getBoolean("game_effects_enabled", true))
@@ -173,6 +175,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         set(value) {
             editorSyntaxHighlightingState.value = value
             settingsPreferences.edit().putBoolean("editor_syntax_highlighting", value).apply()
+        }
+
+    private val editorIndentSizeState = mutableStateOf(
+        settingsPreferences.getInt("editor_indent_size", 4).let { if (it in setOf(2, 4, 8)) it else 4 }
+    )
+    var editorIndentSize: Int
+        get() = editorIndentSizeState.value
+        set(value) {
+            editorIndentSizeState.value = if (value in setOf(2, 4, 8)) value else 4
+            settingsPreferences.edit().putInt("editor_indent_size", editorIndentSizeState.value).apply()
+        }
+
+    private val reducedMotionState = mutableStateOf(settingsPreferences.getBoolean("reduced_motion", false))
+    var reducedMotionEnabled: Boolean
+        get() = reducedMotionState.value
+        set(value) {
+            reducedMotionState.value = value
+            settingsPreferences.edit().putBoolean("reduced_motion", value).apply()
         }
 
     var autoCheckUpdates by mutableStateOf(settingsPreferences.getBoolean("auto_check_updates", true))
