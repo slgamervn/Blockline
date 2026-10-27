@@ -201,6 +201,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var updateDownloadState by mutableStateOf(UpdateDownloadState.IDLE)
         private set
+    var updateDownloadVersion by mutableStateOf<String?>(null)
+        private set
     var updateDownloadProgress by mutableStateOf(0)
         private set
     var updateDownloadError by mutableStateOf<String?>(null)
@@ -386,6 +388,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { AppUpdateRepository.compareVersions(it.version, BuildConfig.VERSION_NAME) > 0 }.getOrDefault(false)
         } ?: return
         if (updateDownloadJob?.isActive == true) return
+        updateDownloadVersion = info.version
         updateDownloadError = null
         updateDownloadState = UpdateDownloadState.DOWNLOADING
         updateDownloadProgress = 0
@@ -435,6 +438,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun installDownloadedUpdate(context: android.content.Context) {
         val info = updateInfo ?: latestReleaseInfo ?: return
         if (updateDownloadState == UpdateDownloadState.VERIFYING || updateDownloadState == UpdateDownloadState.INSTALLING) return
+        updateDownloadVersion = info.version
         updateDownloadError = null
         updateDownloadState = UpdateDownloadState.VERIFYING
         updateDownloadJob = viewModelScope.launch {
