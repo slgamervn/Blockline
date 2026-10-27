@@ -76,7 +76,7 @@ private fun goTab(nav: NavController, route: String) {
 
 @Composable
 fun BlocklineRoot(vm: AppViewModel = viewModel()) {
-    BlocklineTheme(vm.themeMode) {
+    BlocklineTheme(vm.themeMode, vm.accentColor) {
         val nav = rememberNavController()
         val context = LocalContext.current
         val animationsEnabled = rememberSystemAnimationsEnabled()

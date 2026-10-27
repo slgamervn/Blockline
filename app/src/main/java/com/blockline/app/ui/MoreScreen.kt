@@ -87,6 +87,7 @@ import com.blockline.app.data.TEXT_EXT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.blockline.app.ui.theme.AccentColor
 import com.blockline.app.ui.theme.ThemeMode
 import java.io.OutputStream
 
@@ -265,6 +266,18 @@ fun MoreScreen(vm: AppViewModel) {
                         onClick = { vm.themeMode = ThemeMode.SYSTEM },
                         label = { Text(stringResource(R.string.system)) }
                     )
+                }
+                androidx.compose.material3.HorizontalDivider()
+                Text(stringResource(R.string.accent_color), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.accent_color_hint), color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.FilterChip(selected = vm.accentColor == AccentColor.EMERALD, onClick = { vm.accentColor = AccentColor.EMERALD }, label = { Text(stringResource(R.string.accent_emerald)) })
+                    androidx.compose.material3.FilterChip(selected = vm.accentColor == AccentColor.BLUE, onClick = { vm.accentColor = AccentColor.BLUE }, label = { Text(stringResource(R.string.accent_blue)) })
+                    androidx.compose.material3.FilterChip(selected = vm.accentColor == AccentColor.VIOLET, onClick = { vm.accentColor = AccentColor.VIOLET }, label = { Text(stringResource(R.string.accent_violet)) })
+                    androidx.compose.material3.FilterChip(selected = vm.accentColor == AccentColor.AMBER, onClick = { vm.accentColor = AccentColor.AMBER }, label = { Text(stringResource(R.string.accent_amber)) })
+                }
+                androidx.compose.material3.OutlinedButton(onClick = { vm.resetAppearanceAndEditor() }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.reset_appearance_editor))
                 }
             }
         }

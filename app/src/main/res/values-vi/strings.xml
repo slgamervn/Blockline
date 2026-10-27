@@ -103,6 +103,13 @@
     <string name="more_subtitle">Tùy chỉnh không gian làm việc và trình chỉnh sửa.</string>
     <string name="appearance">Giao diện</string>
     <string name="appearance_hint">Chọn giao diện hiển thị của Blockline.</string>
+    <string name="accent_color">Màu nhấn</string>
+    <string name="accent_color_hint">Đổi màu nút chính và trạng thái được chọn. Lựa chọn được lưu trên thiết bị.</string>
+    <string name="accent_emerald">Xanh ngọc</string>
+    <string name="accent_blue">Xanh dương</string>
+    <string name="accent_violet">Tím</string>
+    <string name="accent_amber">Hổ phách</string>
+    <string name="reset_appearance_editor">Khôi phục giao diện và trình soạn thảo mặc định</string>
     <string name="dark">Tối</string>
     <string name="light">Sáng</string>
     <string name="system">Theo hệ thống</string>

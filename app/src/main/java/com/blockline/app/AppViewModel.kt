@@ -36,6 +36,7 @@ import com.blockline.app.data.BatchRenameEngine
 import com.blockline.app.data.EditorHistory
 import com.blockline.app.data.BatchRenameOutcome
 import com.blockline.app.data.ValidationIssue
+import com.blockline.app.ui.theme.AccentColor
 import com.blockline.app.ui.theme.ThemeMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -99,6 +100,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             themeState.value = value
             settingsPreferences.edit().putString("theme_mode", value.name).apply()
         }
+
+    private val accentColorState = mutableStateOf(
+        runCatching { AccentColor.valueOf(settingsPreferences.getString("accent_color", AccentColor.EMERALD.name) ?: AccentColor.EMERALD.name) }
+            .getOrDefault(AccentColor.EMERALD)
+    )
+    var accentColor: AccentColor
+        get() = accentColorState.value
+        set(value) {
+            accentColorState.value = value
+            settingsPreferences.edit().putString("accent_color", value.name).apply()
+        }
+
+    fun resetAppearanceAndEditor() {
+        themeMode = ThemeMode.DARK_PLUS
+        accentColor = AccentColor.EMERALD
+        fontSize = 14
+        gameEffectsEnabled = true
+        clickSoundsEnabled = false
+    }
 
     private val gameEffectsState = mutableStateOf(settingsPreferences.getBoolean("game_effects_enabled", true))
     var gameEffectsEnabled: Boolean

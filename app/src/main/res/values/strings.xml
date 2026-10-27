@@ -103,6 +103,13 @@
     <string name="more_subtitle">Settings for your workspace and editor.</string>
     <string name="appearance">Appearance</string>
     <string name="appearance_hint">Choose how Blockline looks.</string>
+    <string name="accent_color">Accent color</string>
+    <string name="accent_color_hint">Changes primary controls and selected states. Your choice is saved on this device.</string>
+    <string name="accent_emerald">Emerald</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_violet">Violet</string>
+    <string name="accent_amber">Amber</string>
+    <string name="reset_appearance_editor">Restore appearance and editor defaults</string>
     <string name="dark">Dark</string>
     <string name="light">Light</string>
     <string name="system">System</string>

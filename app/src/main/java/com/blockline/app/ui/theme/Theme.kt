@@ -27,6 +27,35 @@ enum class ThemeMode {
     AMOLED
 }
 
+enum class AccentColor {
+    EMERALD, BLUE, VIOLET, AMBER;
+
+    fun primary(dark: Boolean): Color = when (this) {
+        EMERALD -> if (dark) Color(0xFF3DBA7A) else Color(0xFF267F45)
+        BLUE -> if (dark) Color(0xFF4BA3FF) else Color(0xFF005A9E)
+        VIOLET -> if (dark) Color(0xFFC4B5FD) else Color(0xFF6941C6)
+        AMBER -> if (dark) Color(0xFFE6B35A) else Color(0xFF8A5A00)
+    }
+    fun onPrimary(dark: Boolean): Color = when (this) {
+        EMERALD -> if (dark) Color(0xFF062315) else Color.White
+        BLUE -> if (dark) Color(0xFF08213A) else Color.White
+        VIOLET -> if (dark) Color(0xFF26134A) else Color.White
+        AMBER -> if (dark) Color(0xFF352300) else Color.White
+    }
+    fun container(dark: Boolean): Color = when (this) {
+        EMERALD -> if (dark) Color(0xFF20382A) else Color(0xFFD5F1DD)
+        BLUE -> if (dark) Color(0xFF183653) else Color(0xFFD7E9F8)
+        VIOLET -> if (dark) Color(0xFF35265C) else Color(0xFFE8DDFF)
+        AMBER -> if (dark) Color(0xFF4A3515) else Color(0xFFFFF0CC)
+    }
+    fun onContainer(dark: Boolean): Color = when (this) {
+        EMERALD -> if (dark) Color(0xFFC6F2D7) else Color(0xFF174A28)
+        BLUE -> if (dark) Color(0xFFD6E9FF) else Color(0xFF003A64)
+        VIOLET -> if (dark) Color(0xFFE8DDFF) else Color(0xFF35265C)
+        AMBER -> if (dark) Color(0xFFFFE8BC) else Color(0xFF503700)
+    }
+}
+
 val Emerald = Color(0xFF3DBA7A)
 val Amber = Color(0xFFE6B35A)
 val OnSurface = Color(0xFFD4D4D4)
@@ -52,10 +81,10 @@ private val CompactTypography = Typography().let { base ->
 }
 
 private val DarkPlusColors = darkColorScheme(
-    primary = Color(0xFF007ACC),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFF264F78),
-    onPrimaryContainer = Color(0xFFD7E9F8),
+    primary = Emerald,
+    onPrimary = Color(0xFF062315),
+    primaryContainer = Color(0xFF20382A),
+    onPrimaryContainer = Color(0xFFC6F2D7),
     secondary = Emerald,
     onSecondary = Color(0xFF071A10),
     secondaryContainer = Color(0xFF20382A),
@@ -74,10 +103,10 @@ private val DarkPlusColors = darkColorScheme(
 )
 
 private val LightPlusColors = lightColorScheme(
-    primary = Color(0xFF007ACC),
+    primary = Color(0xFF267F45),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFCCE4F7),
-    onPrimaryContainer = Color(0xFF003A64),
+    primaryContainer = Color(0xFFD5F1DD),
+    onPrimaryContainer = Color(0xFF174A28),
     secondary = Color(0xFF267F45),
     onSecondary = Color.White,
     secondaryContainer = Color(0xFFD5F1DD),
@@ -109,19 +138,29 @@ private val BlocklineShapes = Shapes(
 )
 
 @Composable
-fun BlocklineTheme(mode: ThemeMode, content: @Composable () -> Unit) {
+fun BlocklineTheme(
+    mode: ThemeMode,
+    accent: AccentColor = AccentColor.EMERALD,
+    content: @Composable () -> Unit
+) {
     val systemDark = isSystemInDarkTheme()
     val dark = when (mode) {
         ThemeMode.LIGHT, ThemeMode.LIGHT_PLUS -> false
         ThemeMode.SYSTEM -> systemDark
         ThemeMode.DARK, ThemeMode.DARK_PLUS, ThemeMode.AMOLED -> true
     }
-    val colors = when (mode) {
+    val baseColors = when (mode) {
         ThemeMode.AMOLED -> AmoledColors
         ThemeMode.LIGHT, ThemeMode.LIGHT_PLUS -> LightPlusColors
         ThemeMode.SYSTEM -> if (systemDark) DarkPlusColors else LightPlusColors
         ThemeMode.DARK, ThemeMode.DARK_PLUS -> DarkPlusColors
     }
+    val colors = baseColors.copy(
+        primary = accent.primary(dark), onPrimary = accent.onPrimary(dark),
+        primaryContainer = accent.container(dark), onPrimaryContainer = accent.onContainer(dark),
+        secondary = accent.primary(dark), onSecondary = accent.onPrimary(dark),
+        secondaryContainer = accent.container(dark), onSecondaryContainer = accent.onContainer(dark)
+    )
     val view = LocalView.current
     SideEffect {
         val window = (view.context as? Activity)?.window
