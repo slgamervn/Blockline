@@ -202,7 +202,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             apkUrl = apkUrl,
             apkSizeBytes = settingsPreferences.getLong("latest_release_size", 0L).coerceAtLeast(0L),
             releaseUrl = releaseUrl,
-            publishedAt = settingsPreferences.getString("latest_release_published_at", "") ?: ""
+            publishedAt = settingsPreferences.getString("latest_release_published_at", "") ?: "",
+            sha256 = settingsPreferences.getString("latest_release_sha256", null)
         )
     }
 
@@ -216,6 +217,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             .putLong("latest_release_size", info.apkSizeBytes)
             .putString("latest_release_url", info.releaseUrl)
             .putString("latest_release_published_at", info.publishedAt)
+            .putString("latest_release_sha256", info.sha256)
             .apply()
     }
     var lastUpdateCheck by mutableStateOf(settingsPreferences.getString("last_update_check", null))
@@ -337,7 +339,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             result.onSuccess { available ->
                 if (available != null) rememberReleaseInfo(available)
                 val ignoredVersion = settingsPreferences.getString("dismissed_update_version", null)
-                updateInfo = if (available != null && (ignoredVersion != available.version || !automatic)) available else null
+                // Automatic checks update the saved changelog silently. Keep modals for
+                // explicit user-initiated checks so startup never interrupts editing.
+                updateInfo = if (available != null && !automatic &&
+                    (ignoredVersion != available.version || !automatic)
+                ) available else null
                 updateCheckResult = when {
                     available != null -> text(R.string.update_available_status, available.version)
                     else -> text(R.string.update_up_to_date)
