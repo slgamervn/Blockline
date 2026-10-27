@@ -81,7 +81,7 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
     BlocklineTheme(vm.themeMode, vm.accentColor) {
         val nav = rememberNavController()
         val context = LocalContext.current
-        val animationsEnabled = rememberSystemAnimationsEnabled()
+        val animationsEnabled = rememberSystemAnimationsEnabled() && !vm.reducedMotionEnabled
         val snack = remember { SnackbarHostState() }
         val msg = vm.message
         val update = vm.updateInfo
