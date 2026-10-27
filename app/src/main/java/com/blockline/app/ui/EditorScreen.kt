@@ -177,8 +177,8 @@ private fun visibleCodeWindow(
         if (!wordWrapEnabled && firstVisible == lastVisible) {
             val lineStart = layout.getLineStart(firstVisible).coerceIn(0, source.length)
             val lineEnd = layout.getLineEnd(firstVisible).coerceIn(lineStart, source.length)
-            val left = (editor.scrollX + editor.compoundPaddingLeft).toFloat()
-            val right = (editor.scrollX + editor.width - editor.compoundPaddingRight).toFloat()
+            val left = editor.scrollX.toFloat()
+            val right = (editor.scrollX + editor.width - editor.compoundPaddingLeft - editor.compoundPaddingRight).toFloat()
             val viewportStart = layout.getOffsetForHorizontal(firstVisible, left).coerceIn(lineStart, lineEnd)
             val viewportEnd = layout.getOffsetForHorizontal(firstVisible, right).coerceIn(viewportStart, lineEnd)
             start = (viewportStart - 512).coerceAtLeast(lineStart)
@@ -237,10 +237,10 @@ private fun applyEditorCodeSpans(
     // Text edits move existing spans, so clear once per source snapshot. During ordinary
     // scrolling, remove only the old viewport's spans instead of querying the full document.
     if (tracker.source !== source) {
-        val oldStart = tracker.start.coerceIn(0, editable.length)
-        val oldEnd = tracker.end.coerceIn(oldStart, editable.length)
-        if (oldStart < oldEnd) editable.getSpans(oldStart, oldEnd, EditorCodeSpan::class.java).forEach(editable::removeSpan)
-        editable.getSpans(windowStart, windowEnd, EditorCodeSpan::class.java).forEach(editable::removeSpan)
+        // The Editable shifts spans when text is inserted/deleted before the tracked window.
+        // On a new source snapshot remove all existing editor color spans (span-count bounded),
+        // so no shifted stale colors can survive outside the new viewport.
+        clearEditorCodeSpans(editor)
         tracker.source = source
         tracker.start = -1
         tracker.end = -1
@@ -1144,21 +1144,22 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         val syntaxRefreshRunnable = Runnable {
                                             syntaxRefreshRequests.trySend(Unit)
                                         }
-                                        setOnScrollChangeListener { view, _, scrollY, _, _ ->
+                                        var lastStyledScrollX = -1
+                                        setOnScrollChangeListener { view, scrollX, scrollY, oldScrollX, _ ->
                                             val native = view as? EditText
                                             val nativePath = native?.let { nativeDocumentPaths[it] } ?: vm.activeFile
                                             if (native != null && nativePath != null) {
-                                                vm.saveEditorViewport(nativePath, native.scrollX, scrollY, native.selectionStart, native.selectionEnd)
+                                                vm.saveEditorViewport(nativePath, scrollX, scrollY, native.selectionStart, native.selectionEnd)
                                             }
                                             val currentLayout = native?.layout
                                             if (currentLayout != null && currentLayout.lineCount > 0) {
                                                 val line = currentLayout.getLineForVertical(
                                                     scrollY.coerceIn(0, (currentLayout.height - 1).coerceAtLeast(0))
                                                 )
-                                                if (line != lastStyledLine) {
+                                                if (line != lastStyledLine || scrollX != lastStyledScrollX || scrollX != oldScrollX) {
                                                     lastStyledLine = line
-                                                    // Debounce syntax work until scrolling settles instead of
-                                                    // tokenizing and replacing spans every 65 ms mid-gesture.
+                                                    lastStyledScrollX = scrollX
+                                                    // Refresh after vertical or horizontal scroll settles.
                                                     removeCallbacks(syntaxRefreshRunnable)
                                                     postDelayed(syntaxRefreshRunnable, 120L)
                                                 }
