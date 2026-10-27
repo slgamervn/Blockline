@@ -89,6 +89,9 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
         val backStack by nav.currentBackStackEntryAsState()
         val route = backStack?.destination?.route
         if (update != null) {
+            val updateState = if (vm.updateDownloadVersion == update.version) vm.updateDownloadState else UpdateDownloadState.IDLE
+            val downloadProgress = if (updateState == UpdateDownloadState.IDLE) 0 else vm.updateDownloadProgress
+            val downloadError = if (vm.updateDownloadVersion == update.version) vm.updateDownloadError else null
             AlertDialog(
                 onDismissRequest = { vm.dismissUpdate(update.version) },
                 title = { Text(stringResource(R.string.update_dialog_title)) },
@@ -110,9 +113,9 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                         Text(stringResource(R.string.update_download_prompt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", update.apkSizeBytes / 1_048_576.0)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
-                            when (vm.updateDownloadState) {
+                            when (updateState) {
                                 UpdateDownloadState.IDLE -> stringResource(R.string.update_state_idle)
-                                UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, vm.updateDownloadProgress)
+                                UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, downloadProgress)
                                 UpdateDownloadState.VERIFYING -> stringResource(R.string.update_state_verifying)
                                 UpdateDownloadState.READY_TO_INSTALL -> stringResource(R.string.update_state_ready)
                                 UpdateDownloadState.WAITING_PERMISSION -> stringResource(R.string.update_state_waiting_permission)
@@ -121,28 +124,28 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                                 UpdateDownloadState.CANCELLED -> stringResource(R.string.update_state_cancelled)
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (vm.updateDownloadState == UpdateDownloadState.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (updateState == UpdateDownloadState.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        if (vm.updateDownloadState == UpdateDownloadState.DOWNLOADING || vm.updateDownloadState == UpdateDownloadState.VERIFYING) {
+                        if (updateState == UpdateDownloadState.DOWNLOADING || updateState == UpdateDownloadState.VERIFYING) {
                             androidx.compose.material3.LinearProgressIndicator(
-                                progress = { if (vm.updateDownloadState == UpdateDownloadState.VERIFYING) 1f else vm.updateDownloadProgress / 100f },
+                                progress = { if (updateState == UpdateDownloadState.VERIFYING) 1f else downloadProgress / 100f },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        vm.updateDownloadError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+                        downloadError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                     }
                 },
                 confirmButton = {
-                    when (vm.updateDownloadState) {
+                    when (updateState) {
                         UpdateDownloadState.DOWNLOADING -> TextButton(onClick = { vm.cancelUpdateDownload() }) { Text(stringResource(R.string.update_cancel_download)) }
                         UpdateDownloadState.READY_TO_INSTALL, UpdateDownloadState.WAITING_PERMISSION -> Button(onClick = { vm.installDownloadedUpdate(context) }) {
-                            Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.WAITING_PERMISSION) R.string.update_install_after_permission else R.string.update_install_downloaded))
+                            Text(stringResource(if (updateState == UpdateDownloadState.WAITING_PERMISSION) R.string.update_install_after_permission else R.string.update_install_downloaded))
                         }
                         UpdateDownloadState.VERIFYING, UpdateDownloadState.INSTALLING -> Button(onClick = {}, enabled = false) {
-                            Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.INSTALLING) R.string.update_state_installing else R.string.update_state_verifying))
+                            Text(stringResource(if (updateState == UpdateDownloadState.INSTALLING) R.string.update_state_installing else R.string.update_state_verifying))
                         }
                         else -> Button(onClick = { vm.downloadUpdate() }) {
-                            Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.FAILED || vm.updateDownloadState == UpdateDownloadState.CANCELLED) R.string.update_retry_download else R.string.update_download_action))
+                            Text(stringResource(if (updateState == UpdateDownloadState.FAILED || updateState == UpdateDownloadState.CANCELLED) R.string.update_retry_download else R.string.update_download_action))
                         }
                     }
                 },
