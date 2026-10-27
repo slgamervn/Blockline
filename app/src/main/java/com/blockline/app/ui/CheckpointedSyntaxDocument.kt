@@ -55,17 +55,16 @@ internal class CheckpointedSyntaxDocument private constructor(
         }
 
         while (cursor < end) {
-            val token = scanToken(source, cursor, language)
-            if (token == null) {
+            // Consult the index before scanning: a token can be much larger than the viewport.
+            // If a checkpoint carries its full range, never walk that token again while scrolling.
+            val known = checkpointInsideToken(cursor)?.takeIf { it.tokenStart == cursor }
+            val token = if (known == null) scanToken(source, cursor, language) else null
+            if (known == null && token == null) {
                 cursor++
                 continue
             }
-
-            // A token longer than the checkpoint stride has a checkpoint inside it. Reuse its
-            // final classification/end rather than walking the long token again on every scroll.
-            val known = checkpointInsideToken(cursor)
-            val tokenEnd = if (known?.tokenStart == cursor) known.tokenEnd else token.end
-            val kind = if (known?.tokenStart == cursor) known.kind ?: token.kind else token.kind
+            val tokenEnd = known?.tokenEnd ?: token!!.end
+            val kind = known?.kind ?: token!!.kind
             addIntersection(spans, cursor, tokenEnd, kind, start, end)
             cursor = tokenEnd.coerceAtLeast(cursor + 1)
         }
