@@ -1179,11 +1179,18 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                                             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
                                             override fun afterTextChanged(s: Editable?) {
+                                                if (syncingNativeText[0]) return
                                                 val updated = s?.toString().orEmpty()
                                                 val cursor = selectionStart.coerceIn(0, updated.length)
                                                 if (updated !== editorValue.text || cursor != editorValue.selection.start) {
                                                     lastSyncedNativeText[0] = updated
                                                     editorValue = TextFieldValue(updated, TextRange(cursor))
+                                                    val nativePath = nativeDocumentPaths[this@apply] ?: vm.activeFile
+                                                    if (nativePath != null) {
+                                                        vm.saveEditorViewport(
+                                                            nativePath, scrollX, scrollY, selectionStart, selectionEnd
+                                                        )
+                                                    }
                                                     if (completionItems.isNotEmpty()) completionItems = emptyList()
                                                 }
                                             }
