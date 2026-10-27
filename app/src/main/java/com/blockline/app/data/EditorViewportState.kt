@@ -16,8 +16,9 @@ data class EditorViewportState(
         return copy(
             scrollX = scrollX.coerceAtLeast(0),
             scrollY = scrollY.coerceAtLeast(0),
-            selectionStart = minOf(start, end),
-            selectionEnd = maxOf(start, end)
+            // Keep anchor/caret direction; reversed selections are valid editor state.
+            selectionStart = start,
+            selectionEnd = end
         )
     }
 }
