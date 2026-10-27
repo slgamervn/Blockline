@@ -11,6 +11,8 @@ import android.view.inputmethod.EditorInfo
 import android.text.InputType
 import android.widget.EditText
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -22,6 +24,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -104,6 +111,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.blockline.app.AppViewModel
 import com.blockline.app.R
 import com.blockline.app.data.JsonTools
+import com.blockline.app.data.EditorIndentationPolicy
 import com.blockline.app.data.AddonCompletionEngine
 import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
@@ -111,6 +119,7 @@ import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
 import com.blockline.app.ui.theme.EditorTokens
 import com.blockline.app.ui.theme.editorTokens
+import com.blockline.app.ui.rememberSystemAnimationsEnabled
 
 private const val LARGE_FILE_PAGE_CHARS = 12_000
 private const val LIVE_TEXT_ANALYSIS_MAX_CHARS = 12_000
@@ -310,6 +319,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     }
     val playClickSound = { if (vm.clickSoundsEnabled) clickSound?.play() }
     val wideLayout = LocalConfiguration.current.screenWidthDp >= 600
+    val motionEnabled = rememberSystemAnimationsEnabled() && !vm.reducedMotionEnabled
     val keyboardController = LocalSoftwareKeyboardController.current
     var sidebarOpen by remember { mutableStateOf(false) }
     var showCommandPalette by remember { mutableStateOf(false) }
@@ -717,8 +727,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             )
             AnimatedVisibility(
                 visible = showAdvancementToast && vm.gameEffectsEnabled,
-                enter = slideInVertically { -it } + fadeIn(),
-                exit = slideOutVertically { -it } + fadeOut()
+                enter = if (motionEnabled) slideInVertically { -it } + fadeIn() else EnterTransition.None,
+                exit = if (motionEnabled) slideOutVertically { -it } + fadeOut() else ExitTransition.None
             ) {
                 Surface(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp)
@@ -1089,7 +1099,22 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         editText.setHorizontallyScrolling(!editorWordWrapEnabled)
                                         editText.tag = editorWordWrapEnabled
                                     }
-                                    editText.isEnabled = !vm.isOpeningFile
+                                    editText.setOnKeyListener { _, keyCode, event ->
+                                        if (keyCode == android.view.KeyEvent.KEYCODE_TAB &&
+                                            event.action == android.view.KeyEvent.ACTION_DOWN &&
+                                            !vm.isOpeningFile && !vm.readOnly
+                                        ) {
+                                            val start = minOf(editText.selectionStart, editText.selectionEnd)
+                                                .coerceIn(0, editText.text.length)
+                                            val end = maxOf(editText.selectionStart, editText.selectionEnd)
+                                                .coerceIn(start, editText.text.length)
+                                            val indent = EditorIndentationPolicy.spaces(vm.editorIndentSize)
+                                            editText.text.replace(start, end, indent)
+                                            editText.setSelection(start + indent.length)
+                                            true
+                                        } else false
+                                    }
+                                    editText.isEnabled = !vm.isOpeningFile && !vm.readOnly
                                     if (editText.textSize != vm.fontSize.toFloat()) {
                                         editText.textSize = vm.fontSize.toFloat()
                                     }
@@ -1102,8 +1127,22 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     editorValue = it
                                     if (completionItems.isNotEmpty()) completionItems = emptyList()
                                 },
-                                readOnly = vm.isOpeningFile,
-                                modifier = Modifier.fillMaxSize(),
+                                readOnly = vm.isOpeningFile || vm.readOnly,
+                                modifier = Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+                                    if (event.type == KeyEventType.KeyDown && event.key == Key.Tab &&
+                                        !vm.isOpeningFile && !vm.readOnly
+                                    ) {
+                                        val inserted = EditorIndentationPolicy.insertTab(
+                                            editorValue.text,
+                                            editorValue.selection.start,
+                                            editorValue.selection.end,
+                                            vm.editorIndentSize
+                                        )
+                                        editorValue = TextFieldValue(inserted.text, TextRange(inserted.cursor))
+                                        vm.updateContent(inserted.text)
+                                        true
+                                    } else false
+                                },
                                 textStyle = TextStyle(color = tokens.foreground, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
                                 visualTransformation = precomputedEditorText
                                     ?.takeIf { vm.editorSyntaxHighlightingEnabled && lang != null && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS }
@@ -1147,8 +1186,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             AnimatedVisibility(
                 visible = sidebarOpen,
                 modifier = Modifier.align(Alignment.CenterStart).padding(start = 60.dp),
-                enter = slideInHorizontally { -it },
-                exit = slideOutHorizontally { -it }
+                enter = if (motionEnabled) slideInHorizontally { -it } else EnterTransition.None,
+                exit = if (motionEnabled) slideOutHorizontally { -it } else ExitTransition.None
             ) {
                 EditorSidebar(
                     title = stringResource(R.string.chrome_explorer),
