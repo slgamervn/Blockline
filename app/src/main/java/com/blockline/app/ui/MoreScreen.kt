@@ -47,7 +47,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -68,7 +67,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blockline.app.AppViewModel
-import com.blockline.app.data.UpdateDownloadState
 import com.blockline.app.BuildConfig
 import com.blockline.app.R
 import com.blockline.app.data.ExportMode
@@ -151,39 +149,19 @@ fun MoreScreen(vm: AppViewModel) {
                     ) {
                         Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(stringResource(R.string.update_available_status, info.version), style = androidx.compose.material3.MaterialTheme.typography.titleSmall)
-                            if (info.releaseNotes.isNotBlank()) Text(info.releaseNotes.take(1_000), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
-                            Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", info.apkSizeBytes / 1_048_576.0)), style = androidx.compose.material3.MaterialTheme.typography.labelSmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(
-                                when (vm.updateDownloadState) {
-                                    UpdateDownloadState.IDLE -> stringResource(R.string.update_state_idle)
-                                    UpdateDownloadState.DOWNLOADING -> stringResource(R.string.update_state_downloading, vm.updateDownloadProgress)
-                                    UpdateDownloadState.VERIFYING -> stringResource(R.string.update_state_verifying)
-                                    UpdateDownloadState.READY_TO_INSTALL -> stringResource(R.string.update_state_ready)
-                                    UpdateDownloadState.WAITING_PERMISSION -> stringResource(R.string.update_state_waiting_permission)
-                                    UpdateDownloadState.INSTALLING -> stringResource(R.string.update_state_installing)
-                                    UpdateDownloadState.FAILED -> stringResource(R.string.update_state_failed)
-                                    UpdateDownloadState.CANCELLED -> stringResource(R.string.update_state_cancelled)
-                                },
+                            if (info.releaseNotes.isNotBlank()) {
+                                Text(info.releaseNotes.take(1_000), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                            }
+                            Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", info.apkSizeBytes / 1_048_576.0)),
+                                style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.update_download_prompt),
                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                color = if (vm.updateDownloadState == UpdateDownloadState.FAILED) androidx.compose.material3.MaterialTheme.colorScheme.error else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (vm.updateDownloadState == UpdateDownloadState.DOWNLOADING || vm.updateDownloadState == UpdateDownloadState.VERIFYING) {
-                                androidx.compose.material3.LinearProgressIndicator(
-                                    progress = { if (vm.updateDownloadState == UpdateDownloadState.VERIFYING) 1f else vm.updateDownloadProgress / 100f },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                            vm.updateDownloadError?.let { Text(it, style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
-                            when (vm.updateDownloadState) {
-                                UpdateDownloadState.DOWNLOADING -> TextButton(onClick = { vm.cancelUpdateDownload() }) { Text(stringResource(R.string.update_cancel_download)) }
-                                UpdateDownloadState.READY_TO_INSTALL, UpdateDownloadState.WAITING_PERMISSION -> Button(onClick = { vm.installDownloadedUpdate(context) }) {
-                                    Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.WAITING_PERMISSION) R.string.update_install_after_permission else R.string.update_install_downloaded))
-                                }
-                                UpdateDownloadState.VERIFYING, UpdateDownloadState.INSTALLING -> Button(onClick = {}, enabled = false) { Text(stringResource(R.string.update_state_verifying)) }
-                                else -> Button(onClick = { vm.downloadUpdate() }) {
-                                    Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.FAILED || vm.updateDownloadState == UpdateDownloadState.CANCELLED) R.string.update_retry_download else R.string.update_download_action))
-                                }
-                            }
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                            Button(
+                                onClick = { vm.openReleasePage(context, info) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text(stringResource(R.string.update_now)) }
                         }
                     }
                 }
@@ -227,30 +205,13 @@ fun MoreScreen(vm: AppViewModel) {
                     if (vm.updateInfo == null && runCatching {
                             com.blockline.app.data.AppUpdateRepository.compareVersions(changelog.version, BuildConfig.VERSION_NAME) > 0
                         }.getOrDefault(false)) {
-                        Text(stringResource(R.string.update_download_prompt), style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                        Text(stringResource(R.string.update_download_prompt),
+                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", changelog.apkSizeBytes / 1_048_576.0)),
-                            style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-                        when (vm.updateDownloadState) {
-                            UpdateDownloadState.DOWNLOADING -> {
-                                androidx.compose.material3.LinearProgressIndicator(
-                                    progress = { vm.updateDownloadProgress / 100f }, modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(stringResource(R.string.update_state_downloading, vm.updateDownloadProgress))
-                                TextButton(onClick = { vm.cancelUpdateDownload() }) { Text(stringResource(R.string.update_cancel_download)) }
-                            }
-                            UpdateDownloadState.VERIFYING -> Text(stringResource(R.string.update_state_verifying))
-                            UpdateDownloadState.READY_TO_INSTALL, UpdateDownloadState.WAITING_PERMISSION -> Button(onClick = { vm.installDownloadedUpdate(context) }) {
-                                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.WAITING_PERMISSION) R.string.update_install_after_permission else R.string.update_install_downloaded))
-                            }
-                            UpdateDownloadState.INSTALLING -> Text(stringResource(R.string.update_state_installing))
-                            else -> Button(onClick = { vm.downloadUpdate() }) {
-                                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.FAILED || vm.updateDownloadState == UpdateDownloadState.CANCELLED) R.string.update_retry_download else R.string.update_download_action))
-                            }
-                        }
-                        vm.updateDownloadError?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error,
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
+                        Button(
+                            onClick = { vm.openReleasePage(context, changelog) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(stringResource(R.string.update_now)) }
                     }
                 }
             }
