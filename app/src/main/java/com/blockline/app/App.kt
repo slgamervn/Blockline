@@ -138,10 +138,22 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                 navController = nav,
                 startDestination = "projects",
                 modifier = Modifier.padding(pad),
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
+                enterTransition = {
+                    if (animationsEnabled) fadeIn(tween(140)) + slideInHorizontally(tween(140)) { width -> width / 18 }
+                    else EnterTransition.None
+                },
+                exitTransition = {
+                    if (animationsEnabled) fadeOut(tween(100)) + slideOutHorizontally(tween(100)) { width -> -width / 28 }
+                    else ExitTransition.None
+                },
+                popEnterTransition = {
+                    if (animationsEnabled) fadeIn(tween(140)) + slideInHorizontally(tween(140)) { width -> -width / 18 }
+                    else EnterTransition.None
+                },
+                popExitTransition = {
+                    if (animationsEnabled) fadeOut(tween(100)) + slideOutHorizontally(tween(100)) { width -> width / 28 }
+                    else ExitTransition.None
+                }
             ) {
                 composable("projects") { ProjectsScreen(vm) { nav.navigate("overview") } }
                 composable("overview") {
