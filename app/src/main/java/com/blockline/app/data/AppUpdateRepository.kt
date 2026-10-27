@@ -14,7 +14,8 @@ data class AppUpdate(
     val apkUrl: String,
     val apkSizeBytes: Long,
     val releaseUrl: String,
-    val publishedAt: String
+    val publishedAt: String,
+    val sha256: String? = null
 )
 
 class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANNEL) {
@@ -45,6 +46,7 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
 
             val apkUrl = asset.optString("browser_download_url", "")
             val releaseUrl = release.optString("html_url", "")
+            val sha256 = digestForAsset(asset)
             if (!apkUrl.startsWith("https://github.com/$REPOSITORY/releases/download/") ||
                 !releaseUrl.startsWith("https://github.com/$REPOSITORY/releases/tag/")) {
                 throw IllegalStateException("The release contains an unexpected download URL.")
@@ -57,7 +59,8 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
                 apkUrl = apkUrl,
                 apkSizeBytes = asset.optLong("size", 0L).coerceAtLeast(0L),
                 releaseUrl = releaseUrl,
-                publishedAt = release.optString("published_at", "")
+                publishedAt = release.optString("published_at", ""),
+                sha256 = sha256
             )
         } finally {
             connection.disconnect()
@@ -90,6 +93,23 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
         fun isSupportedChannel(channel: String): Boolean = channel == STABLE_CHANNEL || channel == TEST_CHANNEL
 
         fun isValidVersion(value: String): Boolean = SemanticVersion.isValid(value)
+
+        /**
+         * GitHub's release asset API can include an SHA-256 digest. Absence is supported
+         * for older releases; a present but malformed digest is rejected rather than ignored.
+         */
+        fun digestForAsset(asset: JSONObject): String? {
+            val raw = asset.optString("digest", "").trim()
+            if (raw.isEmpty()) return null
+            require(raw.startsWith("sha256:", ignoreCase = true)) {
+                "The release asset uses an unsupported checksum format."
+            }
+            val digest = raw.substringAfter(':').lowercase()
+            require(digest.matches(Regex("[0-9a-f]{64}"))) {
+                "The release asset checksum is malformed."
+            }
+            return digest
+        }
 
         fun isTestRelease(version: String, prerelease: Boolean, draft: Boolean): Boolean =
             !draft && prerelease && version.removePrefix("v").endsWith(TEST_VERSION_SUFFIX) &&
