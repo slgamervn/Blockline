@@ -113,7 +113,6 @@ fun BlocklineRoot(vm: AppViewModel = viewModel()) {
                     Button(onClick = { vm.openReleasePage(context, update) }) {
                         Text(stringResource(R.string.update_now))
                     }
-                }
                 },
                 dismissButton = {
                     TextButton(onClick = { vm.dismissUpdate(update.version) }) { Text(stringResource(R.string.update_later)) }
