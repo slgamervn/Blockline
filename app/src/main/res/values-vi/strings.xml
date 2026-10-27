@@ -115,6 +115,10 @@
     <string name="system">Theo hệ thống</string>
     <string name="editor_typography">Cỡ chữ trình chỉnh sửa</string>
     <string name="editor_font_size">Chữ đơn cách · %1$d sp</string>
+<string name="editor_word_wrap_large">Ngắt dòng dài trong tệp lớn</string>
+<string name="editor_word_wrap_large_hint">Bật hoặc tắt cuộn ngang khi chỉnh sửa tệp trên 12.000 ký tự.</string>
+<string name="editor_syntax_highlighting">Tô màu cú pháp</string>
+<string name="editor_syntax_highlighting_hint">Tô màu mã trong các định dạng được hỗ trợ; tắt để chỉnh sửa văn bản thuần nhẹ hơn.</string>
     <string name="smaller_text">A− Nhỏ hơn</string>
     <string name="larger_text">A+ Lớn hơn</string>
     <string name="about_blockline">Thông tin về Blockline</string>
