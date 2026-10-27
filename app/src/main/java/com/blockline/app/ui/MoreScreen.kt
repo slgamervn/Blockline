@@ -224,6 +224,34 @@ fun MoreScreen(vm: AppViewModel) {
                     TextButton(onClick = { vm.openReleasePage(context, changelog) }) {
                         Text(stringResource(R.string.view_release_notes))
                     }
+                    if (vm.updateInfo == null && runCatching {
+                            com.blockline.app.data.AppUpdateRepository.compareVersions(changelog.version, BuildConfig.VERSION_NAME) > 0
+                        }.getOrDefault(false)) {
+                        Text(stringResource(R.string.update_download_prompt), style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.update_download_size, String.format(java.util.Locale.ROOT, "%.1f MB", changelog.apkSizeBytes / 1_048_576.0)),
+                            style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
+                        when (vm.updateDownloadState) {
+                            UpdateDownloadState.DOWNLOADING -> {
+                                androidx.compose.material3.LinearProgressIndicator(
+                                    progress = { vm.updateDownloadProgress / 100f }, modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(stringResource(R.string.update_state_downloading, vm.updateDownloadProgress))
+                                TextButton(onClick = { vm.cancelUpdateDownload() }) { Text(stringResource(R.string.update_cancel_download)) }
+                            }
+                            UpdateDownloadState.VERIFYING -> Text(stringResource(R.string.update_state_verifying))
+                            UpdateDownloadState.READY_TO_INSTALL, UpdateDownloadState.WAITING_PERMISSION -> Button(onClick = { vm.installDownloadedUpdate(context) }) {
+                                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.WAITING_PERMISSION) R.string.update_install_after_permission else R.string.update_install_downloaded))
+                            }
+                            UpdateDownloadState.INSTALLING -> Text(stringResource(R.string.update_state_installing))
+                            else -> Button(onClick = { vm.downloadUpdate() }) {
+                                Text(stringResource(if (vm.updateDownloadState == UpdateDownloadState.FAILED || vm.updateDownloadState == UpdateDownloadState.CANCELLED) R.string.update_retry_download else R.string.update_download_action))
+                            }
+                        }
+                        vm.updateDownloadError?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
+                    }
                 }
             }
         }

@@ -52,13 +52,13 @@ object InAppUpdateInstaller {
         if (!directory.exists() && !directory.mkdirs()) throw IllegalStateException("Cannot create the update cache directory.")
         val target = File(directory, "Blockline-${update.version}.apk")
         val partial = File(directory, "Blockline-${update.version}.apk.part")
-        val resumableBytes = partial.length().takeIf { it in 1 until update.apkSizeBytes } ?: 0L
+        val resumableBytes = UpdateApkPolicy.resumableBytes(partial.length(), update.apkSizeBytes)
         val stat = StatFs(directory.absolutePath)
         if (stat.availableBytes < update.apkSizeBytes - resumableBytes + STORAGE_HEADROOM_BYTES) {
             throw java.io.IOException("Not enough free storage to download this update safely.")
         }
         return withContext(Dispatchers.IO) {
-            var resumeFrom = partial.length().takeIf { it in 1 until update.apkSizeBytes } ?: 0L
+            var resumeFrom = UpdateApkPolicy.resumableBytes(partial.length(), update.apkSizeBytes)
             if (resumeFrom == 0L && partial.exists() && !partial.delete()) {
                 throw java.io.IOException("Cannot clear an invalid partial download.")
             }

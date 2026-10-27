@@ -16,6 +16,9 @@ object UpdateApkPolicy {
             uri.path.removePrefix(prefix).split('/').none { it.isEmpty() || it == "." || it == ".." }
     }
 
+    fun resumableBytes(partialBytes: Long, totalBytes: Long): Long =
+        partialBytes.takeIf { totalBytes > 0L && it in 1 until totalBytes } ?: 0L
+
     fun progressPercent(receivedBytes: Long, totalBytes: Long): Int {
         require(totalBytes > 0L) { "Total download size must be positive." }
         return ((receivedBytes.coerceAtLeast(0L).coerceAtMost(totalBytes) * 100L) / totalBytes).toInt()

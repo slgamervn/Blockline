@@ -337,7 +337,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun downloadUpdate() {
-        val info = updateInfo ?: return
+        val info = (updateInfo ?: latestReleaseInfo)?.takeIf {
+            runCatching { AppUpdateRepository.compareVersions(it.version, BuildConfig.VERSION_NAME) > 0 }.getOrDefault(false)
+        } ?: return
         if (updateDownloadJob?.isActive == true) return
         updateDownloadError = null
         updateDownloadState = UpdateDownloadState.DOWNLOADING

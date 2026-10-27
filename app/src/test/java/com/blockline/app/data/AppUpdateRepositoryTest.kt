@@ -58,6 +58,14 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
+    fun interruptedDownloadsResumeOnlyWhenPartialFileIsIncomplete() {
+        assertEquals(0L, UpdateApkPolicy.resumableBytes(0L, 100L))
+        assertEquals(25L, UpdateApkPolicy.resumableBytes(25L, 100L))
+        assertEquals(0L, UpdateApkPolicy.resumableBytes(100L, 100L))
+        assertEquals(0L, UpdateApkPolicy.resumableBytes(20L, 0L))
+    }
+
+    @Test
     fun downloadProgressIsClampedAndCertificateHistoryMustOverlap() {
         assertEquals(50, UpdateApkPolicy.progressPercent(50L, 100L))
         assertEquals(100, UpdateApkPolicy.progressPercent(101L, 100L))
