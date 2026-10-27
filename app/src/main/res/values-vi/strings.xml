@@ -299,7 +299,7 @@
     <string name="file_operation_running">Đang cập nhật tệp…</string>
     <string name="find_not_found">Không tìm thấy nội dung cần tìm trong tệp này.</string>
     <string name="opening_file">Đang mở tệp…</string>
-    <string name="file_too_large">Tệp lớn hơn 5 MB nên không thể mở an toàn trong trình chỉnh sửa.</string>
+    <string name="file_too_large">Tệp lớn hơn 10 MB nên không thể mở an toàn trong trình chỉnh sửa.</string>
     <string name="filter_json">JSON</string>
     <string name="filter_script">Script</string>
     <string name="filter_function">Function</string>
