@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.inputmethod.EditorInfo
 import android.text.InputType
 import android.widget.EditText
+import java.util.WeakHashMap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -115,6 +116,7 @@ import com.blockline.app.data.EditorIndentationPolicy
 import com.blockline.app.data.AddonCompletionEngine
 import com.blockline.app.data.ProjectValidator
 import com.blockline.app.data.ValidationIssue
+import com.blockline.app.data.EditorViewportState
 import com.blockline.app.ui.theme.Emerald
 import com.blockline.app.ui.theme.OnSurface
 import com.blockline.app.ui.theme.EditorTokens
@@ -128,19 +130,10 @@ private val COMPLETION_TOKEN_REGEX = Regex("[A-Za-z0-9_$:.-]*$")
 private val MANIFEST_UUID_START_REGEX = Regex("\"uuid\"\\s*:\\s*\"$")
 private val MANIFEST_FORMAT_VERSION_START_REGEX = Regex("\"format_version\"\\s*:\\s*\\d*$")
 
-private class EditorCodeSpan(
-    private val color: Int?,
-    private val bold: Boolean,
-    private val italic: Boolean,
-    private val underline: Boolean,
-    private val strikeThrough: Boolean
-) : CharacterStyle() {
+private class EditorCodeSpan(private val color: Int) : CharacterStyle() {
+    // Large-file editor spans change color only; never alter glyph metrics during scrolling.
     override fun updateDrawState(textPaint: TextPaint) {
-        color?.let { textPaint.color = it }
-        textPaint.isFakeBoldText = bold
-        textPaint.textSkewX = if (italic) -0.25f else 0f
-        textPaint.isUnderlineText = underline
-        textPaint.isStrikeThruText = strikeThrough
+        textPaint.color = color
     }
 }
 
@@ -162,7 +155,11 @@ private class EditorSyntaxWindowTracker {
     }
 }
 
-private fun visibleCodeWindow(editor: EditText, source: String): VisibleCodeWindow? {
+private fun visibleCodeWindow(
+    editor: EditText,
+    source: String,
+    wordWrapEnabled: Boolean
+): VisibleCodeWindow? {
     val layout = editor.layout ?: return null
     if (source.isEmpty() || layout.lineCount == 0 || editor.height <= 0) return null
     val maxVertical = (layout.height - 1).coerceAtLeast(0)
@@ -173,42 +170,25 @@ private fun visibleCodeWindow(editor: EditText, source: String): VisibleCodeWind
     var start = layout.getLineStart(firstLine).coerceIn(0, source.length)
     var end = layout.getLineEnd(lastLine).coerceIn(start, source.length)
 
-    // Keep tokenizer input aligned to complete logical lines. Starting in the middle
-    // of a huge minified line loses quote/comment state and produces incorrect colors.
+    // With wrapping disabled Android Layout reports a minified physical line as one huge line.
+    // Resolve its horizontal viewport explicitly rather than requesting the whole line.
     if (end - start > MAX_VISIBLE_SYNTAX_CHARS) {
-        val visibleStart = layout.getLineStart(firstVisible).coerceIn(0, source.length)
-        val visibleEnd = layout.getLineEnd(lastVisible).coerceIn(visibleStart, source.length)
-        val visibleLength = visibleEnd - visibleStart
-
-        if (visibleLength >= MAX_VISIBLE_SYNTAX_CHARS) {
-            // A single oversized logical line (common in minified JSON) cannot be
-            // tokenized safely as an arbitrary substring. Suppress coloring for this
-            // viewport rather than painting misleading spans; normal editing stays active.
+        if (!wordWrapEnabled && firstVisible == lastVisible) {
             val lineStart = layout.getLineStart(firstVisible).coerceIn(0, source.length)
-            val lineEnd = layout.getLineEnd(lastVisible).coerceIn(lineStart, source.length)
-            if (lineEnd - lineStart >= MAX_VISIBLE_SYNTAX_CHARS) return null
-            start = lineStart
-            end = lineEnd
+            val lineEnd = layout.getLineEnd(firstVisible).coerceIn(lineStart, source.length)
+            val left = (editor.scrollX + editor.compoundPaddingLeft).toFloat()
+            val right = (editor.scrollX + editor.width - editor.compoundPaddingRight).toFloat()
+            val viewportStart = layout.getOffsetForHorizontal(firstVisible, left).coerceIn(lineStart, lineEnd)
+            val viewportEnd = layout.getOffsetForHorizontal(firstVisible, right).coerceIn(viewportStart, lineEnd)
+            start = (viewportStart - 512).coerceAtLeast(lineStart)
+            end = (viewportEnd + 2048).coerceAtMost(lineEnd)
         } else {
-            // Expand only across complete lines; never cut a string/comment at the edges.
-            start = visibleStart
-            end = visibleEnd
-            var beforeLine = firstVisible - 1
-            while (beforeLine >= 0) {
-                val candidateStart = layout.getLineStart(beforeLine).coerceIn(0, source.length)
-                if (end - candidateStart > MAX_VISIBLE_SYNTAX_CHARS) break
-                start = candidateStart
-                beforeLine--
-            }
-            var afterLine = lastVisible + 1
-            while (afterLine < layout.lineCount) {
-                val candidateEnd = layout.getLineEnd(afterLine).coerceIn(start, source.length)
-                if (candidateEnd - start > MAX_VISIBLE_SYNTAX_CHARS) break
-                end = candidateEnd
-                afterLine++
-            }
+            start = layout.getLineStart(firstVisible).coerceIn(0, source.length)
+            end = layout.getLineEnd(lastVisible).coerceIn(start, source.length)
+            if (end - start > MAX_VISIBLE_SYNTAX_CHARS) end = start + MAX_VISIBLE_SYNTAX_CHARS
         }
     }
+    if (end - start > MAX_VISIBLE_SYNTAX_CHARS) end = start + MAX_VISIBLE_SYNTAX_CHARS
     if (start >= end) return null
     return VisibleCodeWindow(start, source.substring(start, end))
 }
@@ -218,23 +198,48 @@ private fun clearEditorCodeSpans(editor: EditText) {
     editable.getSpans(0, editable.length, EditorCodeSpan::class.java).forEach(editable::removeSpan)
 }
 
+private fun clearTrackedEditorCodeSpans(
+    editor: EditText,
+    tracker: EditorSyntaxWindowTracker,
+    source: String,
+    wordWrapEnabled: Boolean
+) {
+    val editable = editor.text ?: return
+    val ranges = buildList {
+        if (tracker.start >= 0 && tracker.end > tracker.start) add(tracker.start to tracker.end)
+        visibleCodeWindow(editor, source, wordWrapEnabled)?.let { add(it.start to it.endExclusive()) }
+    }
+    ranges.distinct().forEach { (rangeStart, rangeEnd) ->
+        val start = rangeStart.coerceIn(0, editable.length)
+        val end = rangeEnd.coerceIn(start, editable.length)
+        if (start < end) editable.getSpans(start, end, EditorCodeSpan::class.java).forEach(editable::removeSpan)
+    }
+    tracker.reset()
+}
+
 private fun applyEditorCodeSpans(
     editor: EditText,
     source: String,
     windowStart: Int,
     windowText: String,
     highlighted: AnnotatedString,
-    tracker: EditorSyntaxWindowTracker
+    tracker: EditorSyntaxWindowTracker,
+    wordWrapEnabled: Boolean
 ) {
     val editable = editor.text ?: return
     val windowEnd = windowStart + windowText.length
     if (windowStart < 0 || windowEnd > editable.length) return
     if (editable.subSequence(windowStart, windowEnd).toString() != windowText) return
+    val scrollXBefore = editor.scrollX
+    val scrollYBefore = editor.scrollY
 
     // Text edits move existing spans, so clear once per source snapshot. During ordinary
     // scrolling, remove only the old viewport's spans instead of querying the full document.
     if (tracker.source !== source) {
-        clearEditorCodeSpans(editor)
+        val oldStart = tracker.start.coerceIn(0, editable.length)
+        val oldEnd = tracker.end.coerceIn(oldStart, editable.length)
+        if (oldStart < oldEnd) editable.getSpans(oldStart, oldEnd, EditorCodeSpan::class.java).forEach(editable::removeSpan)
+        editable.getSpans(windowStart, windowEnd, EditorCodeSpan::class.java).forEach(editable::removeSpan)
         tracker.source = source
         tracker.start = -1
         tracker.end = -1
@@ -259,7 +264,7 @@ private fun applyEditorCodeSpans(
             val end = (windowStart + range.end).coerceIn(start, windowEnd)
             if (color != null && start < end) {
                 editable.setSpan(
-                    EditorCodeSpan(color, false, false, false, false),
+                    EditorCodeSpan(color),
                     start,
                     end,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -273,6 +278,14 @@ private fun applyEditorCodeSpans(
     tracker.source = source
     tracker.start = windowStart
     tracker.end = windowEnd
+    // Color-only span updates should not change layout, but keep the current viewport even
+    // if Android schedules a relayout while applying a large batch of spans.
+    editor.scrollTo(scrollXBefore, scrollYBefore)
+    editor.post {
+        if (editor.scrollX != scrollXBefore || editor.scrollY != scrollYBefore) {
+            editor.scrollTo(scrollXBefore, scrollYBefore)
+        }
+    }
 }
 
 private fun paletteFor(tokens: EditorTokens) = Palette(
@@ -366,6 +379,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showHtmlPreview by remember(path) { mutableStateOf(false) }
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
     var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
+    val nativeDocumentPaths = remember { WeakHashMap<EditText, String>() }
+    // Avoid feeding programmatic text synchronization back through the native TextWatcher.
+    val syncingNativeText = remember { booleanArrayOf(false) }
     // Track the text snapshot by identity so recomposition does not stringify an entire
     // multi-megabyte Editable merely to discover that the editor already matches it.
     val lastSyncedNativeText = remember { arrayOf(editorValue.text) }
@@ -401,14 +417,64 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
     var highlightedPage by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
-    LaunchedEffect(pageText, lang, tokens, vm.editorSyntaxHighlightingEnabled) {
+    var checkpointedSyntax by remember(path) { mutableStateOf<CheckpointedSyntaxDocument?>(null) }
+    val syntaxSource = if (vm.readOnly) vm.content else editorValue.text
+
+    // Delay analysis until input settles; checkpoints retain lexical state inside long tokens.
+    LaunchedEffect(path, syntaxSource, lang, vm.readOnly, vm.editorSyntaxHighlightingEnabled) {
+        if (!vm.editorSyntaxHighlightingEnabled || lang == null ||
+            !CheckpointedSyntaxDocument.supports(lang) ||
+            syntaxSource.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS
+        ) {
+            checkpointedSyntax = null
+            return@LaunchedEffect
+        }
+        checkpointedSyntax = null
+        if (!vm.readOnly) {
+            val native = largeEditText
+            if (native != null) {
+                withContext(Dispatchers.Main.immediate) {
+                    clearTrackedEditorCodeSpans(native, syntaxWindowTracker, syntaxSource, editorWordWrapEnabled)
+                }
+            }
+        }
+        delay(420)
+        val snapshot = syntaxSource
+        val document = withContext(Dispatchers.Default) {
+            CheckpointedSyntaxDocument.build(snapshot, lang)
+        }
+        val currentSource = if (vm.readOnly) vm.content else editorValue.text
+        if (path == vm.activeFile && snapshot === currentSource) {
+            checkpointedSyntax = document
+            syntaxRefreshRequests.trySend(Unit)
+        }
+    }
+
+    LaunchedEffect(pageText, pageStart, pageEnd, lang, tokens, checkpointedSyntax, vm.editorSyntaxHighlightingEnabled) {
         if (!vm.editorSyntaxHighlightingEnabled || lang == null || pageText.isEmpty()) {
             highlightedPage = null
         } else {
-            val source = pageText
-            val palette = paletteFor(tokens)
-            val result = withContext(Dispatchers.Default) { highlight(source, lang, palette) }
-            if (source == pageText) highlightedPage = source to result
+            val fullSource = if (vm.readOnly) vm.content else editorValue.text
+            val indexed = checkpointedSyntax?.takeIf { it.source === fullSource && it.language == lang }
+            if (vm.readOnly && fullSource.length > LIVE_TEXT_ANALYSIS_MAX_CHARS &&
+                CheckpointedSyntaxDocument.supports(lang)
+            ) {
+                if (indexed == null) {
+                    // Show plain text until the complete lexical index is ready.
+                    highlightedPage = null
+                } else {
+                    val palette = paletteFor(tokens)
+                    val result = withContext(Dispatchers.Default) {
+                        indexed.highlightWindow(pageStart, pageEnd, palette)
+                    }
+                    if (fullSource === vm.content && pageText == result.text) highlightedPage = pageText to result
+                }
+            } else {
+                val source = pageText
+                val palette = paletteFor(tokens)
+                val result = withContext(Dispatchers.Default) { highlight(source, lang, palette) }
+                if (source == pageText) highlightedPage = source to result
+            }
         }
     }
     val pageDisplayText = remember(pageText, highlightedPage) {
