@@ -227,6 +227,12 @@ private fun applyEditorCodeSpans(
     tracker: EditorSyntaxWindowTracker
 ) {
     val editable = editor.text ?: return
+    // Span updates are visual-only, but Editable/Layout implementations may invalidate
+    // scroll geometry while replacing many spans. Keep interaction state invariant.
+    val savedSelectionStart = editor.selectionStart
+    val savedSelectionEnd = editor.selectionEnd
+    val savedScrollX = editor.scrollX
+    val savedScrollY = editor.scrollY
     val windowEnd = windowStart + windowText.length
     if (windowStart < 0 || windowEnd > editable.length) return
     if (editable.subSequence(windowStart, windowEnd).toString() != windowText) return
@@ -273,6 +279,21 @@ private fun applyEditorCodeSpans(
     tracker.source = source
     tracker.start = windowStart
     tracker.end = windowEnd
+    // Color-only spans must never move the cursor or viewport. Restore after layout
+    // invalidation rather than fighting an in-progress touch-scroll gesture immediately.
+    editor.post {
+        if (editor.text === editable) {
+            val length = editable.length
+            val start = savedSelectionStart.coerceIn(0, length)
+            val end = savedSelectionEnd.coerceIn(0, length)
+            if (editor.selectionStart != start || editor.selectionEnd != end) {
+                editor.setSelection(start, end)
+            }
+            val maxY = ((editor.layout?.height ?: editor.height) - editor.height).coerceAtLeast(0)
+            val maxX = ((editor.layout?.width ?: editor.width) - editor.width).coerceAtLeast(0)
+            editor.scrollTo(savedScrollX.coerceIn(0, maxX), savedScrollY.coerceIn(0, maxY))
+        }
+    }
 }
 
 private fun paletteFor(tokens: EditorTokens) = Palette(
@@ -368,7 +389,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
     // Track the text snapshot by identity so recomposition does not stringify an entire
     // multi-megabyte Editable merely to discover that the editor already matches it.
-    val lastSyncedNativeText = remember { arrayOf(editorValue.text) }
+    val lastSyncedNativeText = remember(path) { arrayOf(editorValue.text) }
+    // AndroidView is reused when the selected tab changes. Keep viewport state per path
+    // so replacing one tab's buffer cannot leave another tab at the previous scroll offset.
+    val nativeViewportByPath = remember { mutableMapOf<String, Pair<Int, Int>>() }
+    val lastNativePath = remember { arrayOf(path) }
     val syntaxRefreshRequests = remember { Channel<Unit>(Channel.CONFLATED) }
     var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     val syntaxWindowTracker = remember(path) { EditorSyntaxWindowTracker() }
@@ -1108,11 +1133,30 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     if (editText.currentTextColor != tokens.foreground.toArgb()) {
                                         editText.setTextColor(tokens.foreground.toArgb())
                                     }
-                                    if (lastSyncedNativeText[0] !== editorValue.text) {
+                                    if (lastSyncedNativeText[0] !== editorValue.text || lastNativePath[0] != path) {
+                                        val previousPath = lastNativePath[0]
+                                        if (previousPath != null) {
+                                            nativeViewportByPath[previousPath] = editText.scrollX to editText.scrollY
+                                        }
                                         val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
+                                        val targetPath = path
                                         editText.setText(editorValue.text)
                                         editText.setSelection(cursor.coerceIn(0, editText.text.length))
                                         lastSyncedNativeText[0] = editorValue.text
+                                        lastNativePath[0] = targetPath
+                                        val viewport = targetPath?.let(nativeViewportByPath::get)
+                                        // setText invalidates Layout; restore only after the new buffer has
+                                        // been measured, and clamp offsets to its actual scroll range.
+                                        editText.post {
+                                            if (targetPath == vm.activeFile && editText === largeEditText) {
+                                                val maxY = (editText.layout?.height ?: editText.height) - editText.height
+                                                val maxX = (editText.layout?.width ?: editText.width) - editText.width
+                                                editText.scrollTo(
+                                                    (viewport?.first ?: 0).coerceIn(0, maxX.coerceAtLeast(0)),
+                                                    (viewport?.second ?: 0).coerceIn(0, maxY.coerceAtLeast(0))
+                                                )
+                                            }
+                                        }
                                     }
                                     if ((editText.tag as? Boolean) != editorWordWrapEnabled) {
                                         editText.setHorizontallyScrolling(!editorWordWrapEnabled)
