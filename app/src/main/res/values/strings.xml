@@ -646,7 +646,7 @@
     <string name="chrome_hide_short">Hide</string>
 
     <string name="update_release_page_note">The release details can be reviewed from the saved changelog below.</string>
-    <string name="update_download_prompt">Open the official GitHub release page to review details and download manually. Blockline never downloads or installs updates automatically.</string>
+    <string name="update_download_prompt">Blockline downloads the APK here, verifies its identity and checksum when published, then asks Android to show the installation confirmation.</string>
     <string name="update_download_size">APK size: %1$s</string>
     <string name="update_download_action">Download update</string>
     <string name="update_retry_download">Retry download</string>
