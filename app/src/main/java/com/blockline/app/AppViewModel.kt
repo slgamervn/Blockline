@@ -120,6 +120,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         fontSize = 14
         gameEffectsEnabled = true
         clickSoundsEnabled = false
+        editorWordWrapEnabled = true
+        editorSyntaxHighlightingEnabled = true
     }
 
     private val gameEffectsState = mutableStateOf(settingsPreferences.getBoolean("game_effects_enabled", true))
@@ -153,6 +155,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             fontSizeState.value = value.coerceIn(10, 24)
             settingsPreferences.edit().putInt("editor_font_size", fontSizeState.value).apply()
         }
+    private val editorWordWrapState = mutableStateOf(
+        settingsPreferences.getBoolean("editor_word_wrap_large_files", true)
+    )
+    var editorWordWrapEnabled: Boolean
+        get() = editorWordWrapState.value
+        set(value) {
+            editorWordWrapState.value = value
+            settingsPreferences.edit().putBoolean("editor_word_wrap_large_files", value).apply()
+        }
+
+    private val editorSyntaxHighlightingState = mutableStateOf(
+        settingsPreferences.getBoolean("editor_syntax_highlighting", true)
+    )
+    var editorSyntaxHighlightingEnabled: Boolean
+        get() = editorSyntaxHighlightingState.value
+        set(value) {
+            editorSyntaxHighlightingState.value = value
+            settingsPreferences.edit().putBoolean("editor_syntax_highlighting", value).apply()
+        }
+
     var autoCheckUpdates by mutableStateOf(settingsPreferences.getBoolean("auto_check_updates", true))
         private set
     var isCheckingUpdates by mutableStateOf(false)

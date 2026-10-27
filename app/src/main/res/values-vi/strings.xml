@@ -115,6 +115,10 @@
     <string name="system">Theo hệ thống</string>
     <string name="editor_typography">Cỡ chữ trình chỉnh sửa</string>
     <string name="editor_font_size">Chữ đơn cách · %1$d sp</string>
+<string name="editor_word_wrap_large">Ngắt dòng dài trong tệp lớn</string>
+<string name="editor_word_wrap_large_hint">Bật hoặc tắt cuộn ngang khi chỉnh sửa tệp trên 12.000 ký tự.</string>
+<string name="editor_syntax_highlighting">Tô màu cú pháp</string>
+<string name="editor_syntax_highlighting_hint">Tô màu mã trong các định dạng được hỗ trợ; tắt để chỉnh sửa văn bản thuần nhẹ hơn.</string>
     <string name="smaller_text">A− Nhỏ hơn</string>
     <string name="larger_text">A+ Lớn hơn</string>
     <string name="about_blockline">Thông tin về Blockline</string>
@@ -450,7 +454,7 @@
     <string name="update_dialog_title">Đã có phiên bản Blockline mới</string>
     <string name="update_dialog_versions">Đang cài: %1$s\nMới nhất: %2$s</string>
     <string name="update_no_notes">Bản phát hành chưa có ghi chú.</string>
-    <string name="update_now">Xem trang tải bản mới nhất</string>
+    <string name="update_now">Mở trang phát hành GitHub</string>
     <string name="update_later">Để sau</string>
     <string name="update_available_status">Có bản cập nhật: v%1$s</string>
     <string name="update_up_to_date">Blockline đang ở phiên bản mới nhất.</string>
@@ -642,7 +646,7 @@
     <string name="chrome_hide_short">Ẩn</string>
 
     <string name="update_release_page_note">Bạn có thể xem lại thông tin bản phát hành trong phần ghi chú đã lưu bên dưới.</string>
-    <string name="update_download_prompt">Blockline tải bản cập nhật ngay trong ứng dụng. Android vẫn yêu cầu bạn xác nhận cài đặt.</string>
+    <string name="update_download_prompt">Mở trang phát hành GitHub chính thức để xem chi tiết và tự tải bản cập nhật. Blockline không tự tải xuống hoặc cài đặt.</string>
     <string name="update_download_size">Dung lượng APK: %1$s</string>
     <string name="update_download_action">Tải bản cập nhật</string>
     <string name="update_retry_download">Thử tải lại</string>
