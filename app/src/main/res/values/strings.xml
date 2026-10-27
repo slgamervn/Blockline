@@ -115,6 +115,10 @@
     <string name="system">System</string>
     <string name="editor_typography">Editor text size</string>
     <string name="editor_font_size">Monospace text · %1$d sp</string>
+<string name="editor_word_wrap_large">Wrap long lines in large files</string>
+<string name="editor_word_wrap_large_hint">Toggle horizontal scrolling for editable files larger than 12,000 characters.</string>
+<string name="editor_syntax_highlighting">Syntax highlighting</string>
+<string name="editor_syntax_highlighting_hint">Color code tokens in supported files; turn off for a lighter plain-text editing view.</string>
     <string name="smaller_text">A− Smaller</string>
     <string name="larger_text">A+ Larger</string>
     <string name="about_blockline">About Blockline</string>
