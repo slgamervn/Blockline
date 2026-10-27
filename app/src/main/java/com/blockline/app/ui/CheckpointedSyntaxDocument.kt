@@ -32,6 +32,8 @@ internal class CheckpointedSyntaxDocument private constructor(
 
     private data class Token(val end: Int, val kind: Kind)
 
+    internal val checkpointCount: Int get() = checkpoints.size
+
     fun highlightWindow(startOffset: Int, endOffset: Int, palette: Palette): AnnotatedString {
         val start = startOffset.coerceIn(0, source.length)
         val end = endOffset.coerceIn(start, source.length)
@@ -313,7 +315,7 @@ internal class CheckpointedSyntaxDocument private constructor(
 
         private fun isNumberStart(source: String, index: Int, language: Lang): Boolean {
             if (source[index].isDigit()) return true
-            return language in setOf(Lang.JSON, Lang.MCFUNC) &&
+            return (language == Lang.JSON || language == Lang.MCFUNC) &&
                 source[index] == '-' && index + 1 < source.length && source[index + 1].isDigit()
         }
 
