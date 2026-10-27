@@ -368,7 +368,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
     // Track the text snapshot by identity so recomposition does not stringify an entire
     // multi-megabyte Editable merely to discover that the editor already matches it.
-    val lastSyncedNativeText = remember { arrayOf(editorValue.text) }
+    val lastSyncedNativeText = remember(path) { arrayOf(editorValue.text) }
+    // AndroidView is reused when the selected tab changes. Keep viewport state per path
+    // so replacing one tab's buffer cannot leave another tab at the previous scroll offset.
+    val nativeViewportByPath = remember { mutableMapOf<String, Pair<Int, Int>>() }
+    val lastNativePath = remember { arrayOf(path) }
     val syntaxRefreshRequests = remember { Channel<Unit>(Channel.CONFLATED) }
     var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     val syntaxWindowTracker = remember(path) { EditorSyntaxWindowTracker() }
@@ -484,9 +488,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
     LaunchedEffect(path, editorValue.text, lang, vm.readOnly) {
-        if ((lang != Lang.JSON && lang != Lang.LANG) || vm.readOnly || editorValue.text.isBlank() ||
-            editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS
-        ) {
+        if ((lang != Lang.JSON && lang != Lang.LANG) || vm.readOnly || editorValue.text.isBlank()) {
             syntaxIssue = null
             checkingJson = false
         } else {
@@ -942,9 +944,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                 }
-                if ((lang == Lang.JSON || lang == Lang.LANG) && !vm.readOnly && editorValue.text.isNotBlank() &&
-                    editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS
-                ) {
+                if ((lang == Lang.JSON || lang == Lang.LANG) && !vm.readOnly && editorValue.text.isNotBlank()) {
                     val issue = syntaxIssue
                     val colors = MaterialTheme.colorScheme
                     val hasSyntaxError = issue?.severity == com.blockline.app.data.IssueSeverity.ERROR
@@ -979,14 +979,6 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
-                }
-                if (!vm.readOnly && lang != null && editorValue.text.length > LIVE_TEXT_ANALYSIS_MAX_CHARS) {
-                    Text(
-                        stringResource(R.string.editor_live_analysis_paused),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
                 }
                 if (vm.readOnly) {
                     Text(
@@ -1108,11 +1100,30 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     if (editText.currentTextColor != tokens.foreground.toArgb()) {
                                         editText.setTextColor(tokens.foreground.toArgb())
                                     }
-                                    if (lastSyncedNativeText[0] !== editorValue.text) {
+                                    if (lastSyncedNativeText[0] !== editorValue.text || lastNativePath[0] != path) {
+                                        val previousPath = lastNativePath[0]
+                                        if (previousPath != null) {
+                                            nativeViewportByPath[previousPath] = editText.scrollX to editText.scrollY
+                                        }
                                         val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
+                                        val targetPath = path
                                         editText.setText(editorValue.text)
                                         editText.setSelection(cursor.coerceIn(0, editText.text.length))
                                         lastSyncedNativeText[0] = editorValue.text
+                                        lastNativePath[0] = targetPath
+                                        val viewport = targetPath?.let(nativeViewportByPath::get)
+                                        // setText invalidates Layout; restore only after the new buffer has
+                                        // been measured, and clamp offsets to its actual scroll range.
+                                        editText.post {
+                                            if (targetPath == vm.activeFile && editText === largeEditText) {
+                                                val maxY = (editText.layout?.height ?: editText.height) - editText.height
+                                                val maxX = (editText.layout?.width ?: editText.width) - editText.width
+                                                editText.scrollTo(
+                                                    (viewport?.first ?: 0).coerceIn(0, maxX.coerceAtLeast(0)),
+                                                    (viewport?.second ?: 0).coerceIn(0, maxY.coerceAtLeast(0))
+                                                )
+                                            }
+                                        }
                                     }
                                     if ((editText.tag as? Boolean) != editorWordWrapEnabled) {
                                         editText.setHorizontallyScrolling(!editorWordWrapEnabled)
