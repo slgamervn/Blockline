@@ -301,6 +301,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val path = vm.activeFile
     val tokens = editorTokens(vm.themeMode, systemDark = isSystemInDarkTheme())
+    val editorWordWrapEnabled = vm.editorWordWrapEnabled
     val clickSound = remember(context, vm.clickSoundsEnabled) {
         if (vm.clickSoundsEnabled) runCatching { PixelClickSound(context) }.getOrNull() else null
     }
@@ -387,8 +388,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
     var highlightedPage by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
-    LaunchedEffect(pageText, lang, tokens) {
-        if (lang == null || pageText.isEmpty()) {
+    LaunchedEffect(pageText, lang, tokens, vm.editorSyntaxHighlightingEnabled) {
+        if (!vm.editorSyntaxHighlightingEnabled || lang == null || pageText.isEmpty()) {
             highlightedPage = null
         } else {
             val source = pageText
@@ -500,10 +501,18 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             (offset + ((syntaxIssue?.column ?: 1) - 1)).coerceIn(0, editorValue.text.length)
         }
     }
-    LaunchedEffect(path, editorValue.text, lang, tokens, largeEditText, vm.readOnly) {
+    LaunchedEffect(path, editorValue.text, lang, tokens, largeEditText, vm.readOnly, vm.editorSyntaxHighlightingEnabled) {
         val source = editorValue.text
         val activePath = path
         val native = largeEditText
+        if (!vm.editorSyntaxHighlightingEnabled) {
+            highlightedText = null
+            if (native != null && syntaxWindowTracker.source != null) {
+                withContext(Dispatchers.Main.immediate) { clearEditorCodeSpans(native) }
+            }
+            syntaxWindowTracker.reset()
+            return@LaunchedEffect
+        }
         if (activePath == null || lang == null || source.isEmpty() || vm.readOnly) {
             highlightedText = null
             if (native != null) {
@@ -562,10 +571,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
-    LaunchedEffect(path, lang, tokens, largeEditText, vm.readOnly) {
+    LaunchedEffect(path, lang, tokens, largeEditText, vm.readOnly, vm.editorSyntaxHighlightingEnabled) {
         val activePath = path ?: return@LaunchedEffect
         val activeLang = lang ?: return@LaunchedEffect
-        if (vm.readOnly) return@LaunchedEffect
+        if (vm.readOnly || !vm.editorSyntaxHighlightingEnabled) return@LaunchedEffect
         val palette = paletteFor(tokens)
 
         // Keep one worker alive while scrolling. Conflate queued refresh requests instead
@@ -1047,7 +1056,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                                         imeOptions = EditorInfo.IME_ACTION_NONE or EditorInfo.IME_FLAG_NO_EXTRACT_UI
                                         isVerticalScrollBarEnabled = true
-                                        setHorizontallyScrolling(false)
+                                        setHorizontallyScrolling(!editorWordWrapEnabled)
+                                        tag = editorWordWrapEnabled
                                         setLineSpacing(0f, 1.1f)
                                         setText(editorValue.text)
                                         setSelection(editorValue.selection.start.coerceIn(0, text.length))
@@ -1075,6 +1085,10 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         editText.setText(editorValue.text)
                                         editText.setSelection(cursor.coerceIn(0, editText.text.length))
                                     }
+                                    if ((editText.tag as? Boolean) != editorWordWrapEnabled) {
+                                        editText.setHorizontallyScrolling(!editorWordWrapEnabled)
+                                        editText.tag = editorWordWrapEnabled
+                                    }
                                     editText.isEnabled = !vm.isOpeningFile
                                     if (editText.textSize != vm.fontSize.toFloat()) {
                                         editText.textSize = vm.fontSize.toFloat()
@@ -1092,7 +1106,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 modifier = Modifier.fillMaxSize(),
                                 textStyle = TextStyle(color = tokens.foreground, fontFamily = FontFamily.Monospace, fontSize = vm.fontSize.sp, lineHeight = (vm.fontSize + 5).sp),
                                 visualTransformation = precomputedEditorText
-                                    ?.takeIf { lang != null && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS }
+                                    ?.takeIf { vm.editorSyntaxHighlightingEnabled && lang != null && editorValue.text.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS }
                                     ?.let { PrecomputedHighlightTransformation(editorValue.text, it) }
                                     ?: androidx.compose.ui.text.input.VisualTransformation.None
                             )
