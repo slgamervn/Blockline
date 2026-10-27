@@ -366,6 +366,9 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
     var showHtmlPreview by remember(path) { mutableStateOf(false) }
     var editorValue by remember(path) { mutableStateOf(TextFieldValue(if (vm.readOnly) "" else vm.content)) }
     var largeEditText by remember(path) { mutableStateOf<EditText?>(null) }
+    // Track the text snapshot by identity so recomposition does not stringify an entire
+    // multi-megabyte Editable merely to discover that the editor already matches it.
+    val lastSyncedNativeText = remember { arrayOf(editorValue.text) }
     val syntaxRefreshRequests = remember { Channel<Unit>(Channel.CONFLATED) }
     var highlightedText by remember(path) { mutableStateOf<Pair<String, AnnotatedString>?>(null) }
     val syntaxWindowTracker = remember(path) { EditorSyntaxWindowTracker() }
@@ -1070,14 +1073,29 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         tag = editorWordWrapEnabled
                                         setLineSpacing(0f, 1.1f)
                                         setText(editorValue.text)
+                                        lastSyncedNativeText[0] = editorValue.text
                                         setSelection(editorValue.selection.start.coerceIn(0, text.length))
+                                        setOnKeyListener { _, keyCode, event ->
+                                            if (keyCode == android.view.KeyEvent.KEYCODE_TAB &&
+                                                event.action == android.view.KeyEvent.ACTION_DOWN &&
+                                                !vm.isOpeningFile && !vm.readOnly
+                                            ) {
+                                                val start = minOf(selectionStart, selectionEnd).coerceIn(0, text.length)
+                                                val end = maxOf(selectionStart, selectionEnd).coerceIn(start, text.length)
+                                                val indent = EditorIndentationPolicy.spaces(vm.editorIndentSize)
+                                                text.replace(start, end, indent)
+                                                setSelection(start + indent.length)
+                                                true
+                                            } else false
+                                        }
                                         addTextChangedListener(object : TextWatcher {
                                             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                                             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
                                             override fun afterTextChanged(s: Editable?) {
                                                 val updated = s?.toString().orEmpty()
                                                 val cursor = selectionStart.coerceIn(0, updated.length)
-                                                if (updated != editorValue.text || cursor != editorValue.selection.start) {
+                                                if (updated !== editorValue.text || cursor != editorValue.selection.start) {
+                                                    lastSyncedNativeText[0] = updated
                                                     editorValue = TextFieldValue(updated, TextRange(cursor))
                                                     if (completionItems.isNotEmpty()) completionItems = emptyList()
                                                 }
@@ -1090,29 +1108,15 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     if (editText.currentTextColor != tokens.foreground.toArgb()) {
                                         editText.setTextColor(tokens.foreground.toArgb())
                                     }
-                                    if (editText.text.toString() != editorValue.text) {
+                                    if (lastSyncedNativeText[0] !== editorValue.text) {
                                         val cursor = editorValue.selection.start.coerceIn(0, editorValue.text.length)
                                         editText.setText(editorValue.text)
                                         editText.setSelection(cursor.coerceIn(0, editText.text.length))
+                                        lastSyncedNativeText[0] = editorValue.text
                                     }
                                     if ((editText.tag as? Boolean) != editorWordWrapEnabled) {
                                         editText.setHorizontallyScrolling(!editorWordWrapEnabled)
                                         editText.tag = editorWordWrapEnabled
-                                    }
-                                    editText.setOnKeyListener { _, keyCode, event ->
-                                        if (keyCode == android.view.KeyEvent.KEYCODE_TAB &&
-                                            event.action == android.view.KeyEvent.ACTION_DOWN &&
-                                            !vm.isOpeningFile && !vm.readOnly
-                                        ) {
-                                            val start = minOf(editText.selectionStart, editText.selectionEnd)
-                                                .coerceIn(0, editText.text.length)
-                                            val end = maxOf(editText.selectionStart, editText.selectionEnd)
-                                                .coerceIn(start, editText.text.length)
-                                            val indent = EditorIndentationPolicy.spaces(vm.editorIndentSize)
-                                            editText.text.replace(start, end, indent)
-                                            editText.setSelection(start + indent.length)
-                                            true
-                                        } else false
                                     }
                                     editText.isEnabled = !vm.isOpeningFile && !vm.readOnly
                                     if (editText.textSize != vm.fontSize.toFloat()) {
