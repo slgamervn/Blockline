@@ -119,6 +119,10 @@
 <string name="editor_word_wrap_large_hint">Bật hoặc tắt cuộn ngang khi chỉnh sửa tệp trên 12.000 ký tự.</string>
 <string name="editor_syntax_highlighting">Tô màu cú pháp</string>
 <string name="editor_syntax_highlighting_hint">Tô màu mã trong các định dạng được hỗ trợ; tắt để chỉnh sửa văn bản thuần nhẹ hơn.</string>
+<string name="editor_indentation_width">Độ rộng thụt lề</string>
+<string name="editor_indent_spaces">%1$d dấu cách</string>
+<string name="reduced_motion">Giảm chuyển động</string>
+<string name="reduced_motion_hint">Tắt hiệu ứng chuyển cảnh và bảng trình chỉnh sửa để giao diện nhẹ nhàng hơn.</string>
     <string name="smaller_text">A− Nhỏ hơn</string>
     <string name="larger_text">A+ Lớn hơn</string>
     <string name="about_blockline">Thông tin về Blockline</string>
