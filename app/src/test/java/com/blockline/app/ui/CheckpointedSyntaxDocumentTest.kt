@@ -57,7 +57,7 @@ class CheckpointedSyntaxDocumentTest {
         val source = buildString {
             append("""{"payload":" """)
             append("x".repeat(8_000))
-            append(""" \"escaped quote\" \\ { "nested": true } Tiếng Việt 🌱","ok":true}""")
+            append(""" \"escaped quote\" \\ { \"nested\": true } Tiếng Việt 🌱","ok":true}""")
         }
         val index = CheckpointedSyntaxDocument.build(source, Lang.JSON)
         val valueOffset = source.indexOf("Tiếng Việt")
