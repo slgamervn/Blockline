@@ -42,6 +42,24 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
+    fun updatePromptOpensOfficialLatestStablePageOrMatchingTestRelease() {
+        assertEquals(
+            "https://github.com/slgamervn/Blockline/releases/latest",
+            AppUpdateRepository.updatePromptUrl("stable", "https://github.com/slgamervn/Blockline/releases/tag/v9.9.9")
+        )
+        assertEquals(
+            "https://github.com/slgamervn/Blockline/releases/tag/v0.1.111-test",
+            AppUpdateRepository.updatePromptUrl("test", "https://github.com/slgamervn/Blockline/releases/tag/v0.1.111-test")
+        )
+        try {
+            AppUpdateRepository.updatePromptUrl("test", "https://example.com/fake-release")
+            throw AssertionError("Unexpected release URL should be rejected.")
+        } catch (_: IllegalArgumentException) {
+            // Expected: update links must stay on the official repository.
+        }
+    }
+
+    @Test
     fun testChannelUsesItsOwnEndpointAndFiltersOnlyTestPrereleases() {
         assertTrue(AppUpdateRepository.endpointForChannel("test").contains("/releases?per_page="))
         assertTrue(AppUpdateRepository.endpointForChannel("stable").endsWith("/releases/latest"))

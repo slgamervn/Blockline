@@ -443,7 +443,6 @@
     <string name="update_dialog_title">A new Blockline version is available</string>
     <string name="update_dialog_versions">Installed: %1$s\nLatest: %2$s</string>
     <string name="update_no_notes">No release notes were provided.</string>
-    <string name="update_download_size">Download size: %1$s MB</string>
     <string name="update_now">View latest download</string>
     <string name="update_later">Later</string>
     <string name="update_available_status">Update available: v%1$s</string>
@@ -635,14 +634,6 @@
     <string name="minecraft_palette_short">Colors</string>
     <string name="chrome_hide_short">Hide</string>
 
-    <string name="update_download_install">Download &amp; install</string>
-    <string name="update_downloading">Downloading update… %1$d%%</string>
-    <string name="update_install_permission_title">Allow Blockline to install updates</string>
-    <string name="update_install_permission_message">Android requires permission for Blockline to request app installation. Enable “Allow from this source”, return to Blockline, then tap Download &amp; install again.</string>
-    <string name="update_install_permission_open">Open settings</string>
-    <string name="update_install_permission_needed">Enable “Allow from this source” in Android settings, then tap Download &amp; install again.</string>
-    <string name="update_download_failed">Could not download update: %1$s</string>
-    <string name="update_installer_open_failed">The APK is downloaded, but Android’s installer could not be opened: %1$s</string>
-    <string name="update_install_confirmation_note">The APK downloads inside Blockline. Android will then show its own installation confirmation; Blockline cannot skip that system security step.</string>
+    <string name="update_release_page_note">This opens the official GitHub release page. Review the notes and choose the APK download yourself.</string>
 
 </resources>
