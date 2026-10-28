@@ -441,7 +441,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             CheckpointedSyntaxDocument.build(snapshot, lang)
         }
         val currentSource = if (vm.readOnly) vm.content else editorValue.text
-        if (path == vm.activeFile && snapshot === currentSource) {
+        if (isCurrentSyntaxSnapshot(snapshot, currentSource, path, vm.activeFile) &&
+            vm.editorSyntaxHighlightingEnabled) {
             checkpointedSyntax = document
             syntaxRefreshRequests.trySend(Unit)
         }
@@ -563,7 +564,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 else ProjectValidator.inspectJsonSyntax(snapshot)
             }
             val currentSource = if (vm.readOnly) vm.content else editorValue.text
-            if (snapshot === currentSource && path == vm.activeFile) {
+            if (isCurrentSyntaxSnapshot(snapshot, currentSource, path, vm.activeFile)) {
                 syntaxIssue = issue
                 checkingJson = false
             }
@@ -638,8 +639,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             withContext(Dispatchers.Main.immediate) {
                 val currentWindow = visibleCodeWindow(editor, source, editorWordWrapEnabled)
                 if (
-                    activePath == vm.activeFile &&
-                    source === editorValue.text &&
+                    isCurrentSyntaxSnapshot(source, editorValue.text, activePath, vm.activeFile) &&
                     editor === largeEditText &&
                     currentWindow != null &&
                     currentWindow.start == window.start &&
@@ -667,7 +667,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@collect
             val editor = largeEditText ?: return@collect
             val window = withContext(Dispatchers.Main.immediate) {
-                if (source !== editorValue.text || activePath != vm.activeFile || editor !== largeEditText) {
+                if (!isCurrentSyntaxSnapshot(source, editorValue.text, activePath, vm.activeFile) || editor !== largeEditText) {
                     null
                 } else {
                     visibleCodeWindow(editor, source, editorWordWrapEnabled)
@@ -688,8 +688,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             withContext(Dispatchers.Main.immediate) {
                 val currentWindow = visibleCodeWindow(editor, source, editorWordWrapEnabled)
                 if (
-                    activePath == vm.activeFile &&
-                    source === editorValue.text &&
+                    isCurrentSyntaxSnapshot(source, editorValue.text, activePath, vm.activeFile) &&
                     editor === largeEditText &&
                     currentWindow != null &&
                     currentWindow.start == window.start &&
