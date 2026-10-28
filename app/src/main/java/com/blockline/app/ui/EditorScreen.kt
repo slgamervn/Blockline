@@ -231,8 +231,6 @@ private fun applyEditorCodeSpans(
     val windowEnd = windowStart + windowText.length
     if (windowStart < 0 || windowEnd > editable.length) return
     if (editable.subSequence(windowStart, windowEnd).toString() != windowText) return
-    val scrollXBefore = editor.scrollX
-    val scrollYBefore = editor.scrollY
 
     // Text edits move existing spans, so clear once per source snapshot. During ordinary
     // scrolling, remove only the old viewport's spans instead of querying the full document.
@@ -279,14 +277,9 @@ private fun applyEditorCodeSpans(
     tracker.source = source
     tracker.start = windowStart
     tracker.end = windowEnd
-    // Color-only span updates should not change layout, but keep the current viewport even
-    // if Android schedules a relayout while applying a large batch of spans.
-    editor.scrollTo(scrollXBefore, scrollYBefore)
-    editor.post {
-        if (editor.scrollX != scrollXBefore || editor.scrollY != scrollYBefore) {
-            editor.scrollTo(scrollXBefore, scrollYBefore)
-        }
-    }
+    // Do not post a scroll restoration after styling: a queued callback can run after a
+    // newer finger-scroll and snap the editor back to an older offset. These spans change
+    // color only, so they do not alter text metrics and need no viewport correction.
 }
 
 private fun paletteFor(tokens: EditorTokens) = Palette(
