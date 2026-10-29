@@ -41,6 +41,7 @@ const untranslatedVisibleText = [...new Set(visibleTextNodes)].filter((value) =>
 assert(untranslatedVisibleText.length === 0, "All visible Vietnamese copy has an English translation");
 assert(/og:locale/.test(html) && /ogLocale\.content = currentLanguage === 'en'/.test(js), "Social metadata follows the selected language");
 assert(!/filter:\s*blur\(/.test(css) && !/backdrop-filter:\s*blur\(/.test(css), "Scroll effects avoid expensive blur filters");
+assert(!/(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(/i.test(css), "Website backgrounds use solid colors rather than gradients");
 assert(/classList\.remove\('is-visible'\)/.test(js) && !/observer\.unobserve\(entry\.target\)/.test(js), "Scroll reveal exits and re-enters when scrolling in either direction");
 assert(/--reveal-y/.test(css) && /scrollDirection > 0/.test(js), "Scroll reveal direction is motion-aware");
 
