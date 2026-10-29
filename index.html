@@ -15,12 +15,11 @@
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://slgamervn.github.io/Blockline/">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=20261022-reveal-fix">
+  
+  <link rel="stylesheet" href="assets/css/style.css?v=20261030-flat-human">
   <title>Blockline — Làm chủ pack. Ngay trên điện thoại.</title>
-  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/main.js?v=20261030-flat-human" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Bỏ qua đến nội dung</a>
@@ -89,17 +88,17 @@
     <section class="manifesto section-pad" aria-labelledby="manifesto-title">
       <div class="wrap manifesto-inner">
         <p class="eyebrow" id="manifesto-title">MỘT KHÔNG GIAN LÀM VIỆC KHÁC</p>
-        <p class="manifesto-copy" data-reading-copy>Pack không chỉ là một tệp để nhập vào game. Đó là cấu trúc, dữ liệu và những chi tiết bạn muốn tự tay hoàn thiện. <span>Blockline đưa công việc ấy lên điện thoại — để bạn có thể duyệt, chỉnh sửa, sao lưu và xuất pack ngay tại nơi mình đang làm việc.</span></p>
+        <p class="manifesto-copy">Pack không chỉ là một tệp để nhập vào game. Đó là cấu trúc, dữ liệu và những chi tiết bạn muốn tự tay hoàn thiện. <span>Blockline đưa công việc ấy lên điện thoại — để bạn có thể duyệt, chỉnh sửa, sao lưu và xuất pack ngay tại nơi mình đang làm việc.</span></p>
         <div class="manifesto-foot"><span>01 — TỪ CẤU TRÚC ĐẾN BẢN XUẤT</span><span>Thiết kế cho quy trình làm pack trên Android</span></div>
       </div>
     </section>
 
     <section class="features-section section-pad wrap" id="features" aria-labelledby="features-title">
-      <div class="section-intro reveal">
+      <div class="section-intro">
         <p class="eyebrow">CÔNG CỤ THỰC DỤNG</p><h2 id="features-title">Tập trung vào phần việc<br>quan trọng nhất.</h2>
         <p>Không cần biến điện thoại thành máy tính. Blockline tập trung vào những thao tác thường gặp khi làm việc với pack.</p>
       </div>
-      <article class="feature-row feature-row-files reveal">
+      <article class="feature-row feature-row-files">
         <div class="feature-copy"><p class="feature-index">01 / CẤU TRÚC</p><h3>Một pack. Rõ từng tệp.</h3><p>Nhập .mcpack hoặc .mcaddon, tự tách Behavior Pack và Resource Pack, rồi duyệt cây thư mục có thể thu gọn. Tạo, đổi tên, di chuyển, xóa và đánh dấu tệp yêu thích ngay trong dự án.</p><ul class="plain-list"><li>Nhập pack có bảo vệ zip-slip</li><li>Cây tệp thu gọn và yêu thích</li><li>Tạo, đổi tên, di chuyển và xóa tệp</li></ul></div>
         <div class="feature-visual file-explorer" aria-label="Minh họa cây thư mục tương tác">
           <div class="mini-window-head"><span>PROJECT EXPLORER</span><span>LOCAL FILES</span></div>
@@ -111,7 +110,7 @@
           <div class="tree-selection"><span>Đang chọn</span><b id="selected-file-name">manifest.json</b><span class="selection-note">Nhấn vào tệp để đổi lựa chọn minh họa.</span></div>
         </div>
       </article>
-      <article class="feature-row feature-row-editor reveal">
+      <article class="feature-row feature-row-editor">
         <div class="feature-copy"><p class="feature-index">02 / CHỈNH SỬA</p><h3>Mã nguồn dễ đọc hơn.</h3><p>Trình soạn thảo hỗ trợ tô màu cú pháp cho JSON, JavaScript và .mcfunction, nhiều tab, hoàn tác/làm lại, tìm trong tệp, tự lưu và định dạng JSON có giữ comment.</p><ul class="plain-list"><li>Chuyển tab không mất mạch làm việc</li><li>Undo / redo và tìm nội dung</li><li>Định dạng JSON giữ comment</li></ul></div>
         <div class="feature-visual editor-preview" aria-label="Minh họa editor với các tab có thể chọn">
           <div class="editor-window-head"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-title">EDITOR / MY ADD-ON</span></div>
@@ -132,7 +131,7 @@
           <div class="editor-status"><span><i></i> Mô phỏng trình soạn thảo</span><span id="editor-language">JSON</span></div>
         </div>
       </article>
-      <article class="feature-row feature-row-manifest reveal">
+      <article class="feature-row feature-row-manifest">
         <div class="feature-copy"><p class="feature-index">03 / CẤU HÌNH PACK</p><h3>Đọc manifest có ngữ cảnh.</h3><p>Xem UUID, module và dependency trong manifest để hiểu pack đang khai báo những gì. Sao lưu và khôi phục dự án khi cần, trước khi xuất bản thử nghiệm.</p><ul class="plain-list"><li>Thông tin header và module</li><li>UUID và dependency</li><li>Sao lưu / khôi phục cục bộ</li></ul></div>
         <div class="feature-visual manifest-card">
           <div class="mini-window-head"><span>MANIFEST INSPECTOR</span><span class="inspector-state">ĐỌC TỪ TỆP</span></div>
@@ -146,8 +145,8 @@
 
     <section class="demo-section section-pad" id="demo" aria-labelledby="demo-title">
       <div class="wrap">
-        <div class="section-intro reveal"><p class="eyebrow">XEM QUY TRÌNH</p><h2 id="demo-title">Từ gói nén đến bản xuất.</h2><p>Chọn từng bước để xem minh họa cách Blockline hỗ trợ một quy trình làm pack thường gặp.</p></div>
-        <div class="demo-layout reveal">
+        <div class="section-intro"><p class="eyebrow">XEM QUY TRÌNH</p><h2 id="demo-title">Từ gói nén đến bản xuất.</h2><p>Chọn từng bước để xem minh họa cách Blockline hỗ trợ một quy trình làm pack thường gặp.</p></div>
+        <div class="demo-layout">
           <div class="demo-tabs" role="tablist" aria-label="Các bước trong quy trình Blockline">
             <button type="button" role="tab" id="demo-tab-import" aria-selected="true" aria-controls="demo-panel" data-demo-tab="import"><span>01</span><span><b>Mở pack</b><small>Nhập .mcpack / .mcaddon</small></span><span class="tab-arrow">↗</span></button>
             <button type="button" role="tab" id="demo-tab-edit" aria-selected="false" aria-controls="demo-panel" data-demo-tab="edit" tabindex="-1"><span>02</span><span><b>Sửa tệp</b><small>Duyệt và chỉnh sửa nội dung</small></span><span class="tab-arrow">↗</span></button>
@@ -166,8 +165,8 @@
     </section>
 
     <section class="fit-section section-pad wrap" aria-labelledby="fit-title">
-      <div class="section-intro reveal"><p class="eyebrow">NÓI RÕ GIỚI HẠN</p><h2 id="fit-title">Đúng việc. Đúng kỳ vọng.</h2><p>Blockline là công cụ làm việc với tệp pack trên Android — không phải trình thay thế toàn bộ bộ công cụ phát triển Minecraft.</p></div>
-      <div class="comparison-wrap reveal" role="region" aria-label="Bảng so sánh phạm vi sử dụng Blockline" tabindex="0">
+      <div class="section-intro"><p class="eyebrow">NÓI RÕ GIỚI HẠN</p><h2 id="fit-title">Đúng việc. Đúng kỳ vọng.</h2><p>Blockline là công cụ làm việc với tệp pack trên Android — không phải trình thay thế toàn bộ bộ công cụ phát triển Minecraft.</p></div>
+      <div class="comparison-wrap" role="region" aria-label="Bảng so sánh phạm vi sử dụng Blockline" tabindex="0">
         <table class="comparison-table"><thead><tr><th scope="col">Nhu cầu</th><th scope="col">Blockline hiện hỗ trợ</th><th scope="col">Giới hạn cần biết</th></tr></thead><tbody>
           <tr><th scope="row">Mở và quản lý pack</th><td><span class="table-mark yes">✓</span> Nhập .mcpack / .mcaddon, duyệt BP/RP và quản lý tệp.</td><td>Chỉ dùng trên Android 8.0 trở lên.</td></tr>
           <tr><th scope="row">Sửa nội dung</th><td><span class="table-mark yes">✓</span> Editor JSON, JavaScript, .mcfunction; tab, undo/redo và tự lưu.</td><td>Tệp trên 1 MB chỉ mở ở chế độ đọc; tệp trên 5 MB không mở được.</td></tr>
@@ -182,34 +181,34 @@
 
     <section class="roadmap-section section-pad" id="roadmap" aria-labelledby="roadmap-title">
       <div class="wrap roadmap-layout">
-        <div class="section-intro reveal"><p class="eyebrow">TRẠNG THÁI SẢN PHẨM</p><h2 id="roadmap-title">Từ nền tảng đến workflow nâng cao.</h2><p>Các nhóm tính năng dưới đây đã có phần triển khai trong mã nguồn. Mức độ tương thích thực tế vẫn cần được kiểm chứng với thiết bị và pack cụ thể.</p></div>
+        <div class="section-intro"><p class="eyebrow">TRẠNG THÁI SẢN PHẨM</p><h2 id="roadmap-title">Từ nền tảng đến workflow nâng cao.</h2><p>Các nhóm tính năng dưới đây đã có phần triển khai trong mã nguồn. Mức độ tương thích thực tế vẫn cần được kiểm chứng với thiết bị và pack cụ thể.</p></div>
         <ol class="roadmap-list">
-          <li class="roadmap-item reveal"><span class="roadmap-number">01</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Quản lý dự án và chỉnh sửa</h3><p>Nhập/xuất pack, explorer, nhiều tab editor, tự lưu, backup/restore và xử lý archive an toàn hơn.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
-          <li class="roadmap-item reveal"><span class="roadmap-number">02</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Tìm kiếm và kiểm tra pack</h3><p>Tìm đường dẫn/nội dung, kiểm tra JSON và manifest, UUID, script entry, dependency cùng một số tham chiếu tài nguyên.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
-          <li class="roadmap-item reveal"><span class="roadmap-number">03</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Generator và snippet</h3><p>Tạo manifest với UUID mới, sao chép snippet JavaScript/Script API và Minecraft function.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
-          <li class="roadmap-item reveal"><span class="roadmap-number">04</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Diff, dependency và Script API</h3><p>So sánh văn bản, xem trước đổi tên/thay thế hàng loạt, nhật ký hoạt động, phân tích dependency và tra cứu declaration có cache/offline fallback.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item"><span class="roadmap-number">01</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Quản lý dự án và chỉnh sửa</h3><p>Nhập/xuất pack, explorer, nhiều tab editor, tự lưu, backup/restore và xử lý archive an toàn hơn.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item"><span class="roadmap-number">02</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Tìm kiếm và kiểm tra pack</h3><p>Tìm đường dẫn/nội dung, kiểm tra JSON và manifest, UUID, script entry, dependency cùng một số tham chiếu tài nguyên.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item"><span class="roadmap-number">03</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Generator và snippet</h3><p>Tạo manifest với UUID mới, sao chép snippet JavaScript/Script API và Minecraft function.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
+          <li class="roadmap-item"><span class="roadmap-number">04</span><div><span class="roadmap-status">ĐÃ TRIỂN KHAI · CẦN QA</span><h3>Diff, dependency và Script API</h3><p>So sánh văn bản, xem trước đổi tên/thay thế hàng loạt, nhật ký hoạt động, phân tích dependency và tra cứu declaration có cache/offline fallback.</p></div><span class="roadmap-symbol" aria-hidden="true">✓</span></li>
         </ol>
       </div>
     </section>
 
     <section class="setup-section section-pad wrap" aria-labelledby="setup-title">
-      <div class="section-intro reveal"><p class="eyebrow">BẮT ĐẦU</p><h2 id="setup-title">Ba bước để bắt đầu.</h2><p>Không cần bước build cho website này. Với ứng dụng, hãy tải APK và cài trên thiết bị Android tương thích.</p></div>
+      <div class="section-intro"><p class="eyebrow">BẮT ĐẦU</p><h2 id="setup-title">Ba bước để bắt đầu.</h2><p>Không cần bước build cho website này. Với ứng dụng, hãy tải APK và cài trên thiết bị Android tương thích.</p></div>
       <ol class="setup-steps">
-        <li class="setup-step reveal"><span class="setup-num">01</span><div class="setup-line"></div><h3>Tải APK</h3><p>Nhấn nút tải để lấy APK Blockline của bản phát hành mới nhất.</p></li>
-        <li class="setup-step reveal"><span class="setup-num">02</span><div class="setup-line"></div><h3>Cài trên Android</h3><p>Thiết bị cần chạy Android 8.0 trở lên. Chỉ cài APK từ nguồn bạn tin cậy.</p></li>
-        <li class="setup-step reveal"><span class="setup-num">03</span><div class="setup-line"></div><h3>Mở pack của bạn</h3><p>Chọn tệp .mcpack hoặc .mcaddon từ thiết bị để bắt đầu làm việc.</p></li>
+        <li class="setup-step"><span class="setup-num">01</span><div class="setup-line"></div><h3>Tải APK</h3><p>Nhấn nút tải để lấy APK Blockline của bản phát hành mới nhất.</p></li>
+        <li class="setup-step"><span class="setup-num">02</span><div class="setup-line"></div><h3>Cài trên Android</h3><p>Thiết bị cần chạy Android 8.0 trở lên. Chỉ cài APK từ nguồn bạn tin cậy.</p></li>
+        <li class="setup-step"><span class="setup-num">03</span><div class="setup-line"></div><h3>Mở pack của bạn</h3><p>Chọn tệp .mcpack hoặc .mcaddon từ thiết bị để bắt đầu làm việc.</p></li>
       </ol>
     </section>
 
     <section class="resources-section section-pad" id="resources" aria-labelledby="resources-title">
       <div class="wrap">
-        <div class="section-intro reveal">
+        <div class="section-intro">
           <p class="eyebrow">TÀI NGUYÊN THAM KHẢO</p>
           <h2 id="resources-title">Nguồn tham khảo cho người làm Bedrock.</h2>
           <p>Danh sách công cụ và tài liệu hữu ích để tra cứu, biên tập và nghiên cứu pack Minecraft Bedrock.</p>
         </div>
         <div class="resource-groups">
-          <div class="resource-group reveal">
+          <div class="resource-group">
             <h3>Tài liệu và API</h3>
             <div class="resource-grid">
               <article class="resource-card"><h4>Microsoft Creator Docs</h4><p>Tài liệu chính thức về creator features, Script API, schema và định dạng pack.</p><a href="https://learn.microsoft.com/vi-vn/minecraft/creator/?view=minecraft-bedrock-stable" target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a></article>
@@ -218,7 +217,7 @@
               <article class="resource-card"><h4>Minecraft Wiki</h4><p>Bách khoa toàn thư Minecraft do cộng đồng duy trì; hãy đối chiếu thông tin với phiên bản Minecraft Bedrock đang dùng.</p><a href="https://minecraft.wiki/" target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a></article>
             </div>
           </div>
-          <div class="resource-group reveal">
+          <div class="resource-group">
             <h3>Trình biên tập và mô hình</h3>
             <div class="resource-grid">
               <article class="resource-card"><h4>bridge.</h4><p>Trình biên tập add-on chạy trên trình duyệt.</p><a href="https://editor.bridge-core.app/" target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a></article>
@@ -226,7 +225,7 @@
               <article class="resource-card"><h4>Blockbench</h4><p>Tạo và chỉnh sửa mô hình, texture và animation.</p><a href="https://blockbench.net/" target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a></article>
             </div>
           </div>
-          <div class="resource-group reveal">
+          <div class="resource-group">
             <h3>Template và tiện ích</h3>
             <div class="resource-grid">
               <article class="resource-card"><h4>Bedrock Tweaks</h4><p>Tham khảo các pack/tweak; chỉ tái sử dụng nội dung khi giấy phép cho phép.</p><a href="https://bedrocktweaks.net/" target="_blank" rel="noopener noreferrer">Mở nguồn ↗</a></article>
@@ -240,8 +239,8 @@
     </section>
 
     <section class="faq-section section-pad" id="faq" aria-labelledby="faq-title">
-      <div class="wrap faq-layout"><div class="section-intro reveal"><p class="eyebrow">CÂU HỎI THƯỜNG GẶP</p><h2 id="faq-title">Trước khi tải.</h2><p>Thông tin rõ ràng về nền tảng, tệp hỗ trợ và giới hạn hiện tại.</p></div>
-        <div class="faq-list reveal">
+      <div class="wrap faq-layout"><div class="section-intro"><p class="eyebrow">CÂU HỎI THƯỜNG GẶP</p><h2 id="faq-title">Trước khi tải.</h2><p>Thông tin rõ ràng về nền tảng, tệp hỗ trợ và giới hạn hiện tại.</p></div>
+        <div class="faq-list">
           <details><summary>Blockline hỗ trợ thiết bị nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Blockline là ứng dụng Android, yêu cầu Android 8.0 trở lên. Liên kết tải xuống luôn trỏ tới APK của bản phát hành mới nhất trên GitHub.</p></div></details>
           <details><summary>Có cần kết nối mạng để chỉnh sửa pack không?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Các công cụ chính được mô tả có thể dùng ngoại tuyến. Trang web chỉ là trang giới thiệu và cung cấp liên kết tải APK.</p></div></details>
           <details><summary>Blockline có thể mở những loại tệp nào?<span aria-hidden="true"></span></summary><div class="faq-answer"><p>Ứng dụng nhận .mcpack và .mcaddon; editor hỗ trợ tệp văn bản JSON, JavaScript và .mcfunction. Tệp trên 1 MB chỉ mở ở chế độ đọc; tệp trên 5 MB không mở được.</p></div></details>
@@ -252,7 +251,7 @@
     </section>
 
     <section class="download-section section-pad wrap" id="download" aria-labelledby="download-title">
-      <div class="download-panel reveal"><div class="download-panel-top"><span class="eyebrow">BLOCKLINE / ANDROID</span><span class="download-version">LATEST RELEASE</span></div><h2 id="download-title">Pack của bạn.<br><span>Quy trình của bạn.</span></h2><p>Mở, chỉnh sửa, sao lưu và xuất pack Minecraft Bedrock ngay trên điện thoại Android.</p><div class="download-panel-actions"><a class="button button-primary button-large" href="https://github.com/slgamervn/Blockline/releases/latest">Tải Blockline APK <span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/slgamervn/Blockline" target="_blank" rel="noopener noreferrer">Xem mã nguồn <span aria-hidden="true">↗</span></a></div><div class="download-meta"><span>Android 8.0 trở lên</span><span>Bản phát hành mới nhất</span><span>Công cụ chính dùng ngoại tuyến</span></div></div>
+      <div class="download-panel"><div class="download-panel-top"><span class="eyebrow">BLOCKLINE / ANDROID</span><span class="download-version">LATEST RELEASE</span></div><h2 id="download-title">Pack của bạn.<br><span>Quy trình của bạn.</span></h2><p>Mở, chỉnh sửa, sao lưu và xuất pack Minecraft Bedrock ngay trên điện thoại Android.</p><div class="download-panel-actions"><a class="button button-primary button-large" href="https://github.com/slgamervn/Blockline/releases/latest">Tải Blockline APK <span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/slgamervn/Blockline" target="_blank" rel="noopener noreferrer">Xem mã nguồn <span aria-hidden="true">↗</span></a></div><div class="download-meta"><span>Android 8.0 trở lên</span><span>Bản phát hành mới nhất</span><span>Công cụ chính dùng ngoại tuyến</span></div></div>
     </section>
   </main>
 
