@@ -19,7 +19,7 @@ assert(!/gradient\s*\(|color-mix\s*\(/i.test(css), "Website uses flat colors wit
 assert(!/@keyframes\s+|animation\s*:\s*[^;{}]+;/i.test(css), "CSS has no decorative animations");
 assert(!/\.download-panel::after|\.reveal\s*\{|html\.reveal-ready/.test(css), "Decorative diagonal overlays and scroll-reveal styles are absent");
 assert(/style\.css\?v=20261030-flat-human/.test(html) && /main\.js\?v=20261030-flat-human/.test(html), "Changed asset URLs bypass stale browser caches");
-assert(!/fonts\.googleapis\.com/.test(html), "Website uses local system fonts rather than decorative remote fonts");
+assert(!/fonts\.(?:googleapis|gstatic)\.com/.test(html), "Website uses local system fonts rather than decorative remote fonts");
 assert(/href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"/.test(html), "Latest release page link is present");
 const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
 assert(apkAnchors.length === 4 && apkAnchors.every((tag) => !/\sdownload(?:\s|=|>)/.test(tag) && !/\bdata-apk-link\b/.test(tag)), "All download buttons link to the latest release page without forcing a direct download");
