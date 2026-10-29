@@ -309,7 +309,7 @@ html.reveal-ready .reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
   .roadmap-layout,.faq-layout{grid-template-columns:1fr;gap:15px}.roadmap-layout .section-intro{position:static}
   .footer-main{grid-template-columns:repeat(2,minmax(0,1fr));gap:42px 30px}.footer-brand-column{grid-column:1/-1}
 }
-@keyframes phone-enter-mobile{from{opacity:0;transform:translate3d(0,18px,0) scale(.985)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+
 @media(max-width:560px){
   :root{--gutter:20px;--section:76px}
   .header-inner{min-height:64px}.brand{font-size:1.13rem}.brand-mark{width:31px;height:31px}
