@@ -123,7 +123,7 @@ h1 span,.download-panel h2 span{color:var(--green-bright)}
 .plain-list{list-style:none;padding:0;margin:27px 0 0;display:grid;gap:12px;color:var(--muted);font-size:.88rem}
 .plain-list li{display:flex;gap:11px;align-items:baseline}
 .plain-list li::before{content:"↗";color:var(--green-bright);font-size:.8rem}
-.feature-visual{min-width:0;border:1px solid var(--line);background:var(--bg-raised);box-shadow:0 20px 60px #0000000b}
+.feature-visual{min-width:0;border:1px solid var(--line);background:var(--bg-raised)}
 .mini-window-head,.editor-window-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:47px;padding:0 17px;border-bottom:1px solid var(--line);color:var(--subtle);font:500 .62rem var(--mono);letter-spacing:.06em}
 .tree-project{display:flex;align-items:center;gap:10px;padding:19px 18px 12px;font-size:.82rem}
 .tree-caret{color:var(--subtle);width:10px;font-size:.8rem}.tree-folder{color:var(--amber)}.tree-project b{font-weight:600}
@@ -299,7 +299,7 @@ html.reveal-ready .reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
   .hero{min-height:auto;padding-top:calc(130px + env(safe-area-inset-top));padding-bottom:80px;grid-template-columns:1fr;gap:55px}
   .hero-copy{padding:0}.hero-visual{justify-self:center;max-width:500px;padding-inline:0}
   h1{font-size:clamp(4rem,11.5vw,7rem);max-width:760px}
-  .hero-lead{max-width:650px}.phone{transform:none;animation:phone-enter-mobile .8s var(--ease) both}
+  .hero-lead{max-width:650px}.phone{transform:none;animation:none}
   .feature-row,.feature-row-editor{grid-template-columns:1fr;gap:28px}
   .feature-row-editor .feature-copy,.feature-row-editor .feature-visual{order:initial}
   .feature-copy{max-width:680px}.feature-visual{width:100%}
@@ -366,8 +366,8 @@ html.reveal-ready .reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
 @media(prefers-reduced-motion:reduce){.reveal{will-change:auto}}
 
 @media(hover:hover) and (prefers-reduced-motion:no-preference){
-  .feature-visual{transition:transform .5s var(--ease),border-color .32s ease,box-shadow .38s ease}
-  .feature-visual:hover{transform:translateY(-4px);border-color:var(--line-strong);box-shadow:0 26px 65px color-mix(in srgb,var(--text) 8%,transparent)}
+  .feature-visual{transition:border-color .2s ease}
+  .feature-visual:hover{border-color:var(--line-strong)}
   .demo-tabs button:hover:not([aria-selected="true"]){background:color-mix(in srgb,var(--bg-soft) 58%,transparent)}
   .faq-list summary{transition:color .2s ease}
   .faq-list summary:hover{color:var(--green-bright)}
@@ -375,8 +375,8 @@ html.reveal-ready .reveal.is-visible{opacity:1;transform:translate3d(0,0,0)}
   .roadmap-item:hover{border-color:var(--green)}
   .setup-line{transition:background-color .3s ease}
   .setup-step:hover .setup-line{background:var(--green)}
-  .download-panel{transition:border-color .3s ease,box-shadow .4s ease}
-  .download-panel:hover{border-color:var(--green);box-shadow:0 24px 70px color-mix(in srgb,var(--text) 6%,transparent)}
+  .download-panel{transition:border-color .2s ease}
+  .download-panel:hover{border-color:var(--green)}
 }
 .language-toggle[aria-pressed="true"]{border-color:var(--green);background:color-mix(in srgb,var(--green) 10%,transparent);color:var(--green-bright)}
 .language-toggle:focus-visible{outline-offset:3px}
