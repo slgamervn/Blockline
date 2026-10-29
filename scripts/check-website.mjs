@@ -15,6 +15,8 @@ assert(/<html lang="vi">/.test(html), "HTML declares Vietnamese language");
 assert(/<h1\b/.test(html) && (html.match(/<h1\b/g) || []).length === 1, "Page has exactly one h1");
 assert(/name="description"/.test(html) && /property="og:title"/.test(html), "SEO and Open Graph metadata exist");
 assert(/assets\/css\/style\.css/.test(html) && /assets\/js\/main\.js/.test(html), "External CSS and deferred JavaScript are linked");
+assert(!/gradient\s*\(/i.test(css), "Website uses flat backgrounds without CSS gradients");
+assert(!/@keyframes\s+(?:phone-enter|phone-enter-mobile|visual-drift|ambient-breathe)\b/i.test(css), "Hero mockup and ambient background remain still");
 assert(/href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"/.test(html), "Latest release page link is present");
 const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
 assert(apkAnchors.length === 4 && apkAnchors.every((tag) => !/\sdownload(?:\s|=|>)/.test(tag) && !/\bdata-apk-link\b/.test(tag)), "All download buttons link to the latest release page without forcing a direct download");
