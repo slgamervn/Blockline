@@ -15,8 +15,11 @@ assert(/<html lang="vi">/.test(html), "HTML declares Vietnamese language");
 assert(/<h1\b/.test(html) && (html.match(/<h1\b/g) || []).length === 1, "Page has exactly one h1");
 assert(/name="description"/.test(html) && /property="og:title"/.test(html), "SEO and Open Graph metadata exist");
 assert(/assets\/css\/style\.css/.test(html) && /assets\/js\/main\.js/.test(html), "External CSS and deferred JavaScript are linked");
-assert(!/gradient\s*\(/i.test(css), "Website uses flat backgrounds without CSS gradients");
-assert(!/@keyframes\s+(?:phone-enter|phone-enter-mobile|visual-drift|ambient-breathe)\b/i.test(css), "Hero mockup and ambient background remain still");
+assert(!/gradient\s*\(|color-mix\s*\(/i.test(css), "Website uses flat colors without gradients or blended overlays");
+assert(!/@keyframes\s+|animation\s*:\s*[^;{}]+;/i.test(css), "CSS has no decorative animations");
+assert(!/\.download-panel::after|\.reveal\s*\{|html\.reveal-ready/.test(css), "Decorative diagonal overlays and scroll-reveal styles are absent");
+assert(/style\.css\?v=20261030-flat-human/.test(html) && /main\.js\?v=20261030-flat-human/.test(html), "Changed asset URLs bypass stale browser caches");
+assert(!/fonts\.(?:googleapis|gstatic)\.com/.test(html), "Website uses local system fonts rather than decorative remote fonts");
 assert(/href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"/.test(html), "Latest release page link is present");
 const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
 assert(apkAnchors.length === 4 && apkAnchors.every((tag) => !/\sdownload(?:\s|=|>)/.test(tag) && !/\bdata-apk-link\b/.test(tag)), "All download buttons link to the latest release page without forcing a direct download");
@@ -24,10 +27,7 @@ assert(!css.includes("\\n.site-header{") && /\.site-header\s*\{\s*position:fixed
 assert(/body\.menu-open\{overflow:hidden\}/.test(css) && !/body\.menu-open\{[^}]*touch-action/.test(css), "Mobile menu locks page scrolling without blocking menu touch gestures");
 assert(/\.mobile-menu\{position:fixed;[^}]*padding:calc\(88px \+ env\(safe-area-inset-top\)\)/.test(css), "Mobile menu clears the fixed header and safe-area inset");
 assert(/prefers-reduced-motion:\s*reduce/.test(css), "Reduced-motion styles are present");
-assert(/IntersectionObserver/.test(js), "Scroll reveal uses IntersectionObserver");
-assert(js.includes("querySelectorAll('.reveal,") && html.includes('class="resource-group reveal"'), "Pre-marked resource reveal sections are included in the observer targets");
-assert(/root\.classList\.add\('reveal-ready'\)/.test(js) && /html\.reveal-ready \.reveal\{opacity:0/.test(css), "Reveal hiding is enabled only after JavaScript initializes the observer");
-assert(/html\.reveal-ready \.reveal\.is-visible\{opacity:1/.test(css) && /else\s*\{\s*revealTargets\.forEach\(\(target\) => target\.classList\.add\('is-visible'\)\)/.test(js), "Scroll reveal has a visible fallback when reduced motion is enabled or IntersectionObserver is unavailable");
+assert(!/revealObserver|root\.classList\.add\('reveal-ready'\)|classList\.add\('reveal'\)/.test(js) && !/html\.reveal-ready/.test(css), "Page content stays visible instead of animating in on scroll");
 assert(!/#resources\s+\.resource-groups/.test(css), "Resource visibility does not depend on section-specific CSS overrides");
 assert(/data-language-toggle/.test(html) && /const englishText = \{/.test(js), "Vietnamese and English language toggle is present");
 
@@ -43,13 +43,12 @@ const untranslatedVisibleText = [...new Set(visibleTextNodes)].filter((value) =>
 assert(untranslatedVisibleText.length === 0, "All visible Vietnamese copy has an English translation");
 assert(/og:locale/.test(html) && /ogLocale\.content = currentLanguage === 'en'/.test(js), "Social metadata follows the selected language");
 assert(!/filter:\s*blur\(/.test(css) && !/backdrop-filter:\s*blur\(/.test(css), "Scroll effects avoid expensive blur filters");
-assert(/classList\.remove\('is-visible'\)/.test(js) && !/observer\.unobserve\(entry\.target\)/.test(js), "Scroll reveal exits and re-enters when scrolling in either direction");
-assert(/--reveal-y/.test(css) && /scrollDirection > 0/.test(js), "Scroll reveal direction is motion-aware");
+assert(!/classList\.remove\('is-visible'\)|--reveal-y|scrollDirection > 0/.test(js + css), "Scrolling does not animate sections in and out");
 
 assert(/aria-expanded/.test(js) && /Escape/.test(js), "Accessible mobile navigation has keyboard support");
 assert(/data-demo-tab/.test(html) && /activateDemoTab/.test(js), "Interactive demo tabs are present");
 assert(/const demoSwipeSurface = document\.querySelector\('\.demo-layout'\)/.test(js) && /demoSwipeSurface\.addEventListener\('touchstart'/.test(js) && /demoSwipeSurface\.addEventListener\('touchend'/.test(js) && /passive:\s*false/.test(js) && /event\.preventDefault\(\)/.test(js) && /deltaX < 0 \? 1 : -1/.test(js) && /Math\.abs\(deltaY\) \* 1\.25/.test(js), "Swiping mobile process cards or preview updates the same selected step without hijacking vertical scrolling");
-assert(/data-reading-copy/.test(html) && /reading-progress/.test(js), "Manifesto scroll highlight is present");
+assert(!/data-reading-copy|reading-progress|--reading-progress/.test(html + css + js), "Manifesto text uses stable colors independent of scroll position");
 assert(/@media\s*\(max-width:\s*380px\)/.test(css) && /@media\s*\(max-width:\s*560px\)/.test(css), "Narrow mobile breakpoints are present");
 assert(/@media\s*\(min-width:\s*1600px\)/.test(css), "Wide desktop breakpoint is present");
 assert(/env\(safe-area-inset-bottom\)/.test(css) && /100svh|100dvh/.test(css), "Safe-area and dynamic viewport support are present");
