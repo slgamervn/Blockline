@@ -231,8 +231,6 @@ private fun applyEditorCodeSpans(
     val windowEnd = windowStart + windowText.length
     if (windowStart < 0 || windowEnd > editable.length) return
     if (editable.subSequence(windowStart, windowEnd).toString() != windowText) return
-    val scrollXBefore = editor.scrollX
-    val scrollYBefore = editor.scrollY
 
     // Text edits move existing spans, so clear once per source snapshot. During ordinary
     // scrolling, remove only the old viewport's spans instead of querying the full document.
@@ -279,14 +277,9 @@ private fun applyEditorCodeSpans(
     tracker.source = source
     tracker.start = windowStart
     tracker.end = windowEnd
-    // Color-only span updates should not change layout, but keep the current viewport even
-    // if Android schedules a relayout while applying a large batch of spans.
-    editor.scrollTo(scrollXBefore, scrollYBefore)
-    editor.post {
-        if (editor.scrollX != scrollXBefore || editor.scrollY != scrollYBefore) {
-            editor.scrollTo(scrollXBefore, scrollYBefore)
-        }
-    }
+    // Do not post a scroll restoration after styling: a queued callback can run after a
+    // newer finger-scroll and snap the editor back to an older offset. These spans change
+    // color only, so they do not alter text metrics and need no viewport correction.
 }
 
 private fun paletteFor(tokens: EditorTokens) = Palette(
@@ -448,7 +441,8 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             CheckpointedSyntaxDocument.build(snapshot, lang)
         }
         val currentSource = if (vm.readOnly) vm.content else editorValue.text
-        if (path == vm.activeFile && snapshot === currentSource) {
+        if (isCurrentSyntaxSnapshot(snapshot, currentSource, path, vm.activeFile) &&
+            vm.editorSyntaxHighlightingEnabled) {
             checkpointedSyntax = document
             syntaxRefreshRequests.trySend(Unit)
         }
@@ -570,7 +564,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                 else ProjectValidator.inspectJsonSyntax(snapshot)
             }
             val currentSource = if (vm.readOnly) vm.content else editorValue.text
-            if (snapshot === currentSource && path == vm.activeFile) {
+            if (isCurrentSyntaxSnapshot(snapshot, currentSource, path, vm.activeFile)) {
                 syntaxIssue = issue
                 checkingJson = false
             }
@@ -645,8 +639,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             withContext(Dispatchers.Main.immediate) {
                 val currentWindow = visibleCodeWindow(editor, source, editorWordWrapEnabled)
                 if (
-                    activePath == vm.activeFile &&
-                    source === editorValue.text &&
+                    isCurrentSyntaxSnapshot(source, editorValue.text, activePath, vm.activeFile) &&
                     editor === largeEditText &&
                     currentWindow != null &&
                     currentWindow.start == window.start &&
@@ -674,7 +667,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             if (source.length <= LIVE_TEXT_ANALYSIS_MAX_CHARS) return@collect
             val editor = largeEditText ?: return@collect
             val window = withContext(Dispatchers.Main.immediate) {
-                if (source !== editorValue.text || activePath != vm.activeFile || editor !== largeEditText) {
+                if (!isCurrentSyntaxSnapshot(source, editorValue.text, activePath, vm.activeFile) || editor !== largeEditText) {
                     null
                 } else {
                     visibleCodeWindow(editor, source, editorWordWrapEnabled)
@@ -695,8 +688,7 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
             withContext(Dispatchers.Main.immediate) {
                 val currentWindow = visibleCodeWindow(editor, source, editorWordWrapEnabled)
                 if (
-                    activePath == vm.activeFile &&
-                    source === editorValue.text &&
+                    isCurrentSyntaxSnapshot(source, editorValue.text, activePath, vm.activeFile) &&
                     editor === largeEditText &&
                     currentWindow != null &&
                     currentWindow.start == window.start &&

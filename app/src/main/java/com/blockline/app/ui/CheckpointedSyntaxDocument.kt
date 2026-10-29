@@ -332,3 +332,15 @@ internal class CheckpointedSyntaxDocument private constructor(
         }
     }
 }
+/**
+ * A background editor result may only be published for the exact immutable text snapshot
+ * and document that requested it. Identity comparison rejects a late result even when an
+ * undo/retype cycle creates a different String with equal characters.
+ */
+internal fun isCurrentSyntaxSnapshot(
+    candidateSource: String,
+    currentSource: String,
+    candidatePath: String?,
+    activePath: String?
+): Boolean = candidateSource === currentSource && candidatePath != null && candidatePath == activePath
+
