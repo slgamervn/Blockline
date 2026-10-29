@@ -16,8 +16,6 @@
 
 
   let currentLanguage = 'vi';
-  let scrollDirection = 1;
-  let previousScrollY = window.scrollY;
   const englishText = {
     "Bỏ qua đến nội dung":"Skip to content",
     "Tính năng":"Features","Trải nghiệm":"Explore","Lộ trình":"Roadmap","Tải APK":"Download APK",
@@ -293,12 +291,6 @@
       bar.classList.toggle('is-active', window.scrollY > 80 && maxScroll > 0);
     }
   };
-  const updateScrollDirection = () => {
-    const currentY = window.scrollY;
-    if (Math.abs(currentY - previousScrollY) > 2) scrollDirection = currentY > previousScrollY ? 1 : -1;
-    previousScrollY = currentY;
-  };
-  window.addEventListener('scroll', updateScrollDirection, { passive: true });
   const queueScrollChrome = () => {
     if (scrollFrame) return;
     scrollFrame = window.requestAnimationFrame(updateScrollChrome);
@@ -382,51 +374,6 @@
     }, { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.15, 0.3, 0.5] });
     navigationSections.forEach((section) => navigationObserver.observe(section));
   }
-
-  const revealTargets = [...document.querySelectorAll('.reveal, .section-intro, .feature-row, .demo-layout, .comparison-wrap, .roadmap-item, .setup-step, .faq-list, .download-panel')];
-  if (!reducedMotion.matches && 'IntersectionObserver' in window) {
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const target = entry.target;
-        if (entry.isIntersecting) {
-          target.style.setProperty('--reveal-y', scrollDirection > 0 ? '22px' : '-22px');
-          target.classList.add('is-visible');
-        } else {
-          target.style.setProperty('--reveal-y', scrollDirection > 0 ? '-22px' : '22px');
-          target.classList.remove('is-visible');
-        }
-      });
-    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
-    revealTargets.forEach((target, index) => {
-      target.classList.add('reveal');
-      if (target.classList.contains('roadmap-item') || target.classList.contains('setup-step')) {
-        target.style.setProperty('--reveal-delay', (index % 3) * 65 + 'ms');
-      }
-      revealObserver.observe(target);
-    });
-    root.classList.add('reveal-ready');
-  } else {
-    revealTargets.forEach((target) => target.classList.add('is-visible'));
-  }
-
-  const readingCopy = document.querySelector('[data-reading-copy]');
-  let readingFrame = 0;
-  const updateReadingHighlight = () => {
-    readingFrame = 0;
-    if (!readingCopy || reducedMotion.matches) return;
-    const rect = readingCopy.getBoundingClientRect();
-    const vh = window.innerHeight || 1;
-    const progress = Math.min(1, Math.max(0, (vh * 0.82 - rect.top) / (rect.height + vh * 0.42)));
-    readingCopy.style.setProperty('--reading-progress', (progress * 100).toFixed(2) + '%');
-  };
-  const queueReadingHighlight = () => {
-    if (readingFrame) return;
-    readingFrame = window.requestAnimationFrame(updateReadingHighlight);
-  };
-  window.addEventListener('scroll', queueReadingHighlight, { passive: true });
-  window.addEventListener('resize', queueReadingHighlight, { passive: true });
-  updateReadingHighlight();
-  if (reducedMotion.matches && readingCopy) readingCopy.style.setProperty('--reading-progress', '100%');
 
   document.querySelectorAll('.tree-toggle').forEach((button) => {
     button.addEventListener('click', () => {
