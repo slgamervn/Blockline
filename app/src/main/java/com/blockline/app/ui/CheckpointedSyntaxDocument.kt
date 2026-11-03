@@ -214,7 +214,7 @@ internal class CheckpointedSyntaxDocument private constructor(
             source: String,
             start: Int,
             language: Lang,
-            checkCancelled: () -> Unit
+            checkCancelled: () -> Unit = {}
         ): Token? {
             if (start !in source.indices) return null
             val first = source[start]
