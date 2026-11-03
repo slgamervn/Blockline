@@ -1,6 +1,7 @@
 package com.blockline.app.ui
 
 import androidx.compose.ui.graphics.Color
+import java.util.concurrent.CancellationException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -19,6 +20,22 @@ class CheckpointedSyntaxDocumentTest {
         property = Color(0xFF9CDCFE),
         identifier = Color(0xFFD4D4D4)
     )
+
+    @Test
+    fun stopsIndexingWhenTheOwningCoroutineIsCancelledDuringALongToken() {
+        val source = "\"" + "x".repeat(2 * 1024 * 1024) + "\""
+        var cancellationChecks = 0
+
+        val failure = runCatching {
+            CheckpointedSyntaxDocument.build(source, Lang.JSON) {
+                cancellationChecks++
+                if (cancellationChecks == 2) throw CancellationException("test cancellation")
+            }
+        }.exceptionOrNull()
+
+        assertTrue(failure is CancellationException)
+        assertEquals(2, cancellationChecks)
+    }
 
     @Test
     fun highlightsJsonKeysValuesAndTypesAcrossFiftyThousandLines() {
