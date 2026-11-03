@@ -84,7 +84,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.channels.Channel
@@ -437,8 +439,11 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
         delay(420)
         val snapshot = syntaxSource
+        val buildContext = currentCoroutineContext()
         val document = withContext(Dispatchers.Default) {
-            CheckpointedSyntaxDocument.build(snapshot, lang)
+            CheckpointedSyntaxDocument.build(snapshot, lang) {
+                buildContext.ensureActive()
+            }
         }
         val currentSource = if (vm.readOnly) vm.content else editorValue.text
         if (isCurrentSyntaxSnapshot(snapshot, currentSource, path, vm.activeFile) &&
