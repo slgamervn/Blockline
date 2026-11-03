@@ -250,11 +250,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var updateCheckRequestId = 0
     var activeFile by mutableStateOf<String?>(null)
         private set
-    private val persistedEditorContents = mutableStateMapOf<String, String>()
+    private var persistedEditorContent by mutableStateOf<String?>(null)
     val activeFilePersistedContent: String?
-        get() = current?.id?.let { projectId ->
-            activeFile?.let { path -> persistedEditorContents[editorSaveKey(projectId, path)] }
-        }
+        get() = activeFile?.let { persistedEditorContent }
 
     private fun editorSaveKey(projectId: String, path: String): String = "$projectId::$path"
 
@@ -795,7 +793,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 outcome.changedContents.forEach { (path, value) ->
                     if (openTabs.containsKey(path)) openTabs[path] = value
                     editorHistory.reset(path)
-                    if (activeFile == path) content = value
+                    if (activeFile == path) {
+                        content = value
+                        persistedEditorContent = value
+                    }
                 }
                 autoSaveJob?.cancel()
                 refreshProjectEntries(projectId)
@@ -817,6 +818,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     openTabs.clear()
                     editorHistory.clear()
                     activeFile = null
+                    persistedEditorContent = null
                     content = ""
                     readOnly = false
                     pendingEditorLine = null
@@ -883,6 +885,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 openTabs.clear()
                 editorHistory.clear()
                 activeFile = null
+                persistedEditorContent = null
                 content = ""
                 readOnly = false
                 pendingEditorLine = null
@@ -1015,6 +1018,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (!saveCurrentAndWait(showMessage = false)) return@launch
             if (requestId != projectSelectionRequestId) return@launch
             current = p
+            persistedEditorContent = null
             refreshOperationLog()
             clearBatchReplacePreview()
             dependencyRequestId++
@@ -1030,6 +1034,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             refresh()
             refreshProjectEntries(p.id)
             activeFile = null
+            persistedEditorContent = null
             content = ""
             openTabs.clear()
             editorHistory.clear()
@@ -1109,6 +1114,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     clearResourcePreview()
                     current = null
                     activeFile = null
+                    persistedEditorContent = null
                     content = ""
                     openTabs.clear()
                     editorHistory.clear()
@@ -1203,9 +1209,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 readOnly = opened.size > 1024L * 1024L
                 content = opened.text
                 openTabs[path] = opened.text
+                persistedEditorContent = opened.text
                 if (buffered == null) {
                     editorHistory.reset(path)
-                    persistedEditorContents[editorSaveKey(project.id, path)] = opened.text
                 }
                 pendingEditorLine = line?.coerceAtLeast(1)
             }.onFailure {
@@ -1254,7 +1260,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 Result.failure(error)
             }
             if (result.isSuccess) {
-                persistedEditorContents[editorSaveKey(projectId, path)] = value
+                if (current?.id == projectId && activeFile == path) {
+                    persistedEditorContent = value
+                }
             } else if (current?.id == projectId && activeFile == path) {
                 message = result.exceptionOrNull()?.message ?: text(R.string.save_failed)
             }
@@ -1288,7 +1296,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 message = error.message ?: text(R.string.save_failed)
                 return false
             }
-            persistedEditorContents[editorSaveKey(project.id, path)] = snapshot
+            if (current?.id == project.id && activeFile == path) {
+                persistedEditorContent = snapshot
+            }
             val latest = when {
                 current?.id != project.id -> null
                 activeFile == path -> content
@@ -1335,6 +1345,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             forgetEditorViewport(path)
             if (activeFile == path) {
                 activeFile = null
+                persistedEditorContent = null
                 content = ""
                 readOnly = false
                 val nextTab = openTabs.keys.lastOrNull()
@@ -1460,7 +1471,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 affectedTabs.forEach { tab ->
                     openTabs.remove(tab)
                     editorHistory.reset(tab)
-                    if (activeFile == tab) { activeFile = null; content = ""; autoSaveJob?.cancel() }
+                    if (activeFile == tab) {
+                        activeFile = null
+                        persistedEditorContent = null
+                        content = ""
+                        autoSaveJob?.cancel()
+                    }
                 }
                 refreshProjectEntries(p.id)
                 message = text(R.string.deleted_path, path)
@@ -1574,6 +1590,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     clearResourcePreview()
                     clearContentSearch()
                     activeFile = null
+                    persistedEditorContent = null
                     content = ""
                     readOnly = false
                     pendingEditorLine = null
