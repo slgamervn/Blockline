@@ -1047,7 +1047,19 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 Row(Modifier.heightIn(min = 42.dp).padding(start = 11.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                                     if (dirty) Text("● ", color = tokens.gameGreen, fontSize = 11.sp)
                                     Text(tab.substringAfterLast('/'), color = tokens.foreground, fontSize = 12.sp, maxLines = 1)
-                                    IconButton(onClick = { vm.closeTab(tab) }, modifier = Modifier.size(40.dp)) {
+                                    IconButton(
+                                        onClick = {
+                                            if (selected) {
+                                                flushNativeEditorSnapshot()
+                                                if (!vm.readOnly && !vm.isOpeningFile && editorValue.text != vm.content) {
+                                                    vm.updateContent(editorValue.text)
+                                                }
+                                                flushNativeEditorSnapshot()
+                                            }
+                                            vm.closeTab(tab)
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
                                         Icon(Icons.Default.Close, stringResource(R.string.close_tab), tint = tokens.muted, modifier = Modifier.size(17.dp))
                                     }
                                 }
