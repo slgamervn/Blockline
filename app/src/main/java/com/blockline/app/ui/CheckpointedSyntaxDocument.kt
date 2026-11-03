@@ -174,37 +174,48 @@ internal class CheckpointedSyntaxDocument private constructor(
         fun build(
             source: String,
             language: Lang,
-            checkpointStride: Int = DEFAULT_CHECKPOINT_STRIDE
+            checkpointStride: Int = DEFAULT_CHECKPOINT_STRIDE,
+            checkCancelled: () -> Unit = {}
         ): CheckpointedSyntaxDocument {
             require(supports(language)) { "Checkpointed syntax is not supported for $language." }
             require(checkpointStride >= 256) { "Checkpoint stride is too small." }
+            checkCancelled()
 
             val checkpoints = ArrayList<Checkpoint>((source.length / checkpointStride) + 2)
             checkpoints += Checkpoint(0)
             var nextCheckpoint = checkpointStride
             var cursor = 0
             while (cursor < source.length) {
+                checkCancelledAt(cursor, checkCancelled)
                 // A checkpoint exactly at a token start belongs to the un-tokenized boundary.
                 while (nextCheckpoint <= cursor) {
+                    checkCancelledAt(nextCheckpoint, checkCancelled)
                     checkpoints += Checkpoint(nextCheckpoint)
                     nextCheckpoint += checkpointStride
                 }
-                val token = scanToken(source, cursor, language)
+                val token = scanToken(source, cursor, language, checkCancelled)
                 if (token == null) {
                     cursor++
                     continue
                 }
                 // Every checkpoint strictly inside this token receives complete token metadata.
                 while (nextCheckpoint < token.end) {
+                    checkCancelledAt(nextCheckpoint, checkCancelled)
                     checkpoints += Checkpoint(nextCheckpoint, cursor, token.end, token.kind)
                     nextCheckpoint += checkpointStride
                 }
                 cursor = token.end
             }
+            checkCancelled()
             return CheckpointedSyntaxDocument(source, language, checkpoints, checkpointStride)
         }
 
-        private fun scanToken(source: String, start: Int, language: Lang): Token? {
+        private fun scanToken(
+            source: String,
+            start: Int,
+            language: Lang,
+            checkCancelled: () -> Unit
+        ): Token? {
             if (start !in source.indices) return null
             val first = source[start]
 
@@ -213,14 +224,20 @@ internal class CheckpointedSyntaxDocument private constructor(
                 when (source[start + 1]) {
                     '/' -> {
                         var end = start + 2
-                        while (end < source.length && source[end] != '\n' && source[end] != '\r') end++
+                        while (end < source.length && source[end] != '\n' && source[end] != '\r') {
+                            checkCancelledAt(end, checkCancelled)
+                            end++
+                        }
                         return Token(end, Kind.COMMENT)
                     }
                     '*' -> {
                         var end = start + 2
                         while (end + 1 < source.length &&
                             !(source[end] == '*' && source[end + 1] == '/')
-                        ) end++
+                        ) {
+                            checkCancelledAt(end, checkCancelled)
+                            end++
+                        }
                         if (end + 1 < source.length) end += 2 else end = source.length
                         return Token(end, Kind.COMMENT)
                     }
@@ -228,7 +245,10 @@ internal class CheckpointedSyntaxDocument private constructor(
             }
             if (language == Lang.MCFUNC && first == '#') {
                 var end = start + 1
-                while (end < source.length && source[end] != '\n' && source[end] != '\r') end++
+                while (end < source.length && source[end] != '\n' && source[end] != '\r') {
+                    checkCancelledAt(end, checkCancelled)
+                    end++
+                }
                 return Token(end, Kind.COMMENT)
             }
 
@@ -243,6 +263,7 @@ internal class CheckpointedSyntaxDocument private constructor(
                 var escaped = false
                 var closed = false
                 while (end < source.length) {
+                    checkCancelledAt(end, checkCancelled)
                     val ch = source[end]
                     if (escaped) {
                         escaped = false
@@ -258,8 +279,8 @@ internal class CheckpointedSyntaxDocument private constructor(
                     end++
                 }
                 val kind = when (language) {
-                    Lang.JSON -> if (closed && nextNonWhitespace(source, end) == ':') Kind.JSON_KEY else Kind.STRING
-                    Lang.JS -> if (nextNonWhitespace(source, end) == ':') Kind.PROPERTY else Kind.STRING
+                    Lang.JSON -> if (closed && nextNonWhitespace(source, end, checkCancelled) == ':') Kind.JSON_KEY else Kind.STRING
+                    Lang.JS -> if (nextNonWhitespace(source, end, checkCancelled) == ':') Kind.PROPERTY else Kind.STRING
                     else -> Kind.STRING
                 }
                 return Token(end.coerceAtLeast(start + 1), kind)
@@ -275,18 +296,27 @@ internal class CheckpointedSyntaxDocument private constructor(
             if (isNumberStart(source, start, language)) {
                 var end = start
                 if (source[end] == '-') end++
-                while (end < source.length && source[end].isDigit()) end++
+                while (end < source.length && source[end].isDigit()) {
+                    checkCancelledAt(end, checkCancelled)
+                    end++
+                }
                 if (end < source.length && source[end] == '.' &&
                     end + 1 < source.length && source[end + 1].isDigit()
                 ) {
                     end++
-                    while (end < source.length && source[end].isDigit()) end++
+                    while (end < source.length && source[end].isDigit()) {
+                        checkCancelledAt(end, checkCancelled)
+                        end++
+                    }
                 }
                 if (end < source.length && source[end] in "eE") {
                     var exponent = end + 1
                     if (exponent < source.length && source[exponent] in "+-") exponent++
                     val digitsStart = exponent
-                    while (exponent < source.length && source[exponent].isDigit()) exponent++
+                    while (exponent < source.length && source[exponent].isDigit()) {
+                        checkCancelledAt(exponent, checkCancelled)
+                        exponent++
+                    }
                     if (exponent > digitsStart) end = exponent
                 }
                 return Token(end.coerceAtLeast(start + 1), Kind.NUMBER)
@@ -294,9 +324,12 @@ internal class CheckpointedSyntaxDocument private constructor(
 
             if (isIdentifierStart(first)) {
                 var end = start + 1
-                while (end < source.length && isIdentifierPart(source[end])) end++
+                while (end < source.length && isIdentifierPart(source[end])) {
+                    checkCancelledAt(end, checkCancelled)
+                    end++
+                }
                 val word = if (end - start <= 64) source.substring(start, end) else ""
-                val next = nextNonWhitespace(source, end)
+                val next = nextNonWhitespace(source, end, checkCancelled)
                 val kind = when (language) {
                     Lang.JSON -> if (word == "true" || word == "false" || word == "null") Kind.BOOLEAN else null
                     Lang.JS -> when {
@@ -325,9 +358,22 @@ internal class CheckpointedSyntaxDocument private constructor(
         private fun isIdentifierPart(ch: Char): Boolean =
             ch == '_' || ch == '$' || ch.isLetterOrDigit()
 
-        private fun nextNonWhitespace(source: String, from: Int): Char? {
+        private const val CANCELLATION_CHECK_MASK = 0x0FFF
+
+        private fun checkCancelledAt(index: Int, checkCancelled: () -> Unit) {
+            if ((index and CANCELLATION_CHECK_MASK) == 0) checkCancelled()
+        }
+
+        private fun nextNonWhitespace(
+            source: String,
+            from: Int,
+            checkCancelled: () -> Unit
+        ): Char? {
             var index = from.coerceAtLeast(0)
-            while (index < source.length && source[index].isWhitespace()) index++
+            while (index < source.length && source[index].isWhitespace()) {
+                checkCancelledAt(index, checkCancelled)
+                index++
+            }
             return source.getOrNull(index)
         }
     }
