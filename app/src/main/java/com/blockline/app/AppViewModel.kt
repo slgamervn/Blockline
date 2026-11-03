@@ -51,6 +51,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 
+private const val MAX_OPEN_EDITOR_TABS = 5
+
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun text(id: Int, vararg args: Any): String {
         val app = getApplication<Application>()
@@ -1163,6 +1165,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (activeFile == path && !isOpeningFile) {
             pendingEditorLine = line?.coerceAtLeast(1)
             if (line == null) pendingEditorLine = null
+            return
+        }
+        if (path !in openTabs && openTabs.size >= MAX_OPEN_EDITOR_TABS) {
+            message = text(R.string.editor_tab_limit, MAX_OPEN_EDITOR_TABS)
             return
         }
 
