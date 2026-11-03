@@ -885,6 +885,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 openTabs.clear()
                 editorHistory.clear()
                 activeFile = null
+                persistedEditorContent = null
                 content = ""
                 readOnly = false
                 pendingEditorLine = null
