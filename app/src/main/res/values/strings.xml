@@ -147,6 +147,7 @@
     <string name="delete_item_confirm">Permanently delete %1$s from this project? This cannot be undone.</string>
     <string name="editor">Editor</string>
     <string name="close_tab">Close tab</string>
+    <string name="editor_tab_limit">You can keep up to %1$d tabs open. Close a tab before opening another file.</string>
     <string name="format_json_only">Formatting is available for JSON files</string>
     <string name="no_file_open">No file open</string>
     <string name="no_file_hint">Choose a file in Explorer to start editing.</string>

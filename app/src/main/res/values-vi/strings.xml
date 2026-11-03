@@ -147,6 +147,7 @@
     <string name="delete_item_confirm">Xóa vĩnh viễn %1$s khỏi dự án này? Thao tác này không thể hoàn tác.</string>
     <string name="editor">Trình chỉnh sửa</string>
     <string name="close_tab">Đóng thẻ</string>
+    <string name="editor_tab_limit">Chỉ có thể mở tối đa %1$d tab. Hãy đóng một tab trước khi mở tệp khác.</string>
     <string name="format_json_only">Chỉ có thể định dạng tệp JSON</string>
     <string name="no_file_open">Chưa mở tệp</string>
     <string name="no_file_hint">Chọn một tệp trong mục Tệp để bắt đầu chỉnh sửa.</string>
