@@ -389,8 +389,11 @@
     <string name="api_reference_versions_cached">Known versions: %1$d</string>
     <string name="api_source_live">online</string>
     <string name="api_source_cache">cache</string>
-    <string name="api_source_bundled">bundled snapshot</string>
+    <string name="api_source_bundled">offline subset</string>
     <string name="api_reference_search">Search symbols, methods, properties and documentation</string>
+    <string name="api_reference_versions_select">Tap a version to load it</string>
+    <string name="api_reference_version_stable">Stable</string>
+    <string name="api_reference_version_preview">Preview</string>
     <string name="api_reference_no_symbols">No matching symbols. Try a shorter query or refresh the package.</string>
     <string name="api_reference_copy">Copy declaration</string>
     <string name="api_reference_insert">Insert into TypeScript editor</string>
