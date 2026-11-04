@@ -144,4 +144,24 @@ class ScriptApiDeclarationParserTest {
         )
     }
 
+    @Test
+    fun parsesEnumMembersWithoutInitializers() {
+        val source = """
+            export declare enum Direction {
+                North,
+                East,
+                South = 2,
+                West,
+            }
+        """.trimIndent()
+        val symbols = ScriptApiDeclarationParser.parse(
+            source, "@minecraft/server", "2.11.0"
+        ).symbols
+
+        assertEquals(
+            listOf("North", "East", "South", "West"),
+            symbols.single().members.map { it.name }
+        )
+    }
+
 }
