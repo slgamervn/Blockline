@@ -389,8 +389,11 @@
     <string name="api_reference_versions_cached">Số phiên bản đã biết: %1$d</string>
     <string name="api_source_live">trực tuyến</string>
     <string name="api_source_cache">bộ nhớ đệm</string>
-    <string name="api_source_bundled">snapshot đi kèm</string>
+    <string name="api_source_bundled">bộ API rút gọn ngoại tuyến</string>
     <string name="api_reference_search">Tìm symbol, hàm, thuộc tính và tài liệu</string>
+    <string name="api_reference_versions_select">Chạm vào phiên bản để tải</string>
+    <string name="api_reference_version_stable">Ổn định</string>
+    <string name="api_reference_version_preview">Preview</string>
     <string name="api_reference_no_symbols">Không tìm thấy symbol phù hợp. Hãy thử từ khóa ngắn hơn hoặc cập nhật package.</string>
     <string name="api_reference_copy">Sao chép declaration</string>
     <string name="api_reference_insert">Chèn vào editor TypeScript</string>
