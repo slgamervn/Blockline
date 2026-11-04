@@ -383,10 +383,10 @@
     <string name="api_reference_hint">Search supported Minecraft Script API declarations. Cached and bundled references work offline; refreshing versions requires internet access.</string>
     <string name="api_reference_version">Package version (optional)</string>
     <string name="api_reference_latest_hint">Leave blank to use the default version</string>
-    <string name="api_reference_load">Load cached</string>
+    <string name="api_reference_load">Load version</string>
     <string name="api_reference_refresh">Refresh online</string>
     <string name="api_reference_status">%1$s · %2$s · Source: %3$s</string>
-    <string name="api_reference_versions_cached">Known versions: %1$d</string>
+    <string name="api_reference_versions_cached">Available versions: %1$d</string>
     <string name="api_source_live">online</string>
     <string name="api_source_cache">cache</string>
     <string name="api_source_bundled">offline subset</string>
