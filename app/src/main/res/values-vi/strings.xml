@@ -383,10 +383,10 @@
     <string name="api_reference_hint">Tìm declaration của Minecraft Script API được hỗ trợ. Dữ liệu cache và snapshot đi kèm dùng được offline; cập nhật phiên bản cần Internet.</string>
     <string name="api_reference_version">Phiên bản package (không bắt buộc)</string>
     <string name="api_reference_latest_hint">Để trống để dùng phiên bản mặc định</string>
-    <string name="api_reference_load">Tải từ cache</string>
+    <string name="api_reference_load">Tải phiên bản</string>
     <string name="api_reference_refresh">Cập nhật online</string>
     <string name="api_reference_status">%1$s · %2$s · Nguồn: %3$s</string>
-    <string name="api_reference_versions_cached">Số phiên bản đã biết: %1$d</string>
+    <string name="api_reference_versions_cached">Phiên bản có thể chọn: %1$d</string>
     <string name="api_source_live">trực tuyến</string>
     <string name="api_source_cache">bộ nhớ đệm</string>
     <string name="api_source_bundled">bộ API rút gọn ngoại tuyến</string>
