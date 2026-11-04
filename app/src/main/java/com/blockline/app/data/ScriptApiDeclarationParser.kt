@@ -38,6 +38,9 @@ object ScriptApiDeclarationParser {
     private val memberNamePattern = Regex(
         """^(?:(?:public|private|protected|static|readonly|abstract|override|declare|async|get|set)[ \t]+)*([A-Za-z_$][A-Za-z0-9_$]*|constructor)(?:\?)?[ \t]*(?:<[^;{}]*>)?[ \t]*(?=\(|:|!|=)"""
     )
+    private val enumMemberNamePattern = Regex(
+        """^([A-Za-z_$][A-Za-z0-9_$]*)[ \t]*(?:=[\s\S]*?)?,?[ \t]*$"""
+    )
     private val commentPattern = Regex("""(?s)/\*.*?\*/|//[^\r\n]*""")
     private val whitespacePattern = Regex("""\s+""")
 
@@ -59,7 +62,8 @@ object ScriptApiDeclarationParser {
                 stripComments(raw).substringBefore(';').trim()
             }
             val body = if (kind in setOf("class", "interface", "enum", "namespace")) extractBody(raw) else null
-            val parsedMembers = body?.let(::parseMembers) ?: ParsedMembers(emptyList(), emptyList())
+            val parsedMembers = body?.let { parseMembers(it, enumMembers = kind == "enum") }
+                ?: ParsedMembers(emptyList(), emptyList())
             symbols += ScriptApiSymbol(
                 name = name,
                 kind = kind,
@@ -88,14 +92,14 @@ object ScriptApiDeclarationParser {
         val unparsed: List<String>
     )
 
-    private fun parseMembers(body: String): ParsedMembers {
+    private fun parseMembers(body: String, enumMembers: Boolean = false): ParsedMembers {
         val members = ArrayList<ScriptApiMember>()
         val unparsed = ArrayList<String>()
-        splitMembers(body).forEach { rawMember ->
+        splitMembers(body, enumMembers).forEach { rawMember ->
             val doc = leadingDocumentation(rawMember)
             val clean = stripComments(rawMember).trim()
             if (clean.isBlank()) return@forEach
-            val match = memberNamePattern.find(clean)
+            val match = (if (enumMembers) enumMemberNamePattern else memberNamePattern).find(clean)
             if (match == null) {
                 unparsed += rawMember.trim()
             } else {
@@ -110,7 +114,7 @@ object ScriptApiDeclarationParser {
         return ParsedMembers(members, unparsed)
     }
 
-    private fun splitMembers(body: String): List<String> {
+    private fun splitMembers(body: String, commaSeparated: Boolean = false): List<String> {
         val result = ArrayList<String>()
         var start = 0
         var i = 0
@@ -168,7 +172,10 @@ object ScriptApiDeclarationParser {
                 '}' -> if (braces > 0) braces--
                 '<' -> angles++
                 '>' -> if (angles > 0) angles--
-                ';' -> if (parentheses == 0 && brackets == 0 && braces == 0 && angles == 0) {
+                ';', ',' -> if (
+                    (c == ';' || commaSeparated && c == ',') &&
+                    parentheses == 0 && brackets == 0 && braces == 0 && angles == 0
+                ) {
                     result += body.substring(start, i + 1)
                     start = i + 1
                 }
@@ -259,4 +266,40 @@ object ScriptApiDeclarationParser {
 
     private fun normalizeSignature(text: String): String =
         whitespacePattern.replace(stripComments(text), " ").trim()
+}
+
+/**
+ * Searches top-level declarations and their nested members.
+ * A member match keeps its owning class/interface in the result.
+ */
+object ScriptApiSearch {
+    fun filterSymbols(
+        symbols: List<ScriptApiSymbol>,
+        query: String,
+        limit: Int = 20
+    ): List<ScriptApiSymbol> {
+        val term = query.trim()
+        if (term.isEmpty()) return symbols.take(limit)
+        return symbols.asSequence()
+            .filter { symbol ->
+                symbol.name.contains(term, ignoreCase = true) ||
+                    symbol.kind.contains(term, ignoreCase = true) ||
+                    symbol.signature.contains(term, ignoreCase = true) ||
+                    symbol.documentation.contains(term, ignoreCase = true) ||
+                    matchingMembers(symbol, term).isNotEmpty()
+            }
+            .take(limit)
+            .toList()
+    }
+
+    fun matchingMembers(symbol: ScriptApiSymbol, query: String): List<ScriptApiMember> {
+        val term = query.trim()
+        if (term.isEmpty()) return emptyList()
+        return symbol.members.filter { member ->
+            member.name.contains(term, ignoreCase = true) ||
+                member.signature.contains(term, ignoreCase = true) ||
+                member.documentation.contains(term, ignoreCase = true) ||
+                member.rawDeclaration.contains(term, ignoreCase = true)
+        }
+    }
 }

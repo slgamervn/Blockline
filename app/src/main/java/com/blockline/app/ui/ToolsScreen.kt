@@ -80,6 +80,7 @@ import com.blockline.app.data.DiffLineKind
 import com.blockline.app.data.ScriptApiReferenceRepository
 import com.blockline.app.data.ScriptApiLoadResult
 import com.blockline.app.data.ScriptApiSource
+import com.blockline.app.data.ScriptApiSearch
 import com.blockline.app.data.TEXT_EXT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -596,10 +597,7 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
     }
 
     val filteredSymbols = remember(result, query) {
-        result?.symbols.orEmpty().filter {
-            query.isBlank() || it.name.contains(query, true) || it.kind.contains(query, true) ||
-                it.documentation.contains(query, true)
-        }.take(20)
+        ScriptApiSearch.filterSymbols(result?.symbols.orEmpty(), query)
     }
 
     Card(Modifier.fillMaxWidth()) {
@@ -652,6 +650,33 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                 Text(stringResource(R.string.api_reference_status, loaded.packageName, loaded.version, sourceLabel))
                 if (loaded.availableVersions.isNotEmpty()) {
                     Text(stringResource(R.string.api_reference_versions_cached, loaded.availableVersions.size), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    val stableVersions = loaded.availableVersions.filter { !it.contains("-") }.take(2)
+                    val previewVersions = loaded.availableVersions.filter { it.contains("-") }.take(4)
+                    val suggestedVersions = (stableVersions + previewVersions).distinct()
+                    if (suggestedVersions.isNotEmpty()) {
+                        Text(stringResource(R.string.api_reference_versions_select), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            suggestedVersions.forEach { candidate ->
+                                val channelLabel = if (candidate.contains("-")) {
+                                    stringResource(R.string.api_reference_version_preview)
+                                } else {
+                                    stringResource(R.string.api_reference_version_stable)
+                                }
+                                androidx.compose.material3.FilterChip(
+                                    selected = loaded.version == candidate,
+                                    enabled = !loading,
+                                    onClick = {
+                                        version = candidate
+                                        loadReference(packageName, candidate, false)
+                                    },
+                                    label = { Text("$channelLabel $candidate", maxLines = 1) }
+                                )
+                            }
+                        }
+                    }
                 }
             }
             error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.tertiary, style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
@@ -676,6 +701,31 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                         Text(symbol.signature, fontFamily = FontFamily.Monospace, style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
                         if (symbol.documentation.isNotBlank()) {
                             Text(symbol.documentation, style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
+                        }
+                        ScriptApiSearch.matchingMembers(symbol, query).take(8).forEach { member ->
+                            Column(
+                                Modifier.fillMaxWidth().padding(start = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Text(
+                                    member.name,
+                                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    member.signature,
+                                    fontFamily = FontFamily.Monospace,
+                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                                )
+                                if (member.documentation.isNotBlank()) {
+                                    Text(
+                                        member.documentation,
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 3
+                                    )
+                                }
+                            }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(onClick = {

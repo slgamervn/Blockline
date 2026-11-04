@@ -60,4 +60,108 @@ class ScriptApiDeclarationParserTest {
         assertEquals("function", result.symbols.single().kind)
         assertTrue(result.symbols.single().signature.contains("callback"))
     }
+
+
+    @Test
+    fun searchesNestedMethodsAndProperties() {
+        val source = """
+            export declare class World {
+                /** Returns a dimension. */
+                getDimension(dimensionId: string): Dimension;
+                readonly isHardcore: boolean;
+            }
+            export declare class Player {
+                sendMessage(message: string): void;
+            }
+        """.trimIndent()
+        val symbols = ScriptApiDeclarationParser.parse(
+            source, "@minecraft/server", "2.11.0"
+        ).symbols
+
+        val dimensionResults = ScriptApiSearch.filterSymbols(symbols, "getDimension")
+        assertEquals(listOf("World"), dimensionResults.map { it.name })
+        assertEquals(
+            listOf("getDimension"),
+            ScriptApiSearch.matchingMembers(dimensionResults.single(), "getDimension").map { it.name }
+        )
+
+        val propertyResults = ScriptApiSearch.filterSymbols(symbols, "isHardcore")
+        assertEquals(listOf("World"), propertyResults.map { it.name })
+        assertEquals(
+            listOf("isHardcore"),
+            ScriptApiSearch.matchingMembers(propertyResults.single(), "isHardcore").map { it.name }
+        )
+
+        val messageResults = ScriptApiSearch.filterSymbols(symbols, "MESSAGE")
+        assertEquals(listOf("Player"), messageResults.map { it.name })
+    }
+
+    @Test
+    fun searchesSignaturesAndDocumentationCaseInsensitively() {
+        val source = """
+            export declare interface EntityQueryOptions {
+                /** Filters by entity type. */
+                type?: string;
+            }
+        """.trimIndent()
+        val symbols = ScriptApiDeclarationParser.parse(
+            source, "@minecraft/server", "2.11.0"
+        ).symbols
+
+        assertEquals(
+            listOf("EntityQueryOptions"),
+            ScriptApiSearch.filterSymbols(symbols, "entityquery").map { it.name }
+        )
+        assertEquals(
+            listOf("type"),
+            ScriptApiSearch.matchingMembers(symbols.single(), "filters by entity").map { it.name }
+        )
+        assertTrue(ScriptApiSearch.filterSymbols(symbols, "unknown-symbol").isEmpty())
+    }
+
+
+
+    @Test
+    fun parsesAndSearchesEnumMembersSeparatedByCommas() {
+        val source = """
+            export declare enum EntityComponentTypes {
+                Health = "minecraft:health",
+                Inventory = "minecraft:inventory",
+                IsBaby = "minecraft:is_baby"
+            }
+        """.trimIndent()
+        val symbols = ScriptApiDeclarationParser.parse(
+            source, "@minecraft/server", "2.11.0"
+        ).symbols
+
+        assertEquals(
+            listOf("Health", "Inventory", "IsBaby"),
+            symbols.single().members.map { it.name }
+        )
+        assertEquals(
+            listOf("Inventory"),
+            ScriptApiSearch.matchingMembers(symbols.single(), "inventory").map { it.name }
+        )
+    }
+
+    @Test
+    fun parsesEnumMembersWithoutInitializers() {
+        val source = """
+            export declare enum Direction {
+                North,
+                East,
+                South = 2,
+                West,
+            }
+        """.trimIndent()
+        val symbols = ScriptApiDeclarationParser.parse(
+            source, "@minecraft/server", "2.11.0"
+        ).symbols
+
+        assertEquals(
+            listOf("North", "East", "South", "West"),
+            symbols.single().members.map { it.name }
+        )
+    }
+
 }

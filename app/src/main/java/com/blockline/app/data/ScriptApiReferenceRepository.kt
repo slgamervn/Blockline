@@ -129,17 +129,22 @@ class ScriptApiReferenceRepository(context: Context) {
         )
         val tags = json.optJSONObject("dist-tags")
         val versionsObject = json.optJSONObject("versions") ?: JSONObject()
+        val allVersions = mutableListOf<String>()
         val stableVersions = mutableListOf<String>()
         val keys = versionsObject.keys()
         while (keys.hasNext()) {
             val version = keys.next()
-            if (Regex("""^\d+\.\d+\.\d+$""").matches(version)) stableVersions += version
+            if (SemanticVersion.isValid(version)) {
+                allVersions += version
+                if (SemanticVersion.isStable(version)) stableVersions += version
+            }
         }
         val stableSorted = stableVersions.distinct().sortedWith(versionComparator)
+        val allSorted = allVersions.distinct().sortedWith(versionComparator)
         val taggedLatest = tags?.optString("latest").orEmpty()
         val latest = if (taggedLatest in stableSorted) taggedLatest else stableSorted.firstOrNull()
             ?: error("The registry returned no stable package versions.")
-        return PackageMetadata(latest, stableSorted.take(120))
+        return PackageMetadata(latest, allSorted.take(120))
     }
 
     private fun fetchDeclarationSource(packageName: String, version: String): String {
@@ -260,7 +265,12 @@ class ScriptApiReferenceRepository(context: Context) {
     private fun readCachedVersion(packageName: String): String? {
         val metadata = readMetadata(packageName) ?: return null
         if (sourceCacheFile(packageName, metadata.latest).isFile) return metadata.latest
-        return metadata.versions.firstOrNull { sourceCacheFile(packageName, it).isFile }
+        val cachedStable = metadata.versions.firstOrNull {
+            SemanticVersion.isStable(it) && sourceCacheFile(packageName, it).isFile
+        }
+        return cachedStable ?: metadata.versions.firstOrNull {
+            sourceCacheFile(packageName, it).isFile
+        }
     }
 
     private fun readBundledSource(packageName: String): String? = runCatching {
@@ -292,24 +302,20 @@ class ScriptApiReferenceRepository(context: Context) {
         writeAtomically(sourceCacheFile(packageName, version), source)
         val metadata = readMetadata(packageName)
         if (metadata != null && version !in metadata.versions) {
-            writeMetadata(packageName, metadata.copy(versions = (listOf(version) + metadata.versions).distinct()))
+            val versions = (listOf(version) + metadata.versions)
+                .distinct()
+                .sortedWith(versionComparator)
+                .take(120)
+            writeMetadata(packageName, metadata.copy(versions = versions))
         }
     }
 
     private fun writeAtomically(target: File, text: String) =
         AtomicFileWriter.write(target, text, suffix = ".tmp")
 
-    private fun compareVersions(left: String, right: String): Int {
-        val a = left.split('.').map { it.toIntOrNull() ?: 0 }
-        val b = right.split('.').map { it.toIntOrNull() ?: 0 }
-        for (index in 0 until maxOf(a.size, b.size)) {
-            val comparison = a.getOrElse(index) { 0 }.compareTo(b.getOrElse(index) { 0 })
-            if (comparison != 0) return comparison
-        }
-        return left.compareTo(right)
+    private val versionComparator = Comparator<String> { left, right ->
+        SemanticVersion.compare(right, left)
     }
-
-    private val versionComparator = Comparator<String> { left, right -> compareVersions(right, left) }
 
     companion object {
         internal fun isAllowedSourceUrl(url: URL): Boolean =
