@@ -38,6 +38,9 @@ object ScriptApiDeclarationParser {
     private val memberNamePattern = Regex(
         """^(?:(?:public|private|protected|static|readonly|abstract|override|declare|async|get|set)[ \t]+)*([A-Za-z_$][A-Za-z0-9_$]*|constructor)(?:\?)?[ \t]*(?:<[^;{}]*>)?[ \t]*(?=\(|:|!|=)"""
     )
+    private val enumMemberNamePattern = Regex(
+        """^([A-Za-z_$][A-Za-z0-9_$]*)[ \t]*(?:=[\s\S]*?)?,?[ \t]*$"""
+    )
     private val commentPattern = Regex("""(?s)/\*.*?\*/|//[^\r\n]*""")
     private val whitespacePattern = Regex("""\s+""")
 
@@ -96,7 +99,7 @@ object ScriptApiDeclarationParser {
             val doc = leadingDocumentation(rawMember)
             val clean = stripComments(rawMember).trim()
             if (clean.isBlank()) return@forEach
-            val match = memberNamePattern.find(clean)
+            val match = (if (enumMembers) enumMemberNamePattern else memberNamePattern).find(clean)
             if (match == null) {
                 unparsed += rawMember.trim()
             } else {
