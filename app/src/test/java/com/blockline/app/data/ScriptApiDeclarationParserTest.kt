@@ -119,4 +119,29 @@ class ScriptApiDeclarationParserTest {
         assertTrue(ScriptApiSearch.filterSymbols(symbols, "unknown-symbol").isEmpty())
     }
 
+
+
+    @Test
+    fun parsesAndSearchesEnumMembersSeparatedByCommas() {
+        val source = """
+            export declare enum EntityComponentTypes {
+                Health = "minecraft:health",
+                Inventory = "minecraft:inventory",
+                IsBaby = "minecraft:is_baby"
+            }
+        """.trimIndent()
+        val symbols = ScriptApiDeclarationParser.parse(
+            source, "@minecraft/server", "2.11.0"
+        ).symbols
+
+        assertEquals(
+            listOf("Health", "Inventory", "IsBaby"),
+            symbols.single().members.map { it.name }
+        )
+        assertEquals(
+            listOf("Inventory"),
+            ScriptApiSearch.matchingMembers(symbols.single(), "inventory").map { it.name }
+        )
+    }
+
 }
