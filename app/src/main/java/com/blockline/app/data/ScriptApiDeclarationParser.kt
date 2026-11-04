@@ -260,3 +260,39 @@ object ScriptApiDeclarationParser {
     private fun normalizeSignature(text: String): String =
         whitespacePattern.replace(stripComments(text), " ").trim()
 }
+
+/**
+ * Searches top-level declarations and their nested members.
+ * A member match keeps its owning class/interface in the result.
+ */
+object ScriptApiSearch {
+    fun filterSymbols(
+        symbols: List<ScriptApiSymbol>,
+        query: String,
+        limit: Int = 20
+    ): List<ScriptApiSymbol> {
+        val term = query.trim()
+        if (term.isEmpty()) return symbols.take(limit)
+        return symbols.asSequence()
+            .filter { symbol ->
+                symbol.name.contains(term, ignoreCase = true) ||
+                    symbol.kind.contains(term, ignoreCase = true) ||
+                    symbol.signature.contains(term, ignoreCase = true) ||
+                    symbol.documentation.contains(term, ignoreCase = true) ||
+                    matchingMembers(symbol, term).isNotEmpty()
+            }
+            .take(limit)
+            .toList()
+    }
+
+    fun matchingMembers(symbol: ScriptApiSymbol, query: String): List<ScriptApiMember> {
+        val term = query.trim()
+        if (term.isEmpty()) return emptyList()
+        return symbol.members.filter { member ->
+            member.name.contains(term, ignoreCase = true) ||
+                member.signature.contains(term, ignoreCase = true) ||
+                member.documentation.contains(term, ignoreCase = true) ||
+                member.rawDeclaration.contains(term, ignoreCase = true)
+        }
+    }
+}
