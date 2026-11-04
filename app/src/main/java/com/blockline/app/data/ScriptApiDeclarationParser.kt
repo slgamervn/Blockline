@@ -59,7 +59,8 @@ object ScriptApiDeclarationParser {
                 stripComments(raw).substringBefore(';').trim()
             }
             val body = if (kind in setOf("class", "interface", "enum", "namespace")) extractBody(raw) else null
-            val parsedMembers = body?.let(::parseMembers) ?: ParsedMembers(emptyList(), emptyList())
+            val parsedMembers = body?.let { parseMembers(it, enumMembers = kind == "enum") }
+                ?: ParsedMembers(emptyList(), emptyList())
             symbols += ScriptApiSymbol(
                 name = name,
                 kind = kind,
@@ -88,10 +89,10 @@ object ScriptApiDeclarationParser {
         val unparsed: List<String>
     )
 
-    private fun parseMembers(body: String): ParsedMembers {
+    private fun parseMembers(body: String, enumMembers: Boolean = false): ParsedMembers {
         val members = ArrayList<ScriptApiMember>()
         val unparsed = ArrayList<String>()
-        splitMembers(body).forEach { rawMember ->
+        splitMembers(body, enumMembers).forEach { rawMember ->
             val doc = leadingDocumentation(rawMember)
             val clean = stripComments(rawMember).trim()
             if (clean.isBlank()) return@forEach
@@ -110,7 +111,7 @@ object ScriptApiDeclarationParser {
         return ParsedMembers(members, unparsed)
     }
 
-    private fun splitMembers(body: String): List<String> {
+    private fun splitMembers(body: String, commaSeparated: Boolean = false): List<String> {
         val result = ArrayList<String>()
         var start = 0
         var i = 0
@@ -168,7 +169,10 @@ object ScriptApiDeclarationParser {
                 '}' -> if (braces > 0) braces--
                 '<' -> angles++
                 '>' -> if (angles > 0) angles--
-                ';' -> if (parentheses == 0 && brackets == 0 && braces == 0 && angles == 0) {
+                ';', ',' -> if (
+                    (c == ';' || commaSeparated && c == ',') &&
+                    parentheses == 0 && brackets == 0 && braces == 0 && angles == 0
+                ) {
                     result += body.substring(start, i + 1)
                     start = i + 1
                 }
