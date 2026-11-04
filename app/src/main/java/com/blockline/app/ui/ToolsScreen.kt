@@ -650,6 +650,33 @@ private fun ScriptApiReferenceCard(vm: AppViewModel, onOpenEditor: () -> Unit) {
                 Text(stringResource(R.string.api_reference_status, loaded.packageName, loaded.version, sourceLabel))
                 if (loaded.availableVersions.isNotEmpty()) {
                     Text(stringResource(R.string.api_reference_versions_cached, loaded.availableVersions.size), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                    val stableVersions = loaded.availableVersions.filter { !it.contains("-") }.take(2)
+                    val previewVersions = loaded.availableVersions.filter { it.contains("-") }.take(4)
+                    val suggestedVersions = (stableVersions + previewVersions).distinct()
+                    if (suggestedVersions.isNotEmpty()) {
+                        Text(stringResource(R.string.api_reference_versions_select), style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            suggestedVersions.forEach { candidate ->
+                                val channelLabel = if (candidate.contains("-")) {
+                                    stringResource(R.string.api_reference_version_preview)
+                                } else {
+                                    stringResource(R.string.api_reference_version_stable)
+                                }
+                                androidx.compose.material3.FilterChip(
+                                    selected = loaded.version == candidate,
+                                    enabled = !loading,
+                                    onClick = {
+                                        version = candidate
+                                        loadReference(packageName, candidate, false)
+                                    },
+                                    label = { Text("$channelLabel $candidate", maxLines = 1) }
+                                )
+                            }
+                        }
+                    }
                 }
             }
             error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.tertiary, style = androidx.compose.material3.MaterialTheme.typography.bodySmall) }
