@@ -46,7 +46,8 @@ class AppUpdateRepositoryTest {
     fun expectedAssetNameTracksReleaseVersionForBothChannels() {
         assertEquals("Blockline-v1.2.3.apk", UpdateApkPolicy.expectedAssetName("1.2.3"))
         assertEquals("Blockline-v0.1.54-test.apk", UpdateApkPolicy.expectedAssetName("0.1.54-test"))
-        assertTrue(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertTrue(UpdateApkPolicy.isAllowedApkUrl("https://github.com/snowgemm/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
         assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://example.com/Blockline.apk"))
     }
 
@@ -109,7 +110,7 @@ class AppUpdateRepositoryTest {
         assertTrue(AppUpdateRepository.isSupportedChannel("test"))
         assertFalse(AppUpdateRepository.isSupportedChannel("disabled"))
         assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com@evil.example/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
-        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/../../evil.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/snowgemm/Blockline/releases/download/../../evil.apk"))
         assertTrue(AppUpdateRepository.isTestRelease("v0.1.101-test", prerelease = true, draft = false))
         assertFalse(AppUpdateRepository.isTestRelease("v0.1.101", prerelease = false, draft = false))
         assertFalse(AppUpdateRepository.isTestRelease("v0.1.101-beta", prerelease = true, draft = false))
