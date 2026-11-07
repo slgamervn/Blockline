@@ -47,8 +47,8 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
             val apkUrl = asset.optString("browser_download_url", "")
             val releaseUrl = release.optString("html_url", "")
             val sha256 = digestForAsset(asset)
-            if (!apkUrl.startsWith("https://github.com/$REPOSITORY/releases/download/") ||
-                !releaseUrl.startsWith("https://github.com/$REPOSITORY/releases/tag/")) {
+            if (!apkUrl.startsWith("https://github.com/$REPOSITORY_FULL_NAME/releases/download/") ||
+                !releaseUrl.startsWith("https://github.com/$REPOSITORY_FULL_NAME/releases/tag/")) {
                 throw IllegalStateException("The release contains an unexpected download URL.")
             }
             if (compareVersions(version, currentVersion) <= 0) return null
@@ -68,12 +68,12 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
     }
 
     companion object {
-        private const val REPOSITORY = "slgamervn/Blockline"
-        const val RELEASES_URL = "https://github.com/$REPOSITORY/releases"
-        const val LATEST_RELEASE_PAGE_URL = "https://github.com/$REPOSITORY/releases/latest"
-        const val TEST_RELEASES_URL = "https://github.com/$REPOSITORY/releases"
-        private const val STABLE_LATEST_API_URL = "https://api.github.com/repos/$REPOSITORY/releases/latest"
-        private const val TEST_RELEASES_API_URL = "https://api.github.com/repos/$REPOSITORY/releases?per_page=100"
+        const val REPOSITORY_FULL_NAME = "snowgemm/Blockline"
+        const val RELEASES_URL = "https://github.com/$REPOSITORY_FULL_NAME/releases"
+        const val LATEST_RELEASE_PAGE_URL = "https://github.com/$REPOSITORY_FULL_NAME/releases/latest"
+        const val TEST_RELEASES_URL = "https://github.com/$REPOSITORY_FULL_NAME/releases"
+        private const val STABLE_LATEST_API_URL = "https://api.github.com/repos/$REPOSITORY_FULL_NAME/releases/latest"
+        private const val TEST_RELEASES_API_URL = "https://api.github.com/repos/$REPOSITORY_FULL_NAME/releases?per_page=100"
         private const val CONNECT_TIMEOUT_MS = 8_000
         private const val READ_TIMEOUT_MS = 12_000
         private const val STABLE_CHANNEL = "stable"
@@ -93,6 +93,16 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
         fun isSupportedChannel(channel: String): Boolean = channel == STABLE_CHANNEL || channel == TEST_CHANNEL
 
         fun isValidVersion(value: String): Boolean = SemanticVersion.isValid(value)
+
+        fun releasePageUrl(version: String): String {
+            require(isValidVersion(version)) { "Invalid release version." }
+            return "https://github.com/$REPOSITORY_FULL_NAME/releases/tag/v$version"
+        }
+
+        fun apkDownloadUrl(version: String): String {
+            require(isValidVersion(version)) { "Invalid release version." }
+            return "https://github.com/$REPOSITORY_FULL_NAME/releases/download/v$version/Blockline-v$version.apk"
+        }
 
         /**
          * GitHub's release asset API can include an SHA-256 digest. Absence is supported

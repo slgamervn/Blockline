@@ -43,10 +43,37 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
+    fun releasePageUrlUsesCanonicalRepositoryAndValidatedVersions() {
+        assertEquals(
+            "https://github.com/snowgemm/Blockline/releases/tag/v1.2.3",
+            AppUpdateRepository.releasePageUrl("1.2.3")
+        )
+        assertEquals(
+            "https://github.com/snowgemm/Blockline/releases/tag/v0.1.54-test",
+            AppUpdateRepository.releasePageUrl("0.1.54-test")
+        )
+        assertFalse(runCatching { AppUpdateRepository.releasePageUrl("../latest") }.isSuccess)
+    }
+
+    @Test
+    fun apkDownloadUrlUsesCanonicalRepositoryAndValidatedVersions() {
+        assertEquals(
+            "https://github.com/snowgemm/Blockline/releases/download/v1.2.3/Blockline-v1.2.3.apk",
+            AppUpdateRepository.apkDownloadUrl("1.2.3")
+        )
+        assertEquals(
+            "https://github.com/snowgemm/Blockline/releases/download/v0.1.54-test/Blockline-v0.1.54-test.apk",
+            AppUpdateRepository.apkDownloadUrl("0.1.54-test")
+        )
+        assertFalse(runCatching { AppUpdateRepository.apkDownloadUrl("../latest") }.isSuccess)
+    }
+
+    @Test
     fun expectedAssetNameTracksReleaseVersionForBothChannels() {
         assertEquals("Blockline-v1.2.3.apk", UpdateApkPolicy.expectedAssetName("1.2.3"))
         assertEquals("Blockline-v0.1.54-test.apk", UpdateApkPolicy.expectedAssetName("0.1.54-test"))
-        assertTrue(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertTrue(UpdateApkPolicy.isAllowedApkUrl("https://github.com/snowgemm/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
         assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://example.com/Blockline.apk"))
     }
 
@@ -108,8 +135,8 @@ class AppUpdateRepositoryTest {
         assertTrue(AppUpdateRepository.isSupportedChannel("stable"))
         assertTrue(AppUpdateRepository.isSupportedChannel("test"))
         assertFalse(AppUpdateRepository.isSupportedChannel("disabled"))
-        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com@evil.example/slgamervn/Blockline/releases/download/v1/Blockline-v1.apk"))
-        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/slgamervn/Blockline/releases/download/../../evil.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com@evil.example/snowgemm/Blockline/releases/download/v1/Blockline-v1.apk"))
+        assertFalse(UpdateApkPolicy.isAllowedApkUrl("https://github.com/snowgemm/Blockline/releases/download/../../evil.apk"))
         assertTrue(AppUpdateRepository.isTestRelease("v0.1.101-test", prerelease = true, draft = false))
         assertFalse(AppUpdateRepository.isTestRelease("v0.1.101", prerelease = false, draft = false))
         assertFalse(AppUpdateRepository.isTestRelease("v0.1.101-beta", prerelease = true, draft = false))
