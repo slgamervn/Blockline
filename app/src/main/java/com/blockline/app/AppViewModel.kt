@@ -217,16 +217,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
 
     private fun readSavedReleaseInfo(): AppUpdate? {
-        val version = settingsPreferences.getString("latest_release_version", null) ?: return null
-        val releaseUrl = settingsPreferences.getString("latest_release_url", null) ?: return null
-        val apkUrl = settingsPreferences.getString("latest_release_apk_url", null) ?: return null
+        val version = settingsPreferences.getString("latest_release_version", null)
+            ?.takeIf(AppUpdateRepository::isValidVersion) ?: return null
         return AppUpdate(
             version = version,
             releaseName = settingsPreferences.getString("latest_release_name", "Blockline v$version") ?: "Blockline v$version",
             releaseNotes = settingsPreferences.getString("latest_release_notes", "") ?: "",
-            apkUrl = apkUrl,
+            // Rebuild URLs from a validated version so old cached owner links cannot break updates.
+            apkUrl = AppUpdateRepository.apkDownloadUrl(version),
             apkSizeBytes = settingsPreferences.getLong("latest_release_size", 0L).coerceAtLeast(0L),
-            releaseUrl = releaseUrl,
+            releaseUrl = AppUpdateRepository.releasePageUrl(version),
             publishedAt = settingsPreferences.getString("latest_release_published_at", "") ?: "",
             sha256 = settingsPreferences.getString("latest_release_sha256", null)
         )
