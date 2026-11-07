@@ -464,6 +464,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         updateDownloadJob?.cancel()
     }
 
+    fun onUpdateInstallerReturned() {
+        if (updateDownloadState != UpdateDownloadState.INSTALLING) return
+
+        val cachedApkExists = updateDownloadVersion?.let { version ->
+            InAppUpdateInstaller.cachedFile(getApplication(), version) != null
+        } == true
+        updateDownloadState = UpdateApkPolicy.stateAfterInstallerReturns(
+            currentState = updateDownloadState,
+            cachedApkExists = cachedApkExists
+        )
+        updateDownloadError = if (cachedApkExists) null else text(R.string.update_download_missing)
+    }
+
     fun installDownloadedUpdate(context: android.content.Context) {
         val info = updateInfo ?: latestReleaseInfo ?: return
         if (updateDownloadState == UpdateDownloadState.VERIFYING || updateDownloadState == UpdateDownloadState.INSTALLING) return
