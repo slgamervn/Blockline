@@ -26,10 +26,10 @@ assert(!/@keyframes\s+|animation\s*:\s*[^;{}]+;/i.test(css), "CSS has no decorat
 assert(!/\.download-panel::after|\.reveal\s*\{|html\.reveal-ready/.test(css), "Decorative diagonal overlays and scroll-reveal styles are absent");
 assert(/style\.css\?v=20261107-canonical-links/.test(html) && /main\.js\?v=20261107-canonical-links/.test(html), "Changed asset URLs bypass stale browser caches");
 assert(!/fonts\.(?:googleapis|gstatic)\.com/.test(html), "Website uses local system fonts rather than decorative remote fonts");
-assert(/href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"/.test(html), "Latest release page link is present");
+assert(/href="https:\/\/github\.com\/snowgemm\/Blockline\/releases\/latest"/.test(html), "Latest release page link uses the canonical repository");
 assert(/property="og:url" content="https:\/\/snowgemm\.github\.io\/Blockline\//.test(html) && /rel="canonical" href="https:\/\/snowgemm\.github\.io\/Blockline\//.test(html), "Canonical and Open Graph URLs use the new GitHub Pages owner");
 assert(!/https:\/\/(?:github\.com\/slgamervn\/Blockline|slgamervn\.github\.io\/Blockline)\//i.test(html), "Website HTML contains no legacy repository or Pages URLs");
-const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
+const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/snowgemm\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
 assert(apkAnchors.length === 4 && apkAnchors.every((tag) => !/\sdownload(?:\s|=|>)/.test(tag) && !/\bdata-apk-link\b/.test(tag)), "All download buttons link to the latest release page without forcing a direct download");
 assert(!css.includes("\\n.site-header{") && /\.site-header\s*\{\s*position:fixed/.test(css), "Fixed header selector is not corrupted by a literal escape");
 assert(/body\.menu-open\{overflow:hidden\}/.test(css) && !/body\.menu-open\{[^}]*touch-action/.test(css), "Mobile menu locks page scrolling without blocking menu touch gestures");
