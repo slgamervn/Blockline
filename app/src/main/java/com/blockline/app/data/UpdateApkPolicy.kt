@@ -22,6 +22,15 @@ object UpdateApkPolicy {
         return ((receivedBytes.coerceAtLeast(0L).coerceAtMost(totalBytes) * 100L) / totalBytes).toInt()
     }
 
+    fun stateAfterInstallerReturns(
+        currentState: UpdateDownloadState,
+        cachedApkExists: Boolean
+    ): UpdateDownloadState = when {
+        currentState != UpdateDownloadState.INSTALLING -> currentState
+        cachedApkExists -> UpdateDownloadState.READY_TO_INSTALL
+        else -> UpdateDownloadState.FAILED
+    }
+
     fun validatePackageMetadata(
         expectedPackageName: String,
         actualPackageName: String,
