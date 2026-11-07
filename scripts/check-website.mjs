@@ -54,6 +54,7 @@ assert(!/filter:\s*blur\(/.test(css) && !/backdrop-filter:\s*blur\(/.test(css), 
 assert(!/classList\.remove\('is-visible'\)|--reveal-y|scrollDirection > 0/.test(js + css), "Scrolling does not animate sections in and out");
 
 assert(/aria-expanded/.test(js) && /Escape/.test(js), "Accessible mobile navigation has keyboard support");
+assert(js.includes("const navigationSections = ['features', 'demo', 'roadmap', 'resources', 'faq']"), "Scroll navigation tracks all primary page sections");
 assert(/data-demo-tab/.test(html) && /activateDemoTab/.test(js), "Interactive demo tabs are present");
 assert(/const demoSwipeSurface = document\.querySelector\('\.demo-layout'\)/.test(js) && /demoSwipeSurface\.addEventListener\('touchstart'/.test(js) && /demoSwipeSurface\.addEventListener\('touchend'/.test(js) && /passive:\s*false/.test(js) && /event\.preventDefault\(\)/.test(js) && /deltaX < 0 \? 1 : -1/.test(js) && /Math\.abs\(deltaY\) \* 1\.25/.test(js), "Swiping mobile process cards or preview updates the same selected step without hijacking vertical scrolling");
 assert(!/data-reading-copy|reading-progress|--reading-progress/.test(html + css + js), "Manifesto text uses stable colors independent of scroll position");
