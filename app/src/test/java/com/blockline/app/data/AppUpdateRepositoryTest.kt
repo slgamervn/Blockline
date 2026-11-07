@@ -120,6 +120,26 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
+    fun returningFromInstallerRestoresRetryableDownloadState() {
+        assertEquals(
+            UpdateDownloadState.READY_TO_INSTALL,
+            UpdateApkPolicy.stateAfterInstallerReturns(UpdateDownloadState.INSTALLING, cachedApkExists = true)
+        )
+        assertEquals(
+            UpdateDownloadState.FAILED,
+            UpdateApkPolicy.stateAfterInstallerReturns(UpdateDownloadState.INSTALLING, cachedApkExists = false)
+        )
+        assertEquals(
+            UpdateDownloadState.DOWNLOADING,
+            UpdateApkPolicy.stateAfterInstallerReturns(UpdateDownloadState.DOWNLOADING, cachedApkExists = false)
+        )
+        assertEquals(
+            UpdateDownloadState.IDLE,
+            UpdateApkPolicy.stateAfterInstallerReturns(UpdateDownloadState.IDLE, cachedApkExists = true)
+        )
+    }
+
+    @Test
     fun downloadProgressIsClampedAndCertificateHistoryMustOverlap() {
         assertEquals(50, UpdateApkPolicy.progressPercent(50L, 100L))
         assertEquals(100, UpdateApkPolicy.progressPercent(101L, 100L))
