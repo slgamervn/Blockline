@@ -94,6 +94,16 @@ class AppUpdateRepository(private val channel: String = BuildConfig.UPDATE_CHANN
 
         fun isValidVersion(value: String): Boolean = SemanticVersion.isValid(value)
 
+        fun releasePageUrl(version: String): String {
+            require(isValidVersion(version)) { "Invalid release version." }
+            return "https://github.com/$REPOSITORY_FULL_NAME/releases/tag/v$version"
+        }
+
+        fun apkDownloadUrl(version: String): String {
+            require(isValidVersion(version)) { "Invalid release version." }
+            return "https://github.com/$REPOSITORY_FULL_NAME/releases/download/v$version/Blockline-v$version.apk"
+        }
+
         /**
          * GitHub's release asset API can include an SHA-256 digest. Absence is supported
          * for older releases; a present but malformed digest is rejected rather than ignored.
