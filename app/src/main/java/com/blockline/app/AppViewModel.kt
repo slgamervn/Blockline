@@ -218,7 +218,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun readSavedReleaseInfo(): AppUpdate? {
         val version = settingsPreferences.getString("latest_release_version", null)
-            ?.takeIf(AppUpdateRepository::isValidVersion) ?: return null
+            ?.takeIf { AppUpdateRepository.isValidVersion(it) } ?: return null
         return AppUpdate(
             version = version,
             releaseName = settingsPreferences.getString("latest_release_name", "Blockline v$version") ?: "Blockline v$version",
