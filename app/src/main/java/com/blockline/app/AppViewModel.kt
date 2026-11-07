@@ -500,10 +500,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openReleasePage(context: android.content.Context, info: AppUpdate) {
         runCatching {
-            val url = info.releaseUrl
-            require(url.startsWith("https://github.com/slgamervn/Blockline/releases/tag/")) {
-                "Unexpected release URL"
-            }
+            // Build the URL from a validated version so cached metadata cannot retain the former owner.
+            val url = AppUpdateRepository.releasePageUrl(info.version)
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }.onSuccess {
             settingsPreferences.edit().putString("dismissed_update_version", info.version).apply()
