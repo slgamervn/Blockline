@@ -1042,7 +1042,25 @@ fun EditorScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 Row(Modifier.heightIn(min = 42.dp).padding(start = 11.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                                     if (dirty) Text("● ", color = tokens.gameGreen, fontSize = 11.sp)
                                     Text(tab.substringAfterLast('/'), color = tokens.foreground, fontSize = 12.sp, maxLines = 1)
-                                    IconButton(onClick = { vm.closeTab(tab) }, modifier = Modifier.size(40.dp)) {
+                                    IconButton(
+                                        onClick = {
+                                            if (shouldFlushEditorBeforeTabClose(
+                                                    closingPath = tab,
+                                                    activePath = path,
+                                                    readOnly = vm.readOnly,
+                                                    isOpeningFile = vm.isOpeningFile
+                                                )
+                                            ) {
+                                                // Commit the native EditText buffer before ViewModel saves and removes this tab.
+                                                flushNativeEditorSnapshot()
+                                                if (editorValue.text != vm.content) {
+                                                    vm.updateContent(editorValue.text)
+                                                }
+                                            }
+                                            vm.closeTab(tab)
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
                                         Icon(Icons.Default.Close, stringResource(R.string.close_tab), tint = tokens.muted, modifier = Modifier.size(17.dp))
                                     }
                                 }
