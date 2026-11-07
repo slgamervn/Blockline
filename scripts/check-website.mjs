@@ -9,6 +9,12 @@ const assert = (condition, message) => (condition ? passed : errors).push(messag
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const html = read("index.html");
+for (const file of ["README.md", "README.vi.md"]) {
+  const readme = read(file);
+  assert(readme.includes("https://github.com/snowgemm/Blockline"), `${file} references the canonical repository`);
+  assert(readme.includes("https://snowgemm.github.io/Blockline/"), `${file} references the canonical website`);
+  assert(!/https:\/\/(?:github\.com\/slgamervn\/Blockline|slgamervn\.github\.io\/Blockline)\//i.test(readme), `${file} contains no legacy owner URLs`);
+}
 const css = read("assets/css/style.css");
 const js = read("assets/js/main.js");
 assert(/<html lang="vi">/.test(html), "HTML declares Vietnamese language");
@@ -18,10 +24,12 @@ assert(/assets\/css\/style\.css/.test(html) && /assets\/js\/main\.js/.test(html)
 assert(!/gradient\s*\(|color-mix\s*\(/i.test(css), "Website uses flat colors without gradients or blended overlays");
 assert(!/@keyframes\s+|animation\s*:\s*[^;{}]+;/i.test(css), "CSS has no decorative animations");
 assert(!/\.download-panel::after|\.reveal\s*\{|html\.reveal-ready/.test(css), "Decorative diagonal overlays and scroll-reveal styles are absent");
-assert(/style\.css\?v=20261030-flat-human/.test(html) && /main\.js\?v=20261030-flat-human/.test(html), "Changed asset URLs bypass stale browser caches");
+assert(/style\.css\?v=20261107-canonical-links/.test(html) && /main\.js\?v=20261107-canonical-links/.test(html), "Changed asset URLs bypass stale browser caches");
 assert(!/fonts\.(?:googleapis|gstatic)\.com/.test(html), "Website uses local system fonts rather than decorative remote fonts");
-assert(/href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"/.test(html), "Latest release page link is present");
-const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/slgamervn\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
+assert(/href="https:\/\/github\.com\/snowgemm\/Blockline\/releases\/latest"/.test(html), "Latest release page link uses the canonical repository");
+assert(/property="og:url" content="https:\/\/snowgemm\.github\.io\/Blockline\//.test(html) && /rel="canonical" href="https:\/\/snowgemm\.github\.io\/Blockline\//.test(html), "Canonical and Open Graph URLs use the new GitHub Pages owner");
+assert(!/https:\/\/(?:github\.com\/slgamervn\/Blockline|slgamervn\.github\.io\/Blockline)\//i.test(html), "Website HTML contains no legacy repository or Pages URLs");
+const apkAnchors = [...html.matchAll(/<a\b[^>]*href="https:\/\/github\.com\/snowgemm\/Blockline\/releases\/latest"[^>]*>/g)].map((match) => match[0]);
 assert(apkAnchors.length === 4 && apkAnchors.every((tag) => !/\sdownload(?:\s|=|>)/.test(tag) && !/\bdata-apk-link\b/.test(tag)), "All download buttons link to the latest release page without forcing a direct download");
 assert(!css.includes("\\n.site-header{") && /\.site-header\s*\{\s*position:fixed/.test(css), "Fixed header selector is not corrupted by a literal escape");
 assert(/body\.menu-open\{overflow:hidden\}/.test(css) && !/body\.menu-open\{[^}]*touch-action/.test(css), "Mobile menu locks page scrolling without blocking menu touch gestures");
@@ -46,6 +54,7 @@ assert(!/filter:\s*blur\(/.test(css) && !/backdrop-filter:\s*blur\(/.test(css), 
 assert(!/classList\.remove\('is-visible'\)|--reveal-y|scrollDirection > 0/.test(js + css), "Scrolling does not animate sections in and out");
 
 assert(/aria-expanded/.test(js) && /Escape/.test(js), "Accessible mobile navigation has keyboard support");
+assert(js.includes("const navigationSections = ['features', 'demo', 'roadmap', 'resources', 'faq']"), "Scroll navigation tracks all primary page sections");
 assert(/data-demo-tab/.test(html) && /activateDemoTab/.test(js), "Interactive demo tabs are present");
 assert(/const demoSwipeSurface = document\.querySelector\('\.demo-layout'\)/.test(js) && /demoSwipeSurface\.addEventListener\('touchstart'/.test(js) && /demoSwipeSurface\.addEventListener\('touchend'/.test(js) && /passive:\s*false/.test(js) && /event\.preventDefault\(\)/.test(js) && /deltaX < 0 \? 1 : -1/.test(js) && /Math\.abs\(deltaY\) \* 1\.25/.test(js), "Swiping mobile process cards or preview updates the same selected step without hijacking vertical scrolling");
 assert(!/data-reading-copy|reading-progress|--reading-progress/.test(html + css + js), "Manifesto text uses stable colors independent of scroll position");
