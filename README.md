@@ -6,10 +6,10 @@
 
 **Import · Explore · Edit · Validate · Generate · Compare · Export**
 
-[![Build APK](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/slgamervn/Blockline/actions/workflows/build-apk.yml)
-[![Latest Release](https://img.shields.io/github/v/release/slgamervn/Blockline?display_name=tag&color=3dba7a)](https://github.com/slgamervn/Blockline/releases/latest)
+[![Build APK](https://github.com/snowgemm/Blockline/actions/workflows/build-apk.yml/badge.svg?branch=main)](https://github.com/snowgemm/Blockline/actions/workflows/build-apk.yml)
+[![Latest Release](https://img.shields.io/github/v/release/snowgemm/Blockline?display_name=tag&color=3dba7a)](https://github.com/snowgemm/Blockline/releases/latest)
 
-[Download APK](https://github.com/slgamervn/Blockline/releases/latest) · [Project website](https://slgamervn.github.io/Blockline/) · [Report a bug](https://github.com/slgamervn/Blockline/issues)
+[Download APK](https://github.com/snowgemm/Blockline/releases/latest) · [Project website](https://snowgemm.github.io/Blockline/) · [Report a bug](https://github.com/snowgemm/Blockline/issues)
 
 [Tiếng Việt](README.vi.md)
 
@@ -69,7 +69,7 @@ Requirements:
 - Android 8.0 (API 26) or newer to run the app
 
 ```bash
-git clone https://github.com/slgamervn/Blockline.git
+git clone https://github.com/snowgemm/Blockline.git
 cd Blockline
 gradle testDebugUnitTest
 gradle assembleDebug
@@ -131,6 +131,6 @@ Blockline source code is licensed under the [MIT License](LICENSE). Third-party 
 
 Made for creators building Minecraft Bedrock add-ons on mobile.
 
-[Website](https://slgamervn.github.io/Blockline/) · [Releases](https://github.com/slgamervn/Blockline/releases) · [Issues](https://github.com/slgamervn/Blockline/issues)
+[Website](https://snowgemm.github.io/Blockline/) · [Releases](https://github.com/snowgemm/Blockline/releases) · [Issues](https://github.com/snowgemm/Blockline/issues)
 
 </div>
