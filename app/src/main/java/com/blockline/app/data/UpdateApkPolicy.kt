@@ -1,8 +1,6 @@
 package com.blockline.app.data
 
 object UpdateApkPolicy {
-    private const val REPOSITORY = "slgamervn/Blockline"
-
     fun expectedAssetName(version: String): String {
         require(AppUpdateRepository.isValidVersion(version)) { "Invalid release version." }
         return "Blockline-v$version.apk"
@@ -10,7 +8,7 @@ object UpdateApkPolicy {
 
     fun isAllowedApkUrl(url: String): Boolean {
         val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return false
-        val prefix = "/$REPOSITORY/releases/download/"
+        val prefix = "/${AppUpdateRepository.REPOSITORY_FULL_NAME}/releases/download/"
         return uri.scheme == "https" && uri.host == "github.com" && uri.rawUserInfo == null &&
             uri.query == null && uri.fragment == null && uri.path.startsWith(prefix) &&
             uri.path.removePrefix(prefix).split('/').none { it.isEmpty() || it == "." || it == ".." }
