@@ -43,6 +43,19 @@ class AppUpdateRepositoryTest {
     }
 
     @Test
+    fun releasePageUrlUsesCanonicalRepositoryAndValidatedVersions() {
+        assertEquals(
+            "https://github.com/snowgemm/Blockline/releases/tag/v1.2.3",
+            AppUpdateRepository.releasePageUrl("1.2.3")
+        )
+        assertEquals(
+            "https://github.com/snowgemm/Blockline/releases/tag/v0.1.54-test",
+            AppUpdateRepository.releasePageUrl("0.1.54-test")
+        )
+        assertFalse(runCatching { AppUpdateRepository.releasePageUrl("../latest") }.isSuccess)
+    }
+
+    @Test
     fun expectedAssetNameTracksReleaseVersionForBothChannels() {
         assertEquals("Blockline-v1.2.3.apk", UpdateApkPolicy.expectedAssetName("1.2.3"))
         assertEquals("Blockline-v0.1.54-test.apk", UpdateApkPolicy.expectedAssetName("0.1.54-test"))
