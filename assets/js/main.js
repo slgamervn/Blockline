@@ -360,7 +360,7 @@
   }, { passive: true });
 
   const navigationLinks = [...document.querySelectorAll('.desktop-nav a, .mobile-menu-links a')];
-  const navigationSections = ['features', 'demo', 'roadmap', 'faq'].map((id) => document.getElementById(id)).filter(Boolean);
+  const navigationSections = ['features', 'demo', 'roadmap', 'resources', 'faq'].map((id) => document.getElementById(id)).filter(Boolean);
   if ('IntersectionObserver' in window && navigationSections.length) {
     const navigationObserver = new IntersectionObserver((entries) => {
       const visibleSection = entries.filter((entry) => entry.isIntersecting)
